@@ -1,0 +1,26 @@
+package campus.ai.rag.service.entity.rbac;
+
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.Data;
+
+import java.time.LocalDateTime;
+
+/**
+ * 对应表：rbac_user_role
+ */
+@Data
+@TableName("rbac_user_role")
+public class RbacUserRoleEntity {
+
+    @TableId(value = "id", type = IdType.AUTO)
+    private Long id;
+
+    private Long userId;
+
+    private Long roleId;
+
+    private LocalDateTime createdAt;
+}
+

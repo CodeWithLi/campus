@@ -1,0 +1,37 @@
+server:
+  port: 8888
+
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://127.0.0.1:3306/campus_ai_rag?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password:
+
+  data:
+    redis:
+      host:
+      port: 6379
+      password:
+      database: 10
+      timeout: 5s
+
+mybatis-plus:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: campus.ai.rag.service.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+jwt:
+  or-secret-key: EiRF7SH9Su3TRcygA+yEigXYMWDP+o8xcQj0GJDtjUM=
+  or-ttl: 2592000000
+  or-token-name: Authorization
+
+app:
+  ai:
+    default-model-code: qwen_plus
+
+springdoc:
+  swagger-ui:
+    path: /doc.html
