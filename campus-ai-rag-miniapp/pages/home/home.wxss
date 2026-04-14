@@ -1,0 +1,58 @@
+.page {
+  min-height: 100vh;
+  background: #f5f7fa;
+  padding: 24rpx;
+  box-sizing: border-box;
+}
+
+.hero-card {
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  border-radius: 20rpx;
+  padding: 28rpx;
+  color: #ffffff;
+  box-shadow: 0 10rpx 28rpx rgba(59, 130, 246, 0.22);
+}
+
+.hero-title {
+  font-size: 36rpx;
+  font-weight: 600;
+}
+
+.hero-subtitle {
+  margin-top: 10rpx;
+  font-size: 24rpx;
+  opacity: 0.95;
+}
+
+.section-title {
+  margin: 30rpx 0 16rpx;
+  color: #333333;
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+.card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.feature-card {
+  border-radius: 16rpx;
+  background: #ffffff;
+  border: 1rpx solid #e5e7eb;
+  padding: 22rpx;
+  box-shadow: 0 8rpx 20rpx rgba(99, 102, 241, 0.06);
+}
+
+.feature-title {
+  color: #333333;
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
+.feature-desc {
+  margin-top: 10rpx;
+  color: #666666;
+  font-size: 24rpx;
+}

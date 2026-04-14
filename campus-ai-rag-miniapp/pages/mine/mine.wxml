@@ -1,0 +1,26 @@
+<view class="page">
+  <view class="profile-card">
+    <view class="title">个人中心</view>
+    <view class="desc">登录状态：{{isLogin ? '已登录' : '未登录'}}</view>
+  </view>
+
+  <view class="info-card">
+    <view class="info-row">
+      <text class="label">用户名</text>
+      <text class="value">{{username || '-'}}</text>
+    </view>
+    <view class="info-row">
+      <text class="label">邮箱</text>
+      <text class="value">{{email || '-'}}</text>
+    </view>
+    <view class="info-row">
+      <text class="label">Token</text>
+      <text class="value">{{token || '-'}}</text>
+    </view>
+  </view>
+
+  <view class="action-area">
+    <van-button wx:if="{{!isLogin}}" type="primary" block bindtap="goLogin">去登录/注册</van-button>
+    <van-button wx:else plain type="danger" block bindtap="onLogout">退出登录</van-button>
+  </view>
+</view>

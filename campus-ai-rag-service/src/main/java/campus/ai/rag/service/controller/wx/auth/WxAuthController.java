@@ -2,6 +2,7 @@ package campus.ai.rag.service.controller.wx.auth;
 
 import campus.ai.rag.service.common.Result;
 import campus.ai.rag.service.dto.wx.WxEmailCodeDTO;
+import campus.ai.rag.service.dto.wx.WxLoginDTO;
 import campus.ai.rag.service.dto.wx.WxRegisterDTO;
 import campus.ai.rag.service.service.wx.auth.WxAuthService;
 import campus.ai.rag.service.vo.admin.AdminLoginVO;
@@ -45,6 +46,14 @@ public class WxAuthController {
     @Operation(summary = "用户注册")
     public Result<AdminLoginVO> register(@RequestBody WxRegisterDTO dto) {
         return Result.success(wxAuthService.register(dto));
+    }
+
+    @PostMapping("/login")
+    @ApiOperation(value = "用户登录", notes = "策略模式登录：支持PASSWORD(用户名密码)和WX_ONE_CLICK(微信一键登录)")
+    @ApiImplicitParam(name = "dto", value = "用户登录参数", required = true, dataType = "WxLoginDTO", paramType = "body")
+    @Operation(summary = "用户登录")
+    public Result<AdminLoginVO> login(@RequestBody WxLoginDTO dto) {
+        return Result.success(wxAuthService.login(dto));
     }
 }
 

@@ -1,0 +1,248 @@
+.page {
+  position: relative;
+  min-height: 100vh;
+  background: #eef6ff;
+  padding: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.bg-gradient {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 460rpx;
+  background: linear-gradient(120deg, #d5e8ff, #e9f4ff, #dcecff);
+  background-size: 220% 220%;
+  animation: gradientFlow 10s ease-in-out infinite;
+  z-index: 0;
+}
+
+.bg-soft {
+  position: absolute;
+  width: 520rpx;
+  height: 520rpx;
+  left: 50%;
+  top: 70rpx;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0));
+  z-index: 0;
+  animation: haloFloat 9s ease-in-out infinite;
+}
+
+.bg-circle {
+  position: absolute;
+  border-radius: 50%;
+  border: 2rpx solid rgba(255, 255, 255, 0.62);
+  background: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 20rpx rgba(255, 255, 255, 0.16);
+  z-index: 0;
+}
+
+.circle-a {
+  width: 128rpx;
+  height: 128rpx;
+  left: 52rpx;
+  top: 230rpx;
+  animation: circleFloatA 13s ease-in-out infinite;
+}
+
+.circle-b {
+  width: 86rpx;
+  height: 86rpx;
+  right: 76rpx;
+  top: 318rpx;
+  animation: circleFloatB 11s ease-in-out infinite;
+}
+
+.circle-c {
+  width: 104rpx;
+  height: 104rpx;
+  right: 38rpx;
+  bottom: 240rpx;
+  animation: circleFloatC 15s ease-in-out infinite;
+}
+
+.login-card {
+  position: relative;
+  z-index: 1;
+  opacity: 0;
+  transform: translateY(24rpx);
+  transition: opacity 240ms ease, transform 240ms ease;
+}
+
+.login-card.enter {
+  opacity: 1;
+  transform: translateY(0);
+  width: 100%;
+}
+
+.auth-shell {
+  width: 640rpx;
+  margin: 120rpx auto 0;
+  background: rgba(255, 255, 255, 0.62);
+  border: 1rpx solid rgba(255, 255, 255, 0.5);
+  border-radius: 28rpx;
+  padding: 52rpx 40rpx 46rpx;
+  box-sizing: border-box;
+  box-shadow: 0 8rpx 22rpx rgba(64, 158, 255, 0.06);
+}
+
+.brand-area {
+  text-align: center;
+}
+
+.brand-logo {
+  width: 104rpx;
+  height: 104rpx;
+  line-height: 104rpx;
+  margin: 0 auto;
+  border-radius: 22rpx;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 38rpx;
+  background: linear-gradient(135deg, #2dd4bf, #22c1c3);
+  box-shadow: 0 10rpx 20rpx rgba(45, 212, 191, 0.2);
+}
+
+.brand-name {
+  margin-top: 20rpx;
+  color: #333333;
+  font-size: 36rpx;
+  font-weight: 600;
+}
+
+.brand-desc {
+  margin-top: 12rpx;
+  color: #666666;
+  font-size: 24rpx;
+}
+
+.form-card {
+  margin-top: 46rpx;
+  border-radius: 0;
+  overflow: hidden;
+  border-top: 1rpx solid rgba(148, 163, 184, 0.22);
+  border-bottom: 1rpx solid rgba(148, 163, 184, 0.22);
+  background: rgba(255, 255, 255, 0.32);
+}
+
+.action-row {
+  margin-top: 32rpx;
+  transition: transform 150ms ease, opacity 150ms ease;
+}
+
+.action-row:active {
+  transform: scale(0.98);
+  opacity: 0.9;
+}
+
+.quick-link {
+  margin-top: 18rpx;
+  text-align: center;
+  color: #22c1c3;
+  font-size: 24rpx;
+}
+
+.agreement-row {
+  margin-top: 26rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  flex-wrap: wrap;
+}
+
+.agreement-text {
+  color: #666666;
+  font-size: 22rpx;
+}
+
+.agreement-link {
+  color: #22c1c3;
+  font-size: 22rpx;
+}
+
+.footer-row {
+  margin-top: 22rpx;
+  text-align: center;
+}
+
+.link-text {
+  color: #409eff;
+  font-size: 24rpx;
+}
+
+@keyframes gradientFlow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes haloFloat {
+  0% {
+    transform: translateX(-50%) translateY(0);
+    opacity: 0.75;
+  }
+  50% {
+    transform: translateX(-50%) translateY(-14rpx);
+    opacity: 0.95;
+  }
+  100% {
+    transform: translateX(-50%) translateY(0);
+    opacity: 0.75;
+  }
+}
+
+@keyframes circleFloatA {
+  0% {
+    transform: translateY(0) translateX(0);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translateY(-18rpx) translateX(8rpx);
+    opacity: 0.68;
+  }
+  100% {
+    transform: translateY(0) translateX(0);
+    opacity: 0.5;
+  }
+}
+
+@keyframes circleFloatB {
+  0% {
+    transform: translateY(0) translateX(0);
+    opacity: 0.44;
+  }
+  50% {
+    transform: translateY(-14rpx) translateX(-10rpx);
+    opacity: 0.62;
+  }
+  100% {
+    transform: translateY(0) translateX(0);
+    opacity: 0.44;
+  }
+}
+
+@keyframes circleFloatC {
+  0% {
+    transform: translateY(0) translateX(0);
+    opacity: 0.4;
+  }
+  50% {
+    transform: translateY(-16rpx) translateX(-6rpx);
+    opacity: 0.58;
+  }
+  100% {
+    transform: translateY(0) translateX(0);
+    opacity: 0.4;
+  }
+}

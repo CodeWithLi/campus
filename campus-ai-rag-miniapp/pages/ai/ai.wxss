@@ -1,0 +1,31 @@
+.page {
+  padding: 24rpx;
+  background: #f7f8fa;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+.button-row {
+  display: flex;
+  gap: 16rpx;
+  margin: 20rpx 0;
+}
+
+.result-card {
+  margin-top: 20rpx;
+  padding: 20rpx;
+  border-radius: 12rpx;
+  background: #ffffff;
+  box-shadow: 0 8rpx 24rpx rgba(59, 130, 246, 0.08);
+}
+
+.result-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  margin-bottom: 12rpx;
+}
+
+.result-content {
+  color: #333333;
+  word-break: break-all;
+}

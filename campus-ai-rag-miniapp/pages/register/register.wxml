@@ -1,0 +1,68 @@
+<view class="page">
+  <view class="bg-gradient"></view>
+  <view class="bg-soft"></view>
+  <view class="bg-circle circle-a"></view>
+  <view class="bg-circle circle-b"></view>
+  <view class="bg-circle circle-c"></view>
+
+  <view class="auth-shell register-card {{isPageReady ? 'enter' : ''}}">
+    <view class="brand-area">
+      <view class="brand-logo">校</view>
+      <view class="title">账号注册</view>
+      <view class="subtitle">填写信息后即可创建你的账号</view>
+    </view>
+
+    <view class="form-card">
+      <van-field
+        value="{{username}}"
+        data-key="username"
+        label="用户名"
+        placeholder="请输入用户名"
+        bind:change="onFieldChange"
+      />
+      <van-field
+        value="{{password}}"
+        data-key="password"
+        password
+        label="密码"
+        placeholder="请输入密码"
+        bind:change="onFieldChange"
+      />
+      <van-field
+        value="{{email}}"
+        data-key="email"
+        label="邮箱"
+        placeholder="请输入邮箱"
+        bind:change="onFieldChange"
+      />
+      <van-field
+        value="{{emailCode}}"
+        data-key="emailCode"
+        label="验证码"
+        placeholder="请输入验证码"
+        bind:change="onFieldChange"
+      >
+        <van-button
+          slot="button"
+          size="small"
+          type="primary"
+          custom-style="height: 56rpx; width: 140rpx; line-height: 56rpx; padding: 0; border-radius: 999rpx; background: linear-gradient(135deg, #22C1C3, #409EFF); border: none;"
+          bindtap="onSendEmailCode"
+        >
+          发送验证码
+        </van-button>
+      </van-field>
+    </view>
+
+    <view class="btn-row">
+      <van-button
+        type="primary"
+        block
+        custom-style="height: 88rpx; border-radius: 999rpx; background: linear-gradient(135deg, #22C1C3, #409EFF); border: none;"
+        bindtap="onSubmitRegister"
+      >
+        完成注册
+      </van-button>
+    </view>
+  </view>
+</view>

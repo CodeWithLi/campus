@@ -1,0 +1,59 @@
+.page {
+  min-height: 100vh;
+  background: #f5f7fa;
+  padding: 24rpx;
+  box-sizing: border-box;
+}
+
+.profile-card {
+  border-radius: 20rpx;
+  padding: 26rpx;
+  color: #ffffff;
+  background: linear-gradient(135deg, #409eff, #8b5cf6);
+  box-shadow: 0 10rpx 30rpx rgba(64, 158, 255, 0.2);
+}
+
+.title {
+  font-size: 34rpx;
+  font-weight: 600;
+}
+
+.desc {
+  margin-top: 12rpx;
+  font-size: 24rpx;
+}
+
+.info-card {
+  margin-top: 20rpx;
+  background: #ffffff;
+  border-radius: 16rpx;
+  border: 1rpx solid #e5e7eb;
+  padding: 16rpx 20rpx;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16rpx;
+  padding: 14rpx 0;
+  border-bottom: 1rpx solid #f1f3f5;
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.label {
+  color: #666666;
+  width: 120rpx;
+}
+
+.value {
+  color: #333333;
+  flex: 1;
+  word-break: break-all;
+}
+
+.action-area {
+  margin-top: 22rpx;
+}

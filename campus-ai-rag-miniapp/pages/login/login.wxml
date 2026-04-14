@@ -1,0 +1,58 @@
+<view class="page">
+  <view class="bg-gradient"></view>
+  <view class="bg-soft"></view>
+  <view class="bg-circle circle-a"></view>
+  <view class="bg-circle circle-b"></view>
+  <view class="bg-circle circle-c"></view>
+
+  <view class="auth-shell login-card {{isPageReady ? 'enter' : ''}}">
+    <view class="brand-area">
+      <view class="brand-logo">校</view>
+      <view class="brand-name">校园智能助理</view>
+      <view class="brand-desc">欢迎回来，登录继续使用智能服务</view>
+    </view>
+
+    <view class="form-card">
+      <van-field
+        value="{{username}}"
+        data-key="username"
+        label="用户名"
+        placeholder="请输入用户名"
+        bind:change="onFieldChange"
+      />
+      <van-field
+        value="{{password}}"
+        data-key="password"
+        password
+        label="密码"
+        placeholder="请输入密码"
+        bind:change="onFieldChange"
+      />
+    </view>
+
+    <view class="action-row">
+      <van-button
+        type="primary"
+        block
+        custom-style="height: 88rpx; border-radius: 999rpx; background: linear-gradient(135deg, #22C1C3, #409EFF); border: none;"
+        bindtap="onPasswordLogin"
+      >
+        立即登录
+      </van-button>
+    </view>
+
+    <view class="quick-link" bindtap="onQuickLogin">微信一键登录</view>
+
+    <view class="agreement-row">
+      <van-checkbox value="{{agreeProtocol}}" bind:change="onToggleAgree" />
+      <text class="agreement-text">登录及接受</text>
+      <text class="agreement-link">用户协议</text>
+      <text class="agreement-text">及</text>
+      <text class="agreement-link">隐私授权</text>
+    </view>
+
+    <view class="footer-row">
+      <text class="link-text" bindtap="goRegister">还没有账号？去注册</text>
+    </view>
+  </view>
+</view>

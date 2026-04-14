@@ -1,30 +1,32 @@
 package campus.ai.rag.service.service.wx.auth.impl;
 
 import campus.ai.rag.service.common.StatusCodeEnum;
-import campus.ai.rag.service.common.auth.LoginTokenInfo;
 import campus.ai.rag.service.dto.wx.WxEmailCodeDTO;
+import campus.ai.rag.service.dto.wx.WxLoginDTO;
 import campus.ai.rag.service.dto.wx.WxRegisterDTO;
 import campus.ai.rag.service.entity.wx.WxUserAuthEntity;
 import campus.ai.rag.service.entity.wx.WxUserEntity;
 import campus.ai.rag.service.exception.BusinessException;
 import campus.ai.rag.service.mapper.wx.WxUserAuthMapper;
 import campus.ai.rag.service.mapper.wx.WxUserMapper;
-import campus.ai.rag.service.properties.JwtProperties;
-import campus.ai.rag.service.service.security.TokenStoreService;
 import campus.ai.rag.service.service.wx.auth.WxAuthService;
+import campus.ai.rag.service.service.wx.auth.strategy.WxLoginStrategy;
+import campus.ai.rag.service.service.wx.auth.strategy.WxLoginTokenIssuer;
 import campus.ai.rag.service.utils.ApiService;
-import campus.ai.rag.service.utils.JwtUtils;
 import campus.ai.rag.service.vo.admin.AdminLoginVO;
 import campus.ai.rag.service.vo.wx.WxEmailCodeVO;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 public class WxAuthServiceImpl implements WxAuthService {
@@ -33,7 +35,6 @@ public class WxAuthServiceImpl implements WxAuthService {
     private static final String AUTH_TYPE_WX_OPENID = "WX_OPENID";
     private static final String REGISTER_SOURCE_PASSWORD = "PASSWORD";
     private static final String PROVIDER_WECHAT = "WECHAT";
-    private static final String CLIENT_TYPE_WX = "WX";
     private static final String EMAIL_CODE_BIZ_REGISTER = "REGISTER";
     private static final Duration EMAIL_CODE_TTL = Duration.ofMinutes(5);
 
@@ -42,26 +43,24 @@ public class WxAuthServiceImpl implements WxAuthService {
     private final PasswordEncoder passwordEncoder;
     private final RedisTemplate<String, Object> redisTemplate;
     private final ApiService apiService;
-    private final JwtUtils jwtUtils;
-    private final JwtProperties jwtProperties;
-    private final TokenStoreService tokenStoreService;
+    private final WxLoginTokenIssuer wxLoginTokenIssuer;
+    private final Map<String, WxLoginStrategy> loginStrategyMap;
 
     public WxAuthServiceImpl(WxUserMapper wxUserMapper,
                              WxUserAuthMapper wxUserAuthMapper,
                              PasswordEncoder passwordEncoder,
                              RedisTemplate<String, Object> redisTemplate,
                              ApiService apiService,
-                             JwtUtils jwtUtils,
-                             JwtProperties jwtProperties,
-                             TokenStoreService tokenStoreService) {
+                             WxLoginTokenIssuer wxLoginTokenIssuer,
+                             List<WxLoginStrategy> loginStrategies) {
         this.wxUserMapper = wxUserMapper;
         this.wxUserAuthMapper = wxUserAuthMapper;
         this.passwordEncoder = passwordEncoder;
         this.redisTemplate = redisTemplate;
         this.apiService = apiService;
-        this.jwtUtils = jwtUtils;
-        this.jwtProperties = jwtProperties;
-        this.tokenStoreService = tokenStoreService;
+        this.wxLoginTokenIssuer = wxLoginTokenIssuer;
+        this.loginStrategyMap = loginStrategies.stream()
+                .collect(Collectors.toMap(strategy -> strategy.supportType().toUpperCase(Locale.ROOT), Function.identity()));
     }
 
     @Override
@@ -70,6 +69,7 @@ public class WxAuthServiceImpl implements WxAuthService {
             throw new BusinessException(StatusCodeEnum.BAD_REQUEST, "邮箱不能为空");
         }
         String email = dto.getEmail().trim().toLowerCase();
+        validateEmailFormat(email);
         String code = UUID.randomUUID().toString().replace("-", "").substring(0, 6).toUpperCase();
         redisTemplate.opsForValue().set(buildEmailCodeKey(email), code, EMAIL_CODE_TTL);
 
@@ -86,6 +86,7 @@ public class WxAuthServiceImpl implements WxAuthService {
 
         String username = dto.getUsername().trim();
         String email = dto.getEmail().trim().toLowerCase();
+        validateEmailFormat(email);
         String emailCode = dto.getEmailCode().trim();
         String wxCode = dto.getWxCode().trim();
 
@@ -136,19 +137,20 @@ public class WxAuthServiceImpl implements WxAuthService {
         wxUserAuthMapper.insert(wxAuth);
 
         redisTemplate.delete(buildEmailCodeKey(email));
+        return wxLoginTokenIssuer.issue(userEntity);
+    }
 
-        String token = jwtUtils.createWxToken(String.valueOf(userEntity.getId()));
-        LoginTokenInfo tokenInfo = new LoginTokenInfo();
-        tokenInfo.setUserId(String.valueOf(userEntity.getId()));
-        tokenInfo.setUsername(userEntity.getUsername());
-        tokenInfo.setClientType(CLIENT_TYPE_WX);
-        tokenStoreService.storeToken(token, tokenInfo);
-
-        AdminLoginVO vo = new AdminLoginVO();
-        vo.setToken(token);
-        vo.setTokenName(jwtProperties.getOrTokenName());
-        vo.setExpiresIn(tokenStoreService.getTokenTtlMillis());
-        return vo;
+    @Override
+    public AdminLoginVO login(WxLoginDTO dto) {
+        if (Objects.isNull(dto) || isBlank(dto.getLoginType())) {
+            throw new BusinessException(StatusCodeEnum.BAD_REQUEST, "登录方式不能为空");
+        }
+        String loginType = dto.getLoginType().trim().toUpperCase(Locale.ROOT);
+        WxLoginStrategy strategy = loginStrategyMap.get(loginType);
+        if (Objects.isNull(strategy)) {
+            throw new BusinessException(StatusCodeEnum.BAD_REQUEST, "不支持的登录方式：" + loginType);
+        }
+        return strategy.login(dto);
     }
 
     private String resolveOpenidByWxCode(String wxCode) {
@@ -190,6 +192,12 @@ public class WxAuthServiceImpl implements WxAuthService {
 
     private String buildEmailCodeKey(String email) {
         return "campus:email:code:" + EMAIL_CODE_BIZ_REGISTER + ":" + email;
+    }
+
+    private void validateEmailFormat(String email) {
+        if (!email.contains("@") || !email.contains(".")) {
+            throw new BusinessException(StatusCodeEnum.BAD_REQUEST, "邮箱格式不正确");
+        }
     }
 
     private boolean isBlank(String value) {
