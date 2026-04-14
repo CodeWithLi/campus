@@ -17,21 +17,25 @@ public class WxUserEntity {
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
-    private String openId;
-
-    private String unionId;
-
     private String username;
 
-    private String password;
+    private String email;
 
     private String nickname;
 
     private String avatarUrl;
 
-    private String phone;
-
+    /**
+     * 用户状态：1=正常，0=禁用
+     */
     private Integer status;
+
+    /**
+     * 注册来源：PASSWORD/WX
+     */
+    private String registerSource;
+
+    private LocalDateTime lastLoginAt;
 
     private LocalDateTime createdAt;
 

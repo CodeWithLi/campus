@@ -1,9 +1,11 @@
 package campus.ai.rag.service.controller.wx.auth;
 
 import campus.ai.rag.service.common.Result;
-import campus.ai.rag.service.dto.wx.WxLoginDTO;
+import campus.ai.rag.service.dto.wx.WxEmailCodeDTO;
+import campus.ai.rag.service.dto.wx.WxRegisterDTO;
 import campus.ai.rag.service.service.wx.auth.WxAuthService;
 import campus.ai.rag.service.vo.admin.AdminLoginVO;
+import campus.ai.rag.service.vo.wx.WxEmailCodeVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
@@ -15,7 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * 微信端登录接口：账号密码登录，成功后颁发 Redis Token。
+ * 微信端认证接口：发送邮箱验证码 + 用户注册。
  */
 @RestController
 @RequestMapping("/wx/auth")
@@ -29,12 +31,20 @@ public class WxAuthController {
         this.wxAuthService = wxAuthService;
     }
 
-    @PostMapping("/login")
-    @ApiOperation(value = "微信端登录", notes = "微信端账号密码登录，成功后返回Token")
-    @ApiImplicitParam(name = "dto", value = "微信端登录参数", required = true, dataType = "WxLoginDTO", paramType = "body")
-    @Operation(summary = "微信端登录")
-    public Result<AdminLoginVO> login(@RequestBody WxLoginDTO dto) {
-        return Result.success(wxAuthService.login(dto));
+    @PostMapping("/email-code")
+    @ApiOperation(value = "获取邮箱验证码", notes = "当前阶段直接返回6位验证码并写入Redis，后续可对接真实邮件发送")
+    @ApiImplicitParam(name = "dto", value = "获取邮箱验证码参数", required = true, dataType = "WxEmailCodeDTO", paramType = "body")
+    @Operation(summary = "获取邮箱验证码")
+    public Result<WxEmailCodeVO> sendEmailCode(@RequestBody WxEmailCodeDTO dto) {
+        return Result.success(wxAuthService.sendEmailCode(dto));
+    }
+
+    @PostMapping("/register")
+    @ApiOperation(value = "用户注册", notes = "用户名+密码+邮箱+邮箱验证码注册，并通过wxCode绑定openid后返回登录Token")
+    @ApiImplicitParam(name = "dto", value = "用户注册参数", required = true, dataType = "WxRegisterDTO", paramType = "body")
+    @Operation(summary = "用户注册")
+    public Result<AdminLoginVO> register(@RequestBody WxRegisterDTO dto) {
+        return Result.success(wxAuthService.register(dto));
     }
 }
 

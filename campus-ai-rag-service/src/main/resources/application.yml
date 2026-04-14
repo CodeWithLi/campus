@@ -6,13 +6,13 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://127.0.0.1:3306/campus_ai_rag?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: root
-    password:
+    password: xiaoli2004@
 
   data:
     redis:
-      host:
+      host: 118.145.69.255
       port: 6379
-      password:
+      password: 0127ff2faeb99838
       database: 10
       timeout: 5s
 
@@ -27,6 +27,10 @@ jwt:
   or-secret-key: EiRF7SH9Su3TRcygA+yEigXYMWDP+o8xcQj0GJDtjUM=
   or-ttl: 2592000000
   or-token-name: Authorization
+
+wx:
+  appId: wxd3b2d2c0eeea2ea2
+  appSecret: b58e8108f23cd91681b091bbc7c6246c
 
 app:
   ai:
