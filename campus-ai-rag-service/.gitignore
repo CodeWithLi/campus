@@ -32,10 +32,10 @@ build/
 ### VS Code ###
 .vscode/
 
-pdf_extracted.txt
-vue3开发需求.md
-功能清单.md
-开发需求.md
-微信小程序开发需求.md
-星火深度推理http文档.md
-星火语言模型(对话)http文档.md
+/pdf_extracted.txt
+/vue3开发需求.md
+/功能清单.md
+/开发需求.md
+/微信小程序开发需求.md
+/星火深度推理http文档.md
+/星火语言模型(对话)http文档.md
