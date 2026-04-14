@@ -10,7 +10,7 @@ import org.apache.ibatis.annotations.Select;
 public interface WxUserMapper extends BaseMapper<WxUserEntity> {
 
     @Select("""
-            SELECT id, username, email, nickname, avatar_url, status, register_source, last_login_at, created_at, updated_at
+            SELECT id, username, email, nickname, avatar_url, status, register_source, power_points, last_login_at, created_at, updated_at
             FROM wx_user
             WHERE username = #{username}
             LIMIT 1
@@ -18,7 +18,7 @@ public interface WxUserMapper extends BaseMapper<WxUserEntity> {
     WxUserEntity findByUsername(@Param("username") String username);
 
     @Select("""
-            SELECT id, username, email, nickname, avatar_url, status, register_source, last_login_at, created_at, updated_at
+            SELECT id, username, email, nickname, avatar_url, status, register_source, power_points, last_login_at, created_at, updated_at
             FROM wx_user
             WHERE email = #{email}
             LIMIT 1

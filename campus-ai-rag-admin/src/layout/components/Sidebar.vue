@@ -25,6 +25,10 @@
         <span class="menu-dot"></span>
         <span>模型配置</span>
       </el-menu-item>
+      <el-menu-item v-if="userStore.isAdmin" index="/wx-users">
+        <span class="menu-dot"></span>
+        <span>用户管理</span>
+      </el-menu-item>
       <el-menu-item v-if="userStore.isSuperAdmin" index="/prompts/system">
         <span class="menu-dot"></span>
         <span>系统提示词</span>

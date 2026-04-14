@@ -116,6 +116,7 @@ public class WxAuthServiceImpl implements WxAuthService {
         userEntity.setNickname(username);
         userEntity.setStatus(1);
         userEntity.setRegisterSource(REGISTER_SOURCE_PASSWORD);
+        userEntity.setPowerPoints(0);
         wxUserMapper.insert(userEntity);
 
         WxUserAuthEntity passwordAuth = new WxUserAuthEntity();

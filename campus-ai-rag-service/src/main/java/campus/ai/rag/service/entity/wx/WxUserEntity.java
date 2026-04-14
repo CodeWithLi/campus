@@ -35,6 +35,11 @@ public class WxUserEntity {
      */
     private String registerSource;
 
+    /**
+     * 剩余算力点
+     */
+    private Integer powerPoints;
+
     private LocalDateTime lastLoginAt;
 
     private LocalDateTime createdAt;

@@ -42,6 +42,15 @@ const router = createRouter({
             title: '管理员管理',
             requiresSuperAdmin: true
           }
+        },
+        {
+          path: '/wx-users',
+          name: 'wx-users',
+          component: () => import('@/views/wx-user/index.vue'),
+          meta: {
+            title: '用户管理',
+            requiresAdmin: true
+          }
         }
       ]
     },
@@ -68,6 +77,10 @@ router.beforeEach((to) => {
   }
 
   if (to.meta?.requiresSuperAdmin && !userStore.isSuperAdmin) {
+    return '/dashboard'
+  }
+
+  if (to.meta?.requiresAdmin && !userStore.isAdmin) {
     return '/dashboard'
   }
 

@@ -59,7 +59,15 @@ export const useUserStore = defineStore('user', () => {
     return roleCode.value === authority || roleCode.value === `ROLE_${authority}`
   }
 
+  const hasAnyAuthority = (authorities) => {
+    if (!Array.isArray(authorities) || authorities.length === 0) {
+      return false
+    }
+    return authorities.some((item) => hasAuthority(item))
+  }
+
   const isSuperAdmin = computed(() => hasAuthority('SUPER_ADMIN'))
+  const isAdmin = computed(() => hasAuthority('ADMIN') || hasAuthority('SUPER_ADMIN'))
 
   watch(token, () => {
     syncRoleFromToken()
@@ -70,9 +78,11 @@ export const useUserStore = defineStore('user', () => {
     tokenName,
     roleCode,
     isSuperAdmin,
+    isAdmin,
     setToken,
     setTokenName,
     hasAuthority,
+    hasAnyAuthority,
     clearUserInfo
   }
 },
