@@ -6,13 +6,13 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://127.0.0.1:3306/campus_ai_rag?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: root
-    password: xiaoli2004@
+    password:
 
   data:
     redis:
-      host: 118.145.69.255
+      host:
       port: 6379
-      password: 0127ff2faeb99838
+      password:
       database: 10
       timeout: 5s
 
@@ -31,6 +31,15 @@ jwt:
 wx:
   appId: wxd3b2d2c0eeea2ea2
   appSecret: b58e8108f23cd91681b091bbc7c6246c
+
+# PostgreSQL + pgvector（知识库向量检索专用）
+# 说明：当前项目主库仍为 MySQL；此处先预留 pgvector 连接信息，后续做多数据源时启用。
+pg:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://127.0.0.1:5432/campus_ai_rag_vector
+    username:
+    password:
 
 app:
   ai:
