@@ -6,15 +6,28 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://127.0.0.1:3306/campus_ai_rag?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: root
-    password:
+    password: xiaoli2004@
+
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
 
   data:
     redis:
-      host:
+      host: 118.145.69.255
       port: 6379
-      password:
+      password: 0127ff2faeb99838
       database: 10
       timeout: 5s
+  ai:
+    openai:
+      api-key: sk-01e2d69852854c8584ee673ed9d96ce9
+      base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
+      embedding:
+        options:
+          model: text-embedding-v4
+          dimensions: 1024
 
 mybatis-plus:
   mapper-locations: classpath:mapper/*.xml
@@ -37,13 +50,26 @@ wx:
 pg:
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://127.0.0.1:5432/campus_ai_rag_vector
-    username:
-    password:
+    url: jdbc:postgresql://127.0.0.1:5433/campus_ai_rag_vector
+    username: postgres
+    password: postgres
 
 app:
   ai:
     default-model-code: qwen_plus
+
+# 星火图片理解（用于文档内图片内容提取）
+xf:
+  image:
+    app-id: 6346119f
+    api-key: caba4cc5c2e634ec94313d2f2c8d0c16
+    api-secret: ZTgzYmRjMjg2MmY3OWViODMwMzIyNDdj
+    host: spark-api.cn-huabei-1.xf-yun.com
+    path: /v2.1/image
+    domain: imagev3
+    prompt: 请尽可能完整提取图片中的文字内容，如果有表格请用markdown表格输出，并补充关键图示说明。
+    connect-timeout-seconds: 20
+    await-timeout-seconds: 90
 
 springdoc:
   swagger-ui:

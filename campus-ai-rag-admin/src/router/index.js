@@ -51,6 +51,24 @@ const router = createRouter({
             title: '用户管理',
             requiresAdmin: true
           }
+        },
+        {
+          path: '/kb-categories',
+          name: 'kb-categories',
+          component: () => import('@/views/kb-category/index.vue'),
+          meta: {
+            title: '知识库分类',
+            requiresAdmin: true
+          }
+        },
+        {
+          path: '/kb-documents',
+          name: 'kb-documents',
+          component: () => import('@/views/kb-document/index.vue'),
+          meta: {
+            title: '知识库文档',
+            requiresAdmin: true
+          }
         }
       ]
     },

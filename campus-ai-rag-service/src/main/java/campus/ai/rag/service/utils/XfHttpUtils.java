@@ -90,24 +90,30 @@ public final class XfHttpUtils {
             Map<String, Object> root = OBJECT_MAPPER.readValue(responseJson, new TypeReference<>() {
             });
             Object codeObj = root.get("code");
-            if (codeObj instanceof Number code && code.intValue() != 0) {
-                throw new BusinessException(StatusCodeEnum.BUSINESS_ERROR,
-                        "讯飞返回错误，code=" + code + "，message=" + root.get("message"));
+            if (codeObj instanceof Number) {
+                Number code = (Number) codeObj;
+                if (code.intValue() != 0) {
+                    throw new BusinessException(StatusCodeEnum.BUSINESS_ERROR,
+                            "讯飞返回错误，code=" + code + "，message=" + root.get("message"));
+                }
             }
 
             Object choicesObj = root.get("choices");
-            if (!(choicesObj instanceof List<?> choices) || choices.isEmpty()) {
+            if (!(choicesObj instanceof List) || ((List<?>) choicesObj).isEmpty()) {
                 return "";
             }
+            List<?> choices = (List<?>) choicesObj;
 
             Object first = choices.get(0);
-            if (!(first instanceof Map<?, ?> firstMap)) {
+            if (!(first instanceof Map)) {
                 return "";
             }
+            Map<?, ?> firstMap = (Map<?, ?>) first;
             Object messageObj = firstMap.get("message");
-            if (!(messageObj instanceof Map<?, ?> messageMap)) {
+            if (!(messageObj instanceof Map)) {
                 return "";
             }
+            Map<?, ?> messageMap = (Map<?, ?>) messageObj;
             Object contentObj = messageMap.get("content");
             return contentObj == null ? "" : String.valueOf(contentObj);
         } catch (IOException e) {

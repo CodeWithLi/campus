@@ -51,8 +51,15 @@ public final class GenericHttpUtils {
 
         Map<String, Object> body = new HashMap<>();
         switch (reqType) {
-            case MESSAGES -> body.put(reqField, List.of(Map.of("role", "user", "content", userMessage)));
-            case PROMPT, INPUT -> body.put(reqField, userMessage);
+            case MESSAGES:
+                body.put(reqField, List.of(Map.of("role", "user", "content", userMessage)));
+                break;
+            case PROMPT:
+            case INPUT:
+                body.put(reqField, userMessage);
+                break;
+            default:
+                break;
         }
 
         Map<String, String> headers = parseHeaders(headersJson);

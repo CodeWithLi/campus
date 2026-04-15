@@ -91,7 +91,11 @@ public class WxAuthServiceImpl implements WxAuthService {
         String wxCode = dto.getWxCode().trim();
 
         Object cachedCodeObj = redisTemplate.opsForValue().get(buildEmailCodeKey(email));
-        if (!(cachedCodeObj instanceof String cachedCode) || !cachedCode.equalsIgnoreCase(emailCode)) {
+        if (!(cachedCodeObj instanceof String)) {
+            throw new BusinessException(StatusCodeEnum.BAD_REQUEST, "邮箱验证码错误或已过期");
+        }
+        String cachedCode = (String) cachedCodeObj;
+        if (!cachedCode.equalsIgnoreCase(emailCode)) {
             throw new BusinessException(StatusCodeEnum.BAD_REQUEST, "邮箱验证码错误或已过期");
         }
 
@@ -158,11 +162,16 @@ public class WxAuthServiceImpl implements WxAuthService {
         try {
             Map<String, Object> result = apiService.wxLogin(wxCode);
             Object openidObj = result == null ? null : result.get("openid");
-            if (!(openidObj instanceof String openid) || isBlank(openid)) {
+            if (!(openidObj instanceof String)) {
                 String errmsg = result == null ? "微信返回为空" : String.valueOf(result.get("errmsg"));
                 throw new BusinessException(StatusCodeEnum.BUSINESS_ERROR, "获取openid失败：" + errmsg);
             }
-            return openid.trim();
+            String openid = ((String) openidObj).trim();
+            if (isBlank(openid)) {
+                String errmsg = result == null ? "微信返回为空" : String.valueOf(result.get("errmsg"));
+                throw new BusinessException(StatusCodeEnum.BUSINESS_ERROR, "获取openid失败：" + errmsg);
+            }
+            return openid;
         } catch (BusinessException ex) {
             throw ex;
         } catch (Exception ex) {

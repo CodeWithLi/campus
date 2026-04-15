@@ -29,6 +29,14 @@
         <span class="menu-dot"></span>
         <span>用户管理</span>
       </el-menu-item>
+      <el-menu-item v-if="userStore.isAdmin" index="/kb-categories">
+        <span class="menu-dot"></span>
+        <span>知识库分类</span>
+      </el-menu-item>
+      <el-menu-item v-if="userStore.isAdmin" index="/kb-documents">
+        <span class="menu-dot"></span>
+        <span>知识库文档</span>
+      </el-menu-item>
       <el-menu-item v-if="userStore.isSuperAdmin" index="/prompts/system">
         <span class="menu-dot"></span>
         <span>系统提示词</span>

@@ -25,8 +25,8 @@ public class TokenStoreService {
 
     public LoginTokenInfo getTokenInfo(String token) {
         Object value = redisTemplate.opsForValue().get(buildKey(token));
-        if (value instanceof LoginTokenInfo tokenInfo) {
-            return tokenInfo;
+        if (value instanceof LoginTokenInfo) {
+            return (LoginTokenInfo) value;
         }
         return null;
     }
