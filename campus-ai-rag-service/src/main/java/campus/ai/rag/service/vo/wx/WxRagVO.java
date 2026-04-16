@@ -13,6 +13,12 @@ public class WxRagVO {
     @ApiModelProperty(value = "本次请求实际使用的模型编码", example = "qwen_plus")
     private String modelCode;
 
+    @ApiModelProperty(value = "本次RAG会话ID（用于拉取历史/文件）", example = "r_7f3a1c4b0a6f4d2e")
+    private String conversationId;
+
+    @ApiModelProperty(value = "会话标题（可能为空）", example = "安全邮箱绑定")
+    private String conversationTitle;
+
     @ApiModelProperty(value = "AI回复内容")
     private String answer;
 

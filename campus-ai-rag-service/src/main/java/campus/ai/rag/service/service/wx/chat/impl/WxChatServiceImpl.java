@@ -180,6 +180,8 @@ public class WxChatServiceImpl implements WxChatService {
         Duration ttl = Duration.ofDays(days);
         redisTemplate.expire(historyKey(userId, convId), ttl);
         redisTemplate.expire(metaKey(userId, convId), ttl);
+        // 用于会话列表排序展示（前端 history 页需要 updatedAt）
+        redisTemplate.opsForHash().put(metaKey(userId, convId), "updatedAt", System.currentTimeMillis());
     }
 
     private String metaKey(String userId, String convId) {

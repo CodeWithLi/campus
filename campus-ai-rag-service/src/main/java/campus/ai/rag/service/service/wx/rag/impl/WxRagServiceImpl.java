@@ -12,6 +12,8 @@ import campus.ai.rag.service.service.wx.rag.WxRagService;
 import campus.ai.rag.service.utils.WxAuthContextUtils;
 import campus.ai.rag.service.vo.wx.WxRagVO;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -24,6 +26,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.time.Duration;
 
 @Service
 public class WxRagServiceImpl implements WxRagService {
@@ -37,15 +40,24 @@ public class WxRagServiceImpl implements WxRagService {
     private final JdbcTemplate pgJdbcTemplate;
     private final KbDocumentMapper kbDocumentMapper;
     private final WxKbDocumentMapper wxKbDocumentMapper;
+    private final RedisTemplate<String, Object> redisTemplate;
+    private final ObjectMapper objectMapper = new ObjectMapper();
     private final String embeddingApiKey;
     private final String embeddingBaseUrl;
     private final Integer embeddingDimensions;
+
+    @Value("${app.wx.chat.conversation-ttl-days:30}")
+    private Integer conversationTtlDays;
+
+    @Value("${app.wx.chat.title-prompt:}")
+    private String titlePrompt;
 
     public WxRagServiceImpl(AiChatRouter aiChatRouter,
                             RestTemplate restTemplate,
                             @Qualifier("pgJdbcTemplate") JdbcTemplate pgJdbcTemplate,
                             KbDocumentMapper kbDocumentMapper,
                             WxKbDocumentMapper wxKbDocumentMapper,
+                            RedisTemplate<String, Object> redisTemplate,
                             @Value("${spring.ai.openai.api-key:}") String embeddingApiKey,
                             @Value("${spring.ai.openai.base-url:https://dashscope.aliyuncs.com/compatible-mode/v1}") String embeddingBaseUrl,
                             @Value("${spring.ai.openai.embedding.options.dimensions:1024}") Integer embeddingDimensions) {
@@ -54,6 +66,7 @@ public class WxRagServiceImpl implements WxRagService {
         this.pgJdbcTemplate = pgJdbcTemplate;
         this.kbDocumentMapper = kbDocumentMapper;
         this.wxKbDocumentMapper = wxKbDocumentMapper;
+        this.redisTemplate = redisTemplate;
         this.embeddingApiKey = embeddingApiKey;
         this.embeddingBaseUrl = embeddingBaseUrl;
         this.embeddingDimensions = embeddingDimensions;
@@ -69,20 +82,57 @@ public class WxRagServiceImpl implements WxRagService {
             throw new BusinessException(StatusCodeEnum.BAD_REQUEST, "topK 范围仅支持 1~20");
         }
 
+        String userId = WxAuthContextUtils.requireWxUserId();
+        String finalModelCode;
+        String convId = isBlank(dto.getConversationId()) ? newConversationId() : dto.getConversationId().trim();
+
+        finalModelCode = isBlank(dto.getModelCode()) ? aiChatRouter.getDefaultModelCode() : dto.getModelCode().trim();
+        List<Long> fileDocIds = sanitizeDocIds(dto.getFileDocumentIds());
+
         float[] q = embedWithQwen(dto.getQuestion().trim());
         String qVector = toVectorLiteral(q);
 
-        Long userId = parseUserId(WxAuthContextUtils.requireWxUserId());
-        List<WxRagVO.Hit> hits = searchTopK(userId, qVector, dto.getCategoryIds(), topK);
+        Long userIdLong = parseUserId(userId);
+        List<WxRagVO.Hit> hits = searchTopK(userIdLong, qVector, dto.getCategoryIds(), topK);
         String ragContext = buildRagContext(hits);
 
-        String modelCode = isBlank(dto.getModelCode()) ? aiChatRouter.getDefaultModelCode() : dto.getModelCode().trim();
-        String answer = aiChatRouter.chat(modelCode, "RAG", dto.getQuestion().trim(), ragContext);
+        String answer = aiChatRouter.chat(finalModelCode, "RAG", dto.getQuestion().trim(), ragContext);
 
         WxRagVO vo = new WxRagVO();
-        vo.setModelCode(modelCode);
+        vo.setModelCode(finalModelCode);
+        vo.setConversationId(convId);
+        vo.setConversationTitle(null);
         vo.setAnswer(answer);
         vo.setHits(hits);
+
+        // 记录 rag 会话历史（user/assistant）+ 关联文件
+        appendHistory(historyKey(userId, convId), "user", dto.getQuestion().trim());
+        appendHistory(historyKey(userId, convId), "assistant", answer);
+        touchTtlAndUpdatedAt(userId, convId);
+        if (!fileDocIds.isEmpty()) {
+            for (Long docId : fileDocIds) {
+                if (docId == null) continue;
+                redisTemplate.opsForSet().add(filesKey(userId, convId), docId);
+            }
+        }
+
+        // 首轮生成标题（用独立提示词，不走系统提示词）
+        String existingTitle = getString(metaKey(userId, convId), "title");
+        long msgCount = listSize(historyKey(userId, convId));
+        String title = existingTitle;
+        if (isBlank(title) && msgCount <= 2 && !isBlank(titlePrompt)) {
+            String firstAnswerShort = truncate(answer, 180);
+            String titleInput = titlePrompt
+                    + "\n\n【用户首轮问题】\n" + truncate(dto.getQuestion().trim(), 200)
+                    + "\n\n【助手首轮回答】\n" + firstAnswerShort;
+            String generated = safeTitle(aiChatRouter.rawChat(finalModelCode, titleInput));
+            if (!isBlank(generated)) {
+                putString(metaKey(userId, convId), "title", generated);
+                title = generated;
+            }
+        }
+        vo.setConversationTitle(title);
+
         return vo;
     }
 
@@ -355,6 +405,86 @@ public class WxRagServiceImpl implements WxRagService {
 
     private boolean isBlank(String value) {
         return value == null || value.trim().isEmpty();
+    }
+
+    private List<Long> sanitizeDocIds(List<Long> docIds) {
+        if (docIds == null) return List.of();
+        return docIds.stream()
+                .filter(Objects::nonNull)
+                .filter(id -> id > 0)
+                .distinct()
+                .toList();
+    }
+
+    private String metaKey(String userId, String convId) {
+        return "campus:wx:rag:conv:" + userId + ":" + convId + ":meta";
+    }
+
+    private String historyKey(String userId, String convId) {
+        return "campus:wx:rag:conv:" + userId + ":" + convId + ":history";
+    }
+
+    private String filesKey(String userId, String convId) {
+        return "campus:wx:rag:conv:" + userId + ":" + convId + ":files";
+    }
+
+    private String newConversationId() {
+        return "r_" + UUID.randomUUID().toString().replace("-", "").substring(0, 16);
+    }
+
+    private void appendHistory(String historyKey, String role, String content) {
+        WxMsg msg = new WxMsg();
+        msg.role = role;
+        msg.content = content == null ? "" : content;
+        redisTemplate.opsForList().rightPush(historyKey, msg);
+    }
+
+    private long listSize(String key) {
+        Long size = redisTemplate.opsForList().size(key);
+        return size == null ? 0 : size;
+    }
+
+    private String getString(String key, String field) {
+        Object v = redisTemplate.opsForHash().get(key, field);
+        return v == null ? null : String.valueOf(v);
+    }
+
+    private void putString(String key, String field, String value) {
+        if (value == null) {
+            redisTemplate.opsForHash().delete(key, field);
+        } else {
+            redisTemplate.opsForHash().put(key, field, value);
+        }
+    }
+
+    private void touchTtlAndUpdatedAt(String userId, String convId) {
+        long days = conversationTtlDays == null ? 30 : Math.max(1, conversationTtlDays);
+        Duration ttl = Duration.ofDays(days);
+        redisTemplate.expire(historyKey(userId, convId), ttl);
+        redisTemplate.expire(metaKey(userId, convId), ttl);
+        redisTemplate.opsForHash().put(metaKey(userId, convId), "updatedAt", System.currentTimeMillis());
+    }
+
+    private String safeTitle(String raw) {
+        if (raw == null) return null;
+        String t = raw.trim();
+        t = t.replace("\"", "").replace("“", "").replace("”", "").replace("《", "").replace("》", "").trim();
+        if (t.length() > 12) {
+            t = t.substring(0, 12).trim();
+        }
+        return t;
+    }
+
+    private String truncate(String s, int max) {
+        if (s == null) return "";
+        String t = s.trim();
+        if (t.length() <= max) return t;
+        return t.substring(0, max) + "…";
+    }
+
+    private static class WxMsg {
+        public String role;
+        public String content;
     }
 
     private Long parseUserId(String userId) {

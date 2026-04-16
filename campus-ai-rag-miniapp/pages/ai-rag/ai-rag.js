@@ -26,6 +26,10 @@ Page({
     showDocSheet: false,
     uploading: false,
 
+    // server-side rag conversation
+    conversationId: '',
+    conversationTitle: '',
+
     // RAG local history (optional UI parity)
     historyList: []
   },
@@ -173,6 +177,10 @@ Page({
       title: d.title || d.originalFileName || '文件'
     }))
 
+    const docIds = (this.data.docs || [])
+      .map((d) => Number(d.id))
+      .filter((id) => Number.isFinite(id) && id > 0)
+
     const userMessage = {
       id: userMessageId,
       role: 'user',
@@ -206,14 +214,20 @@ Page({
     try {
       const response = await ragApi({
         modelCode: this.data.selectedModelCode || null,
+        conversationId: this.data.conversationId || null,
         question: message,
         categoryIds: null,
-        topK: 5
+        topK: 5,
+        fileDocumentIds: docIds
       })
 
       const answer = response?.data?.answer || ''
       const hits = response?.data?.hits || []
+      const conversationId = response?.data?.conversationId || this.data.conversationId
+      const conversationTitle = response?.data?.conversationTitle || this.data.conversationTitle
       const markdown = this.buildRagMarkdown(answer, hits)
+
+      this.setData({ conversationId, conversationTitle })
 
       this.streamAssistantReply(thinkingId, markdown)
     } catch (error) {
