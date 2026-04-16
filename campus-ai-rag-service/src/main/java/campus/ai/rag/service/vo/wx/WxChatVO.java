@@ -14,6 +14,12 @@ public class WxChatVO {
     @ApiModelProperty(value = "本次请求实际使用的模型编码", example = "qwen_plus")
     private String modelCode;
 
+    @ApiModelProperty(value = "会话ID", example = "c_7f3a1c4b0a6f4d2e")
+    private String conversationId;
+
+    @ApiModelProperty(value = "会话标题（首轮后生成）", example = "安全邮箱绑定")
+    private String conversationTitle;
+
     /**
      * AI 回复内容。
      */

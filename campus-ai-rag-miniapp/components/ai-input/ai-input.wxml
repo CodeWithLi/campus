@@ -1,0 +1,16 @@
+<view class="input-wrap">
+  <view class="voice-btn" bindtap="onVoiceTap">🎤</view>
+  <view class="input-main">
+    <textarea
+      class="input-box"
+      placeholder="输入你想问的问题..."
+      auto-height
+      maxlength="2000"
+      value="{{value}}"
+      bindinput="onInput"
+    />
+  </view>
+  <view class="send-btn {{loading ? 'send-btn-disabled' : ''}}" bindtap="onSend">
+    {{loading ? '发送中' : '发送'}}
+  </view>
+</view>

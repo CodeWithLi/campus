@@ -1,0 +1,93 @@
+<view class="page">
+  <view class="bg-gradient"></view>
+
+  <view class="top-bar">
+    <view class="top-icon left-placeholder"></view>
+    <picker
+      mode="selector"
+      range="{{modelOptions}}"
+      range-key="modelName"
+      value="{{selectedModelIndex}}"
+      bindchange="onModelChange"
+    >
+      <view class="model-switch">
+        <text class="model-text">{{modelOptions[selectedModelIndex].modelName || selectedModelCode || '请选择模型'}}</text>
+        <text class="model-arrow"> ▾</text>
+      </view>
+    </picker>
+    <view class="top-icon history-icon" bindtap="goHistory">☰</view>
+  </view>
+
+  <scroll-view
+    class="chat-scroll"
+    scroll-y
+    scroll-with-animation
+    scroll-into-view="{{scrollIntoView}}"
+    scroll-top="{{scrollTop}}"
+  >
+    <view class="chat-content">
+      <view wx:if="{{chatList.length === 0}}" class="empty-card">
+        <view class="empty-badge">AI ASSISTANT</view>
+        <view class="empty-title">我是你的校园 AI 助手</view>
+        <view class="empty-desc">支持学习、办事、生活问题咨询，点击下方示例可快速开始。</view>
+        <view class="suggestion-row">
+          <view class="suggestion-chip" bindtap="onQuickAsk" data-text="帮我解读今天的教务通知">教务通知解读</view>
+          <view class="suggestion-chip" bindtap="onQuickAsk" data-text="奖学金申请一般需要哪些材料">奖学金申请</view>
+          <view class="suggestion-chip" bindtap="onQuickAsk" data-text="帮我制定本周学习计划">学习计划</view>
+        </view>
+      </view>
+
+      <view wx:if="{{chatList.length === 0}}" class="guide-grid">
+        <view class="guide-card" bindtap="onQuickAsk" data-text="请根据我的情况给我一份高效复习计划">
+          <view class="guide-title">学习规划</view>
+          <view class="guide-desc">生成阶段计划与每日任务</view>
+        </view>
+        <view class="guide-card" bindtap="onQuickAsk" data-text="帮我整理一份实验报告大纲和模板">
+          <view class="guide-title">文书辅助</view>
+          <view class="guide-desc">报告、总结、通知解读</view>
+        </view>
+        <view class="guide-card" bindtap="onQuickAsk" data-text="我想做一个本月生活预算，请给建议">
+          <view class="guide-title">生活建议</view>
+          <view class="guide-desc">预算、健康、效率提升</view>
+        </view>
+      </view>
+
+      <view wx:if="{{chatList.length === 0}}" class="ambient-block">
+        <view class="ambient-orb ambient-orb-a"></view>
+        <view class="ambient-orb ambient-orb-b"></view>
+      </view>
+      
+      <block wx:for="{{chatList}}" wx:key="id">
+        <view id="msg-{{item.id}}">
+          <chat-item role="{{item.role}}" content="{{item.content}}" thinking="{{item.thinking}}"></chat-item>
+        </view>
+      </block>
+      <view id="bottom-anchor-{{anchorKey}}" class="chat-bottom-space"></view>
+    </view>
+  </scroll-view>
+
+  <view class="input-area">
+    <ai-input loading="{{loading}}" bind:send="onSendMessage" />
+  </view>
+
+  <view class="drawer-mask {{showHistoryDrawer ? 'show' : ''}}" bindtap="closeHistoryDrawer"></view>
+  <view class="history-drawer {{showHistoryDrawer ? 'open' : ''}}">
+    <view class="drawer-header">
+      <view class="drawer-title">历史对话</view>
+      <view class="drawer-close" bindtap="closeHistoryDrawer">×</view>
+    </view>
+    <view class="drawer-new" bindtap="onNewConversation">✚ 新建对话</view>
+    <scroll-view class="drawer-list" scroll-y>
+      <view wx:if="{{historyList.length === 0}}" class="drawer-empty">暂无历史会话</view>
+      <view
+        wx:for="{{historyList}}"
+        wx:key="conversationId"
+        class="drawer-item"
+        data-conversation-id="{{item.conversationId}}"
+        bindtap="onSelectHistory"
+      >
+        {{item.conversationTitle || '新会话'}}
+      </view>
+    </scroll-view>
+  </view>
+</view>

@@ -44,3 +44,11 @@ export const testModelChat = (data) => {
     data
   })
 }
+
+export const getTokenBillingLogPage = (params) => {
+  return request({
+    url: '/token-billing-logs',
+    method: 'get',
+    params
+  })
+}

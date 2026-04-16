@@ -12,7 +12,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/admin': {
-        target: 'http://127.0.0.1:8888',
+        target: 'http://127.0.0.1:8899',
         changeOrigin: true,
       },
     },

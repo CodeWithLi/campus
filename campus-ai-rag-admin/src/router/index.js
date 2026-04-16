@@ -26,6 +26,15 @@ const router = createRouter({
           }
         },
         {
+          path: '/token-billing-logs',
+          name: 'token-billing-logs',
+          component: () => import('@/views/token-billing-log/index.vue'),
+          meta: {
+            title: 'Token 消耗日志',
+            requiresAdmin: true
+          }
+        },
+        {
           path: '/prompts/system',
           name: 'system-prompts',
           component: () => import('@/views/prompt/index.vue'),
@@ -69,7 +78,16 @@ const router = createRouter({
             title: '知识库文档',
             requiresAdmin: true
           }
-        }
+        },
+        {
+          path: '/kb-rag-debug',
+          name: 'kb-rag-debug',
+          component: () => import('@/views/kb-rag-debug/index.vue'),
+          meta: {
+            title: 'RAG 调试',
+            requiresAdmin: true
+          }
+        },
       ]
     },
     {

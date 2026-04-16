@@ -15,6 +15,9 @@ public class WxChatDTO {
     @ApiModelProperty(value = "模型编码（ai_model_config.model_code，唯一）", example = "qwen_plus")
     private String modelCode;
 
+    @ApiModelProperty(value = "会话ID（不传则自动创建新会话）", example = "c_7f3a1c4b0a6f4d2e")
+    private String conversationId;
+
     /**
      * 用户输入内容。
      */

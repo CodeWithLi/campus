@@ -1,31 +1,52 @@
 .page {
   padding: 24rpx;
-  background: #f7f8fa;
+  background: #f5f7fa;
   min-height: 100vh;
   box-sizing: border-box;
 }
 
-.button-row {
-  display: flex;
-  gap: 16rpx;
-  margin: 20rpx 0;
+.hero-card {
+  border-radius: 20rpx;
+  padding: 30rpx;
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  color: #ffffff;
+  box-shadow: 0 12rpx 24rpx rgba(59, 130, 246, 0.2);
 }
 
-.result-card {
-  margin-top: 20rpx;
-  padding: 20rpx;
-  border-radius: 12rpx;
-  background: #ffffff;
-  box-shadow: 0 8rpx 24rpx rgba(59, 130, 246, 0.08);
-}
-
-.result-title {
-  font-size: 28rpx;
+.hero-title {
+  font-size: 36rpx;
   font-weight: 600;
-  margin-bottom: 12rpx;
 }
 
-.result-content {
+.hero-desc {
+  margin-top: 12rpx;
+  font-size: 24rpx;
+  opacity: 0.95;
+}
+
+.entry-card {
+  margin-top: 22rpx;
+  border-radius: 16rpx;
+  background: #ffffff;
+  padding: 24rpx;
+  box-shadow: 0 8rpx 20rpx rgba(15, 23, 42, 0.06);
+}
+
+.entry-title {
   color: #333333;
-  word-break: break-all;
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+.entry-desc {
+  margin-top: 10rpx;
+  color: #666666;
+  font-size: 24rpx;
+}
+
+.entry-btn {
+  margin-top: 16rpx;
+  color: #3b82f6;
+  font-size: 24rpx;
+  font-weight: 600;
 }

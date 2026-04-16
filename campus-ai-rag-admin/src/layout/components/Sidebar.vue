@@ -25,6 +25,10 @@
         <span class="menu-dot"></span>
         <span>模型配置</span>
       </el-menu-item>
+      <el-menu-item v-if="userStore.isAdmin" index="/token-billing-logs">
+        <span class="menu-dot"></span>
+        <span>Token 消耗日志</span>
+      </el-menu-item>
       <el-menu-item v-if="userStore.isAdmin" index="/wx-users">
         <span class="menu-dot"></span>
         <span>用户管理</span>
@@ -36,6 +40,10 @@
       <el-menu-item v-if="userStore.isAdmin" index="/kb-documents">
         <span class="menu-dot"></span>
         <span>知识库文档</span>
+      </el-menu-item>
+      <el-menu-item v-if="userStore.isAdmin" index="/kb-rag-debug">
+        <span class="menu-dot"></span>
+        <span>RAG 调试</span>
       </el-menu-item>
       <el-menu-item v-if="userStore.isSuperAdmin" index="/prompts/system">
         <span class="menu-dot"></span>

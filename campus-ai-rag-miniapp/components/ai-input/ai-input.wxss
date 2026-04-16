@@ -1,0 +1,61 @@
+.input-wrap {
+  display: flex;
+  gap: 12rpx;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1rpx solid #dbe7f5;
+  border-radius: 22rpx;
+  padding: 10rpx;
+  box-shadow: 0 10rpx 22rpx rgba(15, 23, 42, 0.06);
+  box-sizing: border-box;
+}
+
+.voice-btn {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30rpx;
+  background: linear-gradient(135deg, #eef4ff, #f7faff);
+  color: #4b5563;
+}
+
+.input-main {
+  flex: 1;
+  min-width: 0;
+  background: #f8fafc;
+  border-radius: 999rpx;
+  padding: 10rpx 18rpx;
+  border: 1rpx solid #edf2f7;
+  box-sizing: border-box;
+}
+
+.input-box {
+  width: 100%;
+  min-height: 46rpx;
+  max-height: 180rpx;
+  font-size: 26rpx;
+  color: #334155;
+  line-height: 1.5;
+}
+
+.send-btn {
+  flex-shrink: 0;
+  width: 72rpx;
+  height: 64rpx;
+  border-radius: 999rpx;
+  font-size: 22rpx;
+  padding: 0;
+  font-weight: 600;
+  color: #ffffff;
+  background: linear-gradient(135deg, #4f8dff, #5b5eea);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.send-btn-disabled {
+  opacity: 0.6;
+}

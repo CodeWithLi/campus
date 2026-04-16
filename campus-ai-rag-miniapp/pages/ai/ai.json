@@ -1,8 +1,3 @@
 {
-  "navigationBarTitleText": "AI助手",
-  "usingComponents": {
-    "van-field": "@vant/weapp/field/index",
-    "van-button": "@vant/weapp/button/index",
-    "van-cell-group": "@vant/weapp/cell-group/index"
-  }
+  "navigationBarTitleText": "AI"
 }

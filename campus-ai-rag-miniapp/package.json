@@ -1,5 +1,8 @@
 {
   "dependencies": {
-    "@vant/weapp": "^1.11.7"
+    "@vant/weapp": "^1.11.7",
+    "markdown-it": "^14.1.1",
+    "marked": "^18.0.0",
+    "towxml": "^3.0.6"
   }
 }

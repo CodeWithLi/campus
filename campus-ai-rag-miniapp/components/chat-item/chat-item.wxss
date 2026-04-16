@@ -1,0 +1,132 @@
+@import "../../towxml/towxml.wxss";
+
+.chat-row {
+  display: flex;
+  margin-bottom: 18rpx;
+}
+
+.chat-row.user {
+  justify-content: flex-end;
+}
+
+.chat-row.assistant {
+  justify-content: flex-start;
+}
+
+.bubble {
+  max-width: 78%;
+  border-radius: 18rpx;
+  padding: 18rpx 20rpx;
+  line-height: 1.55;
+  word-break: break-word;
+}
+
+.bubble-user {
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  color: #ffffff;
+}
+
+.bubble-ai {
+  background: #ffffff;
+  color: #333333;
+  border: 1rpx solid #e5e7eb;
+}
+
+.bubble-ai rich-text {
+  display: block;
+}
+
+.attach-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10rpx;
+  margin-bottom: 12rpx;
+}
+
+.attach-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 8rpx 12rpx;
+  border-radius: 999rpx;
+  background: rgba(59, 130, 246, 0.10);
+  border: 1rpx solid rgba(59, 130, 246, 0.25);
+}
+
+.attach-icon {
+  color: #3b82f6;
+  font-size: 24rpx;
+  line-height: 1;
+}
+
+.attach-title {
+  color: #1d4ed8;
+  font-size: 22rpx;
+  line-height: 1.2;
+  max-width: 320rpx;
+  word-break: break-all;
+}
+
+.chat-row.user .attach-chip {
+  background: rgba(255, 255, 255, 0.18);
+  border: 1rpx solid rgba(255, 255, 255, 0.32);
+}
+
+.chat-row.user .attach-icon {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.chat-row.user .attach-title {
+  color: rgba(255, 255, 255, 0.98);
+}
+
+.thinking-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.thinking-text {
+  color: #64748b;
+}
+
+.thinking-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 2rpx;
+}
+
+.dot {
+  color: #64748b;
+  font-size: 30rpx;
+  line-height: 1;
+  opacity: 0.25;
+  animation: thinkingDot 1.2s ease-in-out infinite;
+}
+
+.dot-2 {
+  animation-delay: 0.2s;
+}
+
+.dot-3 {
+  animation-delay: 0.4s;
+}
+
+@keyframes thinkingDot {
+  0% {
+    opacity: 0.25;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 0.95;
+    transform: translateY(-2rpx);
+  }
+  60% {
+    opacity: 0.4;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0.25;
+    transform: translateY(0);
+  }
+}

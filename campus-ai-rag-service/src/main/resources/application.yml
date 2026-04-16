@@ -1,5 +1,5 @@
 server:
-  port: 8888
+  port: 8899
 
 spring:
   datasource:
@@ -57,6 +57,13 @@ pg:
 app:
   ai:
     default-model-code: qwen_plus
+  wx:
+    chat:
+      conversation-ttl-days: 30
+      title-prompt: 你是标题生成器。请根据【用户首轮问题】与【助手首轮回答】生成一个5-10个字的中文标题，不要加引号，不要加标点，不要解释，只输出标题。
+      summary-prompt: 你是对话摘要助手。请把新增的多轮对话压缩成精炼的中文摘要，保留关键信息、条件、结论与待办。只输出摘要内容，不要解释。
+      max-history-rounds: 8
+      summary-compress-every: 15
 
 # 星火图片理解（用于文档内图片内容提取）
 xf:

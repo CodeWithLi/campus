@@ -1,0 +1,107 @@
+<view class="page">
+  <view class="bg-gradient"></view>
+
+  <view class="top-bar">
+    <view class="top-icon left-placeholder"></view>
+    <picker
+      mode="selector"
+      range="{{modelOptions}}"
+      range-key="modelName"
+      value="{{selectedModelIndex}}"
+      bindchange="onModelChange"
+    >
+      <view class="model-switch">
+        <text class="model-text">{{modelOptions[selectedModelIndex].modelName || selectedModelCode || '请选择模型'}}</text>
+        <text class="model-arrow"> ▾</text>
+      </view>
+    </picker>
+    <view class="top-icon left-placeholder"></view>
+  </view>
+
+  <scroll-view
+    class="chat-scroll"
+    scroll-y
+    scroll-with-animation
+    scroll-into-view="{{scrollIntoView}}"
+    scroll-top="{{scrollTop}}"
+  >
+    <view class="chat-content">
+      <view wx:if="{{chatList.length === 0}}" class="empty-card">
+        <view class="empty-badge">RAG ASSISTANT</view>
+        <view class="empty-title">把资料丢给我</view>
+        <view class="empty-desc">上传你的文档后，我会基于你的内容回答问题，并附上参考资料。</view>
+
+        <view class="suggestion-row">
+          <view class="suggestion-chip" bindtap="onQuickAsk" data-text="我上传的文档里有哪些关键结论？">关键结论</view>
+          <view class="suggestion-chip" bindtap="onQuickAsk" data-text="帮我把文档内容整理成要点清单。">要点清单</view>
+          <view class="suggestion-chip" bindtap="onQuickAsk" data-text="从头到尾解释这份文档我该怎么做？">行动指南</view>
+        </view>
+      </view>
+
+      <view wx:if="{{chatList.length === 0}}" class="guide-grid">
+        <view class="guide-card" bindtap="onQuickAsk" data-text="上传课程资料后，帮我总结重点和易错点。">
+          <view class="guide-title">课程总结</view>
+          <view class="guide-desc">重点 / 易错点 / 复习顺序</view>
+        </view>
+        <view class="guide-card" bindtap="onQuickAsk" data-text="根据我上传的材料，给我写一份可直接提交的文书草稿。">
+          <view class="guide-title">文书草稿</view>
+          <view class="guide-desc">结构 / 用词 / 可提交版本</view>
+        </view>
+        <view class="guide-card" bindtap="onQuickAsk" data-text="把我上传的通知变成清单：我需要做什么？">
+          <view class="guide-title">通知解读</view>
+          <view class="guide-desc">流程 / 时间点 / 待办</view>
+        </view>
+      </view>
+
+      <view wx:if="{{chatList.length === 0}}" class="ambient-block">
+        <view class="ambient-orb ambient-orb-a"></view>
+        <view class="ambient-orb ambient-orb-b"></view>
+      </view>
+
+      <block wx:for="{{chatList}}" wx:key="id">
+        <view id="msg-{{item.id}}">
+          <chat-item
+            role="{{item.role}}"
+            content="{{item.content}}"
+            thinking="{{item.thinking}}"
+            attachments="{{item.attachments}}"
+          ></chat-item>
+        </view>
+      </block>
+
+      <view id="bottom-anchor-{{anchorKey}}" class="chat-bottom-space"></view>
+    </view>
+  </scroll-view>
+
+  <view class="input-area">
+    <view class="upload-toolbar">
+      <view class="upload-btn {{uploading ? 'upload-btn-disabled' : ''}}" bindtap="goUpload">
+        <text class="upload-icon">📎</text>
+        <text class="upload-text">{{uploading ? '上传中' : '上传文档'}}</text>
+      </view>
+    </view>
+
+    <view wx:if="{{docs.length > 0 && showDocSheet}}" class="doc-sheet">
+      <view class="doc-sheet-card">
+        <view class="doc-sheet-left">
+          <text class="doc-sheet-file-icon">📄</text>
+          <text class="doc-sheet-file-title">{{docs[0].title}}</text>
+        </view>
+        <view class="doc-sheet-close" bindtap="onRemoveDoc">×</view>
+      </view>
+      <view class="doc-sheet-actions">
+        <view class="doc-sheet-ok" bindtap="onConfirmDocSheet">你妥了</view>
+      </view>
+    </view>
+
+    <view wx:if="{{docs.length > 0 && !showDocSheet}}" class="doc-chip-row">
+      <view class="doc-chip">
+        <text class="doc-chip-icon">📄</text>
+        <text class="doc-chip-title">{{docs[0].title}}</text>
+        <view class="doc-chip-close" bindtap="onRemoveDoc">×</view>
+      </view>
+    </view>
+
+    <ai-input loading="{{loading}}" bind:send="onSendMessage" />
+  </view>
+</view>

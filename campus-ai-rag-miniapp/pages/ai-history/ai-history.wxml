@@ -1,0 +1,17 @@
+<view class="page">
+  <view class="new-chat" bindtap="onNewConversation">✚ 新建对话</view>
+
+  <view wx:if="{{historyList.length === 0}}" class="empty">
+    暂无历史会话，去 AI 对话提一个问题吧。
+  </view>
+
+  <view
+    wx:for="{{historyList}}"
+    wx:key="conversationId"
+    class="history-card"
+    data-conversation-id="{{item.conversationId}}"
+    bindtap="onOpenConversation"
+  >
+    <view class="history-title">{{item.conversationTitle || '新会话'}}</view>
+  </view>
+</view>

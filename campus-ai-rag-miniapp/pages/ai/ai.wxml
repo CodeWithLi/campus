@@ -1,45 +1,18 @@
 <view class="page">
-  <van-cell-group title="微信端注册">
-    <van-field value="{{email}}" data-key="email" label="邮箱" placeholder="请输入邮箱" bind:change="onFieldChange" />
-    <van-field value="{{emailCode}}" data-key="emailCode" label="验证码" placeholder="请输入验证码" bind:change="onFieldChange" />
-    <van-field value="{{username}}" data-key="username" label="用户名" placeholder="请输入用户名" bind:change="onFieldChange" />
-    <van-field value="{{password}}" data-key="password" label="密码" password placeholder="请输入密码" bind:change="onFieldChange" />
-  </van-cell-group>
-
-  <view class="button-row">
-    <van-button type="primary" size="small" bindtap="onSendEmailCode">发送验证码</van-button>
-    <van-button type="info" size="small" bindtap="onRegister">注册并登录</van-button>
-    <van-button type="danger" size="small" bindtap="onLogout">退出</van-button>
+  <view class="hero-card">
+    <view class="hero-title">AI 工作台</view>
+    <view class="hero-desc">先完成对话功能，RAG 入口已预留。</view>
   </view>
 
-  <van-cell-group title="模型与对话">
-    <van-field
-      value="{{selectedModelCode}}"
-      data-key="selectedModelCode"
-      label="模型编码"
-      placeholder="例如 qwen_plus"
-      bind:change="onModelChange"
-    />
-    <van-field
-      value="{{message}}"
-      data-key="message"
-      label="提问内容"
-      placeholder="请输入问题"
-      bind:change="onFieldChange"
-    />
-  </van-cell-group>
-
-  <view class="button-row">
-    <van-button type="primary" block bindtap="onSendMessage">发送消息</van-button>
-  </view>
-
-  <view class="result-card">
-    <view class="result-title">登录Token</view>
-    <view class="result-content">{{token || '未登录'}}</view>
-  </view>
-
-  <view class="result-card">
-    <view class="result-title">AI回答</view>
-    <view class="result-content">{{answer || '暂无回答'}}</view>
+  <view
+    class="entry-card"
+    wx:for="{{entries}}"
+    wx:key="key"
+    data-action="{{item.action}}"
+    bindtap="onEntryTap"
+  >
+    <view class="entry-title">{{item.title}}</view>
+    <view class="entry-desc">{{item.desc}}</view>
+    <view class="entry-btn">进入</view>
   </view>
 </view>
