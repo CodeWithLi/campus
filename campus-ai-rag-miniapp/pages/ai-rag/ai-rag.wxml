@@ -15,7 +15,7 @@
         <text class="model-arrow"> ▾</text>
       </view>
     </picker>
-    <view class="top-icon left-placeholder"></view>
+    <view class="top-icon history-icon" bindtap="goHistory">☰</view>
   </view>
 
   <scroll-view
@@ -95,13 +95,36 @@
     </view>
 
     <view wx:if="{{docs.length > 0 && !showDocSheet}}" class="doc-chip-row">
-      <view class="doc-chip">
-        <text class="doc-chip-icon">📄</text>
-        <text class="doc-chip-title">{{docs[0].title}}</text>
-        <view class="doc-chip-close" bindtap="onRemoveDoc">×</view>
-      </view>
+      <block wx:for="{{docs}}" wx:key="id">
+        <view class="doc-chip">
+          <text class="doc-chip-icon">📄</text>
+          <text class="doc-chip-title">{{item.title}}</text>
+          <view class="doc-chip-close" bindtap="onRemoveDoc">×</view>
+        </view>
+      </block>
     </view>
 
     <ai-input loading="{{loading}}" bind:send="onSendMessage" />
+  </view>
+
+  <view class="drawer-mask {{showHistoryDrawer ? 'show' : ''}}" bindtap="closeHistoryDrawer"></view>
+  <view class="history-drawer {{showHistoryDrawer ? 'open' : ''}}">
+    <view class="drawer-header">
+      <view class="drawer-title">历史对话</view>
+      <view class="drawer-close" bindtap="closeHistoryDrawer">×</view>
+    </view>
+    <view class="drawer-new" bindtap="onNewConversation">✚ 新建对话</view>
+    <scroll-view class="drawer-list" scroll-y>
+      <view wx:if="{{historyList.length === 0}}" class="drawer-empty">暂无历史会话</view>
+      <view
+        wx:for="{{historyList}}"
+        wx:key="conversationId"
+        class="drawer-item"
+        data-conversation-id="{{item.conversationId}}"
+        bindtap="onSelectHistory"
+      >
+        {{item.conversationTitle || '新会话'}}
+      </view>
+    </scroll-view>
   </view>
 </view>

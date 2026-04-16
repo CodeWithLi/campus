@@ -1,5 +1,5 @@
 import { listEnabledModelsApi } from '../../api/model'
-import { ragApi } from '../../api/rag'
+import { ragApi, listRagConversationsApi, getRagConversationHistoryApi } from '../../api/rag'
 import { getStorage, setStorage } from '../../utils/storage'
 import { showError } from '../../utils/ui'
 
@@ -30,12 +30,19 @@ Page({
     conversationId: '',
     conversationTitle: '',
 
+    showHistoryDrawer: false,
+    historyList: [],
+
     // RAG local history (optional UI parity)
-    historyList: []
   },
 
-  async onLoad() {
+  async onLoad(options = {}) {
+    const conversationId = options?.conversationId || ''
+    this.setData({ conversationId })
     await this.loadModels()
+    if (conversationId) {
+      await this.restoreConversation(conversationId)
+    }
   },
 
   async loadModels() {
@@ -65,6 +72,59 @@ Page({
   onQuickAsk(event) {
     const message = event.currentTarget.dataset.text || ''
     this.sendRag(message)
+  },
+
+  async goHistory() {
+    this.setData({ showHistoryDrawer: true })
+    await this.loadConversationList()
+  },
+
+  closeHistoryDrawer() {
+    this.setData({ showHistoryDrawer: false })
+  },
+
+  async loadConversationList() {
+    try {
+      const response = await listRagConversationsApi()
+      const list = response?.data?.data || response?.data || response || []
+      this.setData({ historyList: list })
+    } catch (error) {
+      this.setData({ historyList: [] })
+      showError(error.message || '历史会话加载失败')
+    }
+  },
+
+  async onSelectHistory(event) {
+    const { conversationId } = event.currentTarget.dataset
+    if (!conversationId || this.data.loading) return
+    this.closeHistoryDrawer()
+    this.setData({
+      conversationId,
+      conversationTitle: '',
+      chatList: [],
+      docs: [],
+      showDocSheet: false,
+      loading: false,
+      anchorKey: 0,
+      scrollIntoView: '',
+      scrollTop: 0
+    })
+    await this.restoreConversation(conversationId)
+  },
+
+  onNewConversation() {
+    this.closeHistoryDrawer()
+    this.setData({
+      conversationId: '',
+      conversationTitle: '',
+      chatList: [],
+      docs: [],
+      showDocSheet: false,
+      loading: false,
+      anchorKey: 0,
+      scrollIntoView: '',
+      scrollTop: 0
+    })
   },
 
   goUpload() {
@@ -203,7 +263,6 @@ Page({
       {
         chatList,
         loading: true,
-        docs: [],
         showDocSheet: false
       },
       () => {
@@ -293,6 +352,55 @@ Page({
       anchorKey: nextAnchorKey,
       scrollTop: nextScrollTop
     })
+  },
+
+  async restoreConversation(conversationId) {
+    if (!conversationId) return
+    try {
+      const response = await getRagConversationHistoryApi(conversationId)
+      const detail = response?.data?.data || response?.data || response || {}
+
+      const rawMessages = Array.isArray(detail?.messages) ? detail.messages : []
+      const rawFiles = Array.isArray(detail?.files) ? detail.files : []
+
+      const messages = rawMessages.map((item) => ({
+        id: buildId('h'),
+        role: String(item?.role || '').toLowerCase() === 'user' ? 'user' : 'assistant',
+        content: item?.content || '',
+        thinking: false,
+        attachments: [],
+        createdAt: Date.now()
+      }))
+
+      const docs = rawFiles.map((f) => ({
+        id: f?.documentId,
+        title: f?.title || f?.originalFileName || '',
+        originalFileName: f?.originalFileName || '',
+        fileExt: f?.fileExt || ''
+      }))
+
+      this.setData(
+        {
+          conversationId,
+          conversationTitle: detail?.conversationTitle || '',
+          chatList: messages,
+          docs,
+          showDocSheet: false,
+          loading: false,
+          anchorKey: 0,
+          scrollIntoView: '',
+          scrollTop: 0
+        },
+        () => {
+          if (messages.length) {
+            this.scrollToBottom()
+          }
+        }
+      )
+    } catch (error) {
+      this.setData({ chatList: [], docs: [], loading: false })
+      showError(error?.message || '会话恢复失败')
+    }
   },
 
   persistLocalHistory() {
