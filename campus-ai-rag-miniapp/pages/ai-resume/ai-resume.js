@@ -56,7 +56,7 @@ Page({
 
   onUnload() {
     this.stopRealtimeSocket()
-    if (this.recorderManager) {
+    if (this.recorderManager && this.data.recording) {
       try {
         this.recorderManager.stop()
       } catch (e) {
@@ -217,6 +217,10 @@ Page({
   },
 
   stopRealtimeRecord() {
+    if (!this.data.recording) {
+      this.setData({ recording: false, voiceLoading: false })
+      return
+    }
     try {
       this.setData({ recording: false, voiceLoading: true })
       if (this.speechSocketTask) {
