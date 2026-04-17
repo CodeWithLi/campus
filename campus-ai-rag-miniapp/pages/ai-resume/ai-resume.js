@@ -8,6 +8,8 @@ import { listEnabledModelsApi } from '../../api/model'
 import { showError } from '../../utils/ui'
 
 const buildId = (prefix) => `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+const BASE_URL = 'https://admin.baomi-ai.com/campus'
+const REALTIME_PATH = '/ws/wx/speech/realtime'
 
 Page({
   data: {
@@ -15,6 +17,9 @@ Page({
     selectedModelCode: '',
     selectedModelIndex: 0,
     loading: false,
+    recording: false,
+    voiceLoading: false,
+    liveSpeechText: '',
     chatList: [],
     conversationId: '',
     conversationTitle: '',
@@ -38,8 +43,26 @@ Page({
     ]
   },
 
+  recorderManager: null,
+  recordingStartAt: 0,
+  speechSocketTask: null,
+  speechSocketOpened: false,
+  realtimeFinalText: '',
+
   async onLoad() {
+    this.initRecorder()
     await this.loadModels()
+  },
+
+  onUnload() {
+    this.stopRealtimeSocket()
+    if (this.recorderManager) {
+      try {
+        this.recorderManager.stop()
+      } catch (e) {
+        // ignore
+      }
+    }
   },
 
   async loadModels() {
@@ -74,6 +97,19 @@ Page({
   onSendQuickQuestion(event) {
     const message = String(event.currentTarget.dataset?.question || '').trim()
     this.sendMessage(message)
+  },
+
+  onVoiceTap() {
+    if (this.data.recording) {
+      this.stopRealtimeRecord()
+      return
+    }
+    if (this.data.loading || this.data.voiceLoading) return
+    if (!this.recorderManager) {
+      showError('当前设备不支持录音')
+      return
+    }
+    this.startRecord()
   },
 
   async sendMessage(message) {
@@ -121,6 +157,164 @@ Page({
 
   onJobDirectionInput(e) {
     this.setData({ jobDirection: e.detail?.value || '' })
+  },
+
+  initRecorder() {
+    if (!wx.getRecorderManager) return
+    const recorderManager = wx.getRecorderManager()
+    this.recorderManager = recorderManager
+
+    recorderManager.onStop(() => {
+      const duration = Date.now() - (this.recordingStartAt || 0)
+      this.setData({ recording: false })
+      if (duration < 600) {
+        this.stopRealtimeSocket()
+        showError('录音时间太短')
+        return
+      }
+      this.finishRealtimeTranscribe()
+    })
+
+    recorderManager.onError((error) => {
+      this.setData({ recording: false, voiceLoading: false, liveSpeechText: '' })
+      this.stopRealtimeSocket()
+      showError(error?.errMsg || '录音失败')
+    })
+
+    recorderManager.onFrameRecorded((res) => {
+      const frameBuffer = res?.frameBuffer
+      if (!frameBuffer || !this.speechSocketTask) return
+      try {
+        this.speechSocketTask.send({ data: frameBuffer })
+      } catch (e) {
+        // ignore
+      }
+    })
+  },
+
+  startRecord() {
+    wx.authorize({
+      scope: 'scope.record',
+      success: async () => {
+        const connected = await this.openRealtimeSocket()
+        if (!connected) return
+        this.recordingStartAt = Date.now()
+        this.realtimeFinalText = ''
+        this.setData({ recording: true, voiceLoading: true, liveSpeechText: '' })
+        this.recorderManager.start({
+          duration: 60000,
+          sampleRate: 16000,
+          numberOfChannels: 1,
+          encodeBitRate: 48000,
+          format: 'PCM',
+          frameSize: 1
+        })
+      },
+      fail: () => {
+        showError('请先开启麦克风权限')
+      }
+    })
+  },
+
+  stopRealtimeRecord() {
+    try {
+      this.setData({ recording: false, voiceLoading: true })
+      if (this.speechSocketTask) {
+        this.speechSocketTask.send({ data: JSON.stringify({ action: 'end' }) })
+      }
+      this.recorderManager.stop()
+    } catch (e) {
+      this.setData({ recording: false, voiceLoading: false })
+      this.stopRealtimeSocket()
+      showError('结束录音失败')
+    }
+  },
+
+  finishRealtimeTranscribe() {
+    setTimeout(() => {
+      const text = (this.realtimeFinalText || this.data.liveSpeechText || '').trim()
+      this.setData({ voiceLoading: false })
+      this.stopRealtimeSocket()
+      if (!text) {
+        showError('未识别到语音内容')
+        return
+      }
+      this.sendMessage(text)
+    }, 500)
+  },
+
+  openRealtimeSocket() {
+    return new Promise((resolve) => {
+      const wsUrl = `${BASE_URL.replace(/^https/, 'wss').replace(/^http/, 'ws')}${REALTIME_PATH}`
+      const socketTask = wx.connectSocket({ url: wsUrl, timeout: 10000 })
+      this.speechSocketTask = socketTask
+
+      let settled = false
+      const done = (ok) => {
+        if (settled) return
+        settled = true
+        resolve(ok)
+      }
+
+      socketTask.onOpen(() => {
+        this.speechSocketOpened = true
+        socketTask.send({
+          data: JSON.stringify({
+            action: 'start',
+            lang: 'autodialect'
+          })
+        })
+        done(true)
+      })
+
+      socketTask.onMessage((res) => {
+        try {
+          const msg = JSON.parse(res?.data || '{}')
+          if (msg.event === 'transcript') {
+            const fullText = msg.fullText || msg.text || ''
+            this.realtimeFinalText = fullText
+            this.setData({ liveSpeechText: fullText })
+            return
+          }
+          if (msg.event === 'completed') {
+            const finalText = (msg.finalText || this.realtimeFinalText || '').trim()
+            this.realtimeFinalText = finalText
+            this.setData({ liveSpeechText: finalText })
+            return
+          }
+          if (msg.event === 'error') {
+            showError(msg.message || '实时转写失败')
+          }
+        } catch (e) {
+          // ignore
+        }
+      })
+
+      socketTask.onError(() => {
+        done(false)
+        this.speechSocketTask = null
+        this.speechSocketOpened = false
+        this.setData({ recording: false, voiceLoading: false })
+        showError('实时转写连接失败')
+      })
+
+      socketTask.onClose(() => {
+        this.speechSocketTask = null
+        this.speechSocketOpened = false
+      })
+    })
+  },
+
+  stopRealtimeSocket() {
+    try {
+      if (this.speechSocketTask && this.speechSocketOpened) {
+        this.speechSocketTask.close({ code: 1000, reason: 'normal close' })
+      }
+    } catch (e) {
+      // ignore
+    }
+    this.speechSocketTask = null
+    this.speechSocketOpened = false
   },
 
   onFillFromLastAssistant() {

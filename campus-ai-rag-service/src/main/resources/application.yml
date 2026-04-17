@@ -24,6 +24,21 @@ spring:
       password: 0127ff2faeb99838
       database: 10
       timeout: 5s
+  mail:
+    host: smtp.163.com
+    port: 465
+    username: 17708216145@163.com
+    password: TNYrcvenwGg7LcAf
+    protocol: smtp
+    properties:
+      mail:
+        smtp:
+          auth: true
+          ssl:
+            enable: true
+            trust: smtp.163.com
+            checkserveridentity: false
+            protocols: TLSv1.2
   ai:
     openai:
       api-key: sk-01e2d69852854c8584ee673ed9d96ce9
@@ -72,6 +87,17 @@ app:
 
 # 星火图片理解（用于文档内图片内容提取）
 xf:
+  # 实时语音转写大模型配置：
+  # signature = base64(hmacSha1(sorted&urlencoded params, api-secret))
+  rtasr:
+    url: wss://office-api-ast-dx.iflyaisol.com/ast/communicate/v1
+    app-id: 6346119f
+    api-key: caba4cc5c2e634ec94313d2f2c8d0c16
+    api-secret: ZTgzYmRjMjg2MmY3OWViODMwMzIyNDdj
+    lang: autodialect
+    audio-encode: pcm_s16le
+    samplerate: 16000
+    role-type: 0
   image:
     app-id: 6346119f
     api-key: caba4cc5c2e634ec94313d2f2c8d0c16
@@ -87,6 +113,16 @@ xf:
     app-id: 6346119f
     api-key: caba4cc5c2e634ec94313d2f2c8d0c16
     api-secret: ZTgzYmRjMjg2MmY3OWViODMwMzIyNDdj
+  fast-asr:
+    # 极速语音转写服务 URL（按你的“极速语音转写”文档填写）
+    url:
+    # 如供应商需要 Bearer 鉴权，可填写该 key
+    api-key: caba4cc5c2e634ec94313d2f2c8d0c16
+    # 部分讯飞接口要求 app_id
+    app-id: 6346119f
+    # 讯飞签名鉴权会用到（非空时启用签名 query）
+    api-secret: ZTgzYmRjMjg2MmY3OWViODMwMzIyNDdj
+    timeout-seconds: 60
 
 springdoc:
   swagger-ui:

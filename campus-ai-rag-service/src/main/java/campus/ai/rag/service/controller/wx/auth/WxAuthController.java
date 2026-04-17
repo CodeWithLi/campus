@@ -33,7 +33,7 @@ public class WxAuthController {
     }
 
     @PostMapping("/email-code")
-    @ApiOperation(value = "获取邮箱验证码", notes = "当前阶段直接返回6位验证码并写入Redis，后续可对接真实邮件发送")
+    @ApiOperation(value = "获取邮箱验证码", notes = "发送6位验证码到邮箱并写入Redis，注册时进行校验")
     @ApiImplicitParam(name = "dto", value = "获取邮箱验证码参数", required = true, dataType = "WxEmailCodeDTO", paramType = "body")
     @Operation(summary = "获取邮箱验证码")
     public Result<WxEmailCodeVO> sendEmailCode(@RequestBody WxEmailCodeDTO dto) {

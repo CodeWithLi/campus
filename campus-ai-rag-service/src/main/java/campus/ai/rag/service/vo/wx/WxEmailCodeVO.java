@@ -11,8 +11,8 @@ public class WxEmailCodeVO {
     @ApiModelProperty(value = "邮箱", example = "test@example.com")
     private String email;
 
-    @ApiModelProperty(value = "验证码（当前阶段用于联调，后续可移除）", example = "A1B2C3")
-    private String code;
+    @ApiModelProperty(value = "发送结果提示", example = "验证码发送成功，请注意查收邮箱")
+    private String message;
 
     @ApiModelProperty(value = "有效期（秒）", example = "300")
     private long expireSeconds;

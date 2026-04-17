@@ -484,6 +484,16 @@
   box-sizing: border-box;
 }
 
+.voice-tip {
+  margin-top: 10rpx;
+  padding: 10rpx 14rpx;
+  border-radius: 12rpx;
+  background: #edf4ff;
+  border: 1rpx solid #dbeafe;
+  color: #3b82f6;
+  font-size: 22rpx;
+}
+
 .drawer-mask {
   position: fixed;
   inset: 0;

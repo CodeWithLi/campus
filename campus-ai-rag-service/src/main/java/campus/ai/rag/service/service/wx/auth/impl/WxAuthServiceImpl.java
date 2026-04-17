@@ -15,16 +15,21 @@ import campus.ai.rag.service.service.wx.auth.strategy.WxLoginTokenIssuer;
 import campus.ai.rag.service.utils.ApiService;
 import campus.ai.rag.service.vo.admin.AdminLoginVO;
 import campus.ai.rag.service.vo.wx.WxEmailCodeVO;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -37,6 +42,7 @@ public class WxAuthServiceImpl implements WxAuthService {
     private static final String PROVIDER_WECHAT = "WECHAT";
     private static final String EMAIL_CODE_BIZ_REGISTER = "REGISTER";
     private static final Duration EMAIL_CODE_TTL = Duration.ofMinutes(5);
+    private static final Duration EMAIL_CODE_SEND_INTERVAL = Duration.ofSeconds(60);
 
     private final WxUserMapper wxUserMapper;
     private final WxUserAuthMapper wxUserAuthMapper;
@@ -44,7 +50,9 @@ public class WxAuthServiceImpl implements WxAuthService {
     private final RedisTemplate<String, Object> redisTemplate;
     private final ApiService apiService;
     private final WxLoginTokenIssuer wxLoginTokenIssuer;
+    private final JavaMailSender javaMailSender;
     private final Map<String, WxLoginStrategy> loginStrategyMap;
+    private final String mailFrom;
 
     public WxAuthServiceImpl(WxUserMapper wxUserMapper,
                              WxUserAuthMapper wxUserAuthMapper,
@@ -52,6 +60,8 @@ public class WxAuthServiceImpl implements WxAuthService {
                              RedisTemplate<String, Object> redisTemplate,
                              ApiService apiService,
                              WxLoginTokenIssuer wxLoginTokenIssuer,
+                             JavaMailSender javaMailSender,
+                             @Value("${spring.mail.username}") String mailFrom,
                              List<WxLoginStrategy> loginStrategies) {
         this.wxUserMapper = wxUserMapper;
         this.wxUserAuthMapper = wxUserAuthMapper;
@@ -59,6 +69,8 @@ public class WxAuthServiceImpl implements WxAuthService {
         this.redisTemplate = redisTemplate;
         this.apiService = apiService;
         this.wxLoginTokenIssuer = wxLoginTokenIssuer;
+        this.javaMailSender = javaMailSender;
+        this.mailFrom = mailFrom;
         this.loginStrategyMap = loginStrategies.stream()
                 .collect(Collectors.toMap(strategy -> strategy.supportType().toUpperCase(Locale.ROOT), Function.identity()));
     }
@@ -70,13 +82,19 @@ public class WxAuthServiceImpl implements WxAuthService {
         }
         String email = dto.getEmail().trim().toLowerCase();
         validateEmailFormat(email);
-        String code = UUID.randomUUID().toString().replace("-", "").substring(0, 6).toUpperCase();
+        String frequencyKey = buildEmailCodeSendFrequencyKey(email);
+        if (Boolean.TRUE.equals(redisTemplate.hasKey(frequencyKey))) {
+            throw new BusinessException(StatusCodeEnum.TOO_MANY_REQUESTS, "验证码发送过于频繁，请稍后再试");
+        }
+        String code = generateNumericCode();
+        sendRegisterEmailCode(email, code);
         redisTemplate.opsForValue().set(buildEmailCodeKey(email), code, EMAIL_CODE_TTL);
+        redisTemplate.opsForValue().set(frequencyKey, "1", EMAIL_CODE_SEND_INTERVAL);
 
         WxEmailCodeVO vo = new WxEmailCodeVO();
         vo.setEmail(email);
-        vo.setCode(code);
         vo.setExpireSeconds(EMAIL_CODE_TTL.toSeconds());
+        vo.setMessage("验证码发送成功，请注意查收邮箱");
         return vo;
     }
 
@@ -202,6 +220,31 @@ public class WxAuthServiceImpl implements WxAuthService {
 
     private String buildEmailCodeKey(String email) {
         return "campus:email:code:" + EMAIL_CODE_BIZ_REGISTER + ":" + email;
+    }
+
+    private String buildEmailCodeSendFrequencyKey(String email) {
+        return "campus:email:send:limit:" + EMAIL_CODE_BIZ_REGISTER + ":" + email;
+    }
+
+    private String generateNumericCode() {
+        int code = ThreadLocalRandom.current().nextInt(100000, 1000000);
+        return String.valueOf(code);
+    }
+
+    private void sendRegisterEmailCode(String email, String code) {
+        MimeMessage mimeMessage = javaMailSender.createMimeMessage();
+        try {
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, false, "UTF-8");
+            helper.setFrom(mailFrom);
+            helper.setTo(email);
+            helper.setSubject("校园AI助手 - 注册验证码");
+            helper.setText("您的注册验证码是：" + code + "，5分钟内有效。若非本人操作请忽略本邮件。", false);
+            javaMailSender.send(mimeMessage);
+        } catch (MessagingException ex) {
+            throw new BusinessException(StatusCodeEnum.BUSINESS_ERROR, "验证码邮件发送失败：" + ex.getMessage());
+        } catch (Exception ex) {
+            throw new BusinessException(StatusCodeEnum.BUSINESS_ERROR, "邮件服务异常，请稍后重试");
+        }
     }
 
     private void validateEmailFormat(String email) {
