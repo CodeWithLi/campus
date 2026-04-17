@@ -11,7 +11,7 @@ public class AiSystemPromptUpdateDTO {
     @ApiModelProperty(value = "提示词名称（后台展示）", example = "系统提示词-对话默认")
     private String promptName;
 
-    @ApiModelProperty(value = "适用场景：CHAT/RAG/BOTH", example = "CHAT")
+    @ApiModelProperty(value = "适用场景：CHAT/RAG/RESUME/BOTH", example = "CHAT")
     private String scene;
 
     @ApiModelProperty(value = "提示词正文（system role）", example = "你是校园智能助理...")

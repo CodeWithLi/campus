@@ -34,8 +34,10 @@ public class WxJwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        String uri = request.getRequestURI();
-        return !uri.startsWith("/wx/") || uri.startsWith("/wx/auth/login");
+        // 注意：应用配置了 context-path=/campus，getRequestURI() 会包含 /campus 前缀
+        // 这里使用 servletPath（不含 context-path），避免过滤器因为前缀导致完全不生效
+        String path = request.getServletPath();
+        return !path.startsWith("/wx/") || path.startsWith("/wx/auth/login");
     }
 
     @Override

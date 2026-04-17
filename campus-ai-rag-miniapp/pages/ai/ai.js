@@ -12,6 +12,12 @@ Page({
         title: 'RAG 问答',
         desc: '基于校园知识库的精准问答（即将接入）',
         action: 'go-rag'
+      },
+      {
+        key: 'resume',
+        title: '简历生成',
+        desc: '简历对话完善 + 星火简历生成链接',
+        action: 'go-resume'
       }
     ]
   },
@@ -24,6 +30,10 @@ Page({
     }
     if (action === 'go-rag') {
       wx.navigateTo({ url: '/pages/ai-rag/ai-rag' })
+      return
+    }
+    if (action === 'go-resume') {
+      wx.navigateTo({ url: '/pages/ai-resume/ai-resume' })
     }
   },
 

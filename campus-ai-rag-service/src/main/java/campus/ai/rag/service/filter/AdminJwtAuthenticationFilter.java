@@ -36,8 +36,10 @@ public class AdminJwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        String uri = request.getRequestURI();
-        return !uri.startsWith("/admin/") || uri.startsWith("/admin/auth/login");
+        // 注意：应用配置了 context-path=/campus，getRequestURI() 会包含 /campus 前缀
+        // Spring Security 的路径匹配通常基于 servletPath（不含 context-path），这里也用 servletPath 保持一致
+        String path = request.getServletPath();
+        return !path.startsWith("/admin/") || path.startsWith("/admin/auth/login");
     }
 
     @Override

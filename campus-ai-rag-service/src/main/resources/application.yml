@@ -1,12 +1,16 @@
 server:
-  port: 8899
+  port: 19832
+  address: 0.0.0.0
+  servlet:
+    context-path: /campus
 
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://127.0.0.1:3306/campus_ai_rag?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://127.0.0.1:3062/campus_ai_rag?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: root
-    password: xiaoli2004@
+#    password: xiaoli2004@
+    password: qwe123
 
   servlet:
     multipart:
@@ -50,7 +54,8 @@ wx:
 pg:
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://127.0.0.1:5433/campus_ai_rag_vector
+#    url: jdbc:postgresql://127.0.0.1:5433/campus_ai_rag_vector
+    url: jdbc:postgresql://127.0.0.1:5432/campus_ai_rag_vector
     username: postgres
     password: postgres
 
@@ -77,6 +82,11 @@ xf:
     prompt: 请尽可能完整提取图片中的文字内容，如果有表格请用markdown表格输出，并补充关键图示说明。
     connect-timeout-seconds: 20
     await-timeout-seconds: 90
+  resume:
+    url: https://cn-huadong-1.xf-yun.com/v1/private/s73f4add9
+    app-id: 6346119f
+    api-key: caba4cc5c2e634ec94313d2f2c8d0c16
+    api-secret: ZTgzYmRjMjg2MmY3OWViODMwMzIyNDdj
 
 springdoc:
   swagger-ui:

@@ -3,7 +3,7 @@
     <div class="toolbar-card">
       <div class="toolbar-left">
         <h2 class="toolbar-title">系统提示词管理</h2>
-        <p class="toolbar-desc">对齐后端 /admin/prompts/system，仅 SUPER_ADMIN 可访问，支持 CHAT / RAG / BOTH 场景</p>
+        <p class="toolbar-desc">对齐后端 /admin/prompts/system，仅 SUPER_ADMIN 可访问，支持 CHAT / RAG / RESUME / BOTH 场景</p>
       </div>
       <el-button type="primary" @click="openCreateDialog">新增系统提示词</el-button>
     </div>
@@ -84,6 +84,7 @@
               <el-select v-model="formData.scene" class="full-width">
                 <el-option label="CHAT" value="CHAT" />
                 <el-option label="RAG" value="RAG" />
+                <el-option label="RESUME" value="RESUME" />
                 <el-option label="BOTH" value="BOTH" />
               </el-select>
             </el-form-item>
@@ -210,6 +211,7 @@ const resetFormData = () => {
 const getSceneTag = (scene) => {
   if (scene === 'CHAT') return 'success'
   if (scene === 'RAG') return 'warning'
+  if (scene === 'RESUME') return 'danger'
   if (scene === 'BOTH') return 'primary'
   return 'info'
 }

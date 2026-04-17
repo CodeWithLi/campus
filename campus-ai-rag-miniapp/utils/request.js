@@ -1,6 +1,7 @@
 import { getStorage, removeStorage } from './storage'
 
-const BASE_URL = 'http://10.0.4.168:8899'
+const BASE_URL = 'https://admin.baomi-ai.com/campus'
+// const BASE_URL = 'http://10.0.4.168:8899'
 const TOKEN_KEY = 'TOKEN'
 const USER_INFO_KEY = 'USER_INFO'
 const LOGIN_STATUS_KEY = 'LOGIN_STATUS'

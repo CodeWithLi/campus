@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 @Service
 public class AdminSystemPromptServiceImpl implements AdminSystemPromptService {
 
-    private static final Set<String> SUPPORTED_SCENES = Set.of("CHAT", "RAG", "BOTH");
+    private static final Set<String> SUPPORTED_SCENES = Set.of("CHAT", "RAG", "RESUME", "BOTH");
 
     private final AiSystemPromptMapper aiSystemPromptMapper;
 
@@ -167,7 +167,7 @@ public class AdminSystemPromptServiceImpl implements AdminSystemPromptService {
     private void validateScene(String scene) {
         String normalized = scene.trim().toUpperCase();
         if (!SUPPORTED_SCENES.contains(normalized)) {
-            throw new BusinessException(StatusCodeEnum.BAD_REQUEST, "scene 仅支持 CHAT/RAG/BOTH");
+            throw new BusinessException(StatusCodeEnum.BAD_REQUEST, "scene 仅支持 CHAT/RAG/RESUME/BOTH");
         }
     }
 

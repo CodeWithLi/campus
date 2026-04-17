@@ -22,7 +22,7 @@ public class AiSystemPromptEntity {
     private String promptName;
 
     /**
-     * 适用场景：CHAT/RAG/BOTH
+     * 适用场景：CHAT/RAG/RESUME/BOTH
      */
     private String scene;
 

@@ -4,7 +4,9 @@ import { getStorage, setStorage } from '../../utils/storage'
 import { showError } from '../../utils/ui'
 
 const CHAT_HISTORY_KEY = 'RAG_CHAT_HISTORY_LIST'
-const BASE_URL = 'http://10.0.4.168:8899'
+// const BASE_URL = 'http://10.0.4.168:8899'
+const BASE_URL = 'https://admin.baomi-ai.com/campus'
+
 
 const buildId = (prefix) => `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
 

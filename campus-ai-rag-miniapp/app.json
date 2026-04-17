@@ -5,6 +5,7 @@
     "pages/ai-chat/ai-chat",
     "pages/ai-history/ai-history",
     "pages/ai-rag/ai-rag",
+    "pages/ai-resume/ai-resume",
     "pages/mine/mine",
     "pages/login/login",
     "pages/register/register"

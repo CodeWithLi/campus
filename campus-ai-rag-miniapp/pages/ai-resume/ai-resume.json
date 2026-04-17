@@ -1,0 +1,8 @@
+{
+  "navigationBarTitleText": "AI简历生成",
+  "renderer": "webview",
+  "usingComponents": {
+    "ai-input": "/components/ai-input/ai-input"
+  }
+}
+

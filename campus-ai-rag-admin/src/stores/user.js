@@ -18,7 +18,12 @@ export const useUserStore = defineStore('user', () => {
     }
 
     try {
-      const base64 = tokenParts[1].replace(/-/g, '+').replace(/_/g, '/')
+      // JWT 使用 base64url 编码，atob 需要标准 base64 + padding
+      let base64 = tokenParts[1].replace(/-/g, '+').replace(/_/g, '/')
+      const padding = base64.length % 4
+      if (padding) {
+        base64 += '='.repeat(4 - padding)
+      }
       const jsonText = decodeURIComponent(
         atob(base64)
           .split('')

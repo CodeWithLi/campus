@@ -1,5 +1,6 @@
 {
   "navigationBarTitleText": "RAG 问答",
+  "renderer": "webview",
   "usingComponents": {
     "chat-item": "/components/chat-item/chat-item",
     "ai-input": "/components/ai-input/ai-input"
