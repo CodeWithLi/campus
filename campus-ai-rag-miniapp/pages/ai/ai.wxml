@@ -1,18 +1,89 @@
 <view class="page">
-  <view class="hero-card">
+  <view class="bg-orb bg-orb-a"></view>
+  <view class="bg-orb bg-orb-b"></view>
+
+  <view class="hero-card enter-rise">
+    <view class="hero-top">
+      <view class="hero-greeting">{{greeting}}</view>
+      <view class="hero-history" bindtap="goHistory">历史记录</view>
+    </view>
     <view class="hero-title">AI 工作台</view>
-    <view class="hero-desc">先完成对话功能，RAG 入口已预留。</view>
+    <view class="hero-desc">{{highlightTitle}}</view>
+    <view class="hero-sub">{{highlightDesc}}</view>
   </view>
 
-  <view
-    class="entry-card"
-    wx:for="{{entries}}"
-    wx:key="key"
-    data-action="{{item.action}}"
-    bindtap="onEntryTap"
-  >
-    <view class="entry-title">{{item.title}}</view>
-    <view class="entry-desc">{{item.desc}}</view>
-    <view class="entry-btn">进入</view>
+  <view class="section enter-rise delay-1">
+    <view class="section-title title-sheen">热门能力</view>
+    <view
+      class="entry-card"
+      wx:for="{{entries}}"
+      wx:key="key"
+      data-key="{{item.key}}"
+      data-action="{{item.action}}"
+      bindtap="onEntryTap"
+      style="background: {{item.gradient}}; animation-delay: {{item.delay}}ms;"
+    >
+      <view class="entry-head">
+        <view class="entry-icon">{{item.icon}}</view>
+        <view class="entry-tag">{{item.tag}}</view>
+      </view>
+      <view class="entry-title">{{item.title}}</view>
+      <view class="entry-desc">{{item.desc}}</view>
+      <view class="entry-btn">立即体验 →</view>
+    </view>
+  </view>
+
+  <view class="section enter-rise delay-2">
+    <view class="section-title title-sheen">今日灵感</view>
+    <view
+      class="inspiration-item"
+      wx:for="{{inspirationList}}"
+      wx:key="index"
+      data-text="{{item}}"
+      bindtap="onPickInspiration"
+      style="animation-delay: {{index * 80}}ms;"
+    >
+      <view class="inspiration-dot"></view>
+      <view class="inspiration-text">{{item}}</view>
+      <view class="inspiration-copy">复制</view>
+    </view>
+  </view>
+
+  <view class="section enter-rise delay-3" wx:if="{{recentEntries.length > 0}}">
+    <view class="section-title title-sheen">最近使用</view>
+    <view
+      class="recent-item"
+      wx:for="{{recentEntries}}"
+      wx:key="key"
+      data-key="{{item.key}}"
+      data-action="{{item.action}}"
+      bindtap="onTapRecent"
+      style="animation-delay: {{index * 90}}ms;"
+    >
+      <view class="recent-icon">{{item.icon}}</view>
+      <view class="recent-title">{{item.title}}</view>
+      <view class="recent-arrow">→</view>
+    </view>
+  </view>
+
+  <view class="section enter-rise delay-4" wx:if="{{recentSummaryCards.length > 0}}">
+    <view class="section-title title-sheen">最近会话摘要</view>
+    <view
+      class="summary-card"
+      wx:for="{{recentSummaryCards}}"
+      wx:key="id"
+      data-type="{{item.type}}"
+      data-conversation-id="{{item.conversationId}}"
+      bindtap="onTapSummary"
+      style="animation-delay: {{index * 110}}ms;"
+    >
+      <view class="summary-top">
+        <view class="summary-title">{{item.title}}</view>
+        <view class="summary-type">{{item.type === 'chat' ? 'AI对话' : 'RAG问答'}}</view>
+      </view>
+      <view class="summary-question" wx:if="{{item.question}}">Q: {{item.question}}</view>
+      <view class="summary-text">{{item.summary}}</view>
+      <view class="summary-action">继续聊 →</view>
+    </view>
   </view>
 </view>
