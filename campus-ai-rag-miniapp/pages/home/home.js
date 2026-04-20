@@ -6,5 +6,18 @@ Page({
       { key: 'guide', title: '办事指南', desc: '流程卡片与材料清单' },
       { key: 'community', title: '社区', desc: '发帖互动与经验分享' }
     ]
+  },
+
+  onTapEntry(e) {
+    const key = e.currentTarget.dataset?.key
+    if (key === 'community') {
+      wx.navigateTo({ url: '/pages/post-create/post-create' })
+      return
+    }
+    if (key === 'qa') {
+      wx.switchTab({ url: '/pages/ai/ai' })
+      return
+    }
+    wx.showToast({ title: '该能力开发中', icon: 'none' })
   }
 })

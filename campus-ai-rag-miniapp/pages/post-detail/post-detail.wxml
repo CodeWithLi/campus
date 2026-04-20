@@ -1,0 +1,81 @@
+<view class="page">
+  <view wx:if="{{!detail && !loading}}" class="empty">帖子不存在或已删除</view>
+
+  <view wx:if="{{detail}}" class="card fade-in">
+    <view class="title">{{detail.title}}</view>
+    <view class="meta-row">
+      <view class="meta-user">{{detail.nickname || ('用户 ' + detail.userId)}}</view>
+      <view class="meta-time">{{detail.createdAt || ''}}</view>
+    </view>
+    <view class="content">{{detail.content}}</view>
+
+    <view class="images" wx:if="{{detail.fullImageUrls && detail.fullImageUrls.length}}">
+      <image
+        wx:for="{{detail.fullImageUrls}}"
+        wx:key="index"
+        class="img"
+        mode="aspectFill"
+        src="{{item}}"
+        data-url="{{item}}"
+        bindtap="onPreviewImage"
+        style="animation-delay: {{(index % 9) * 60}}ms;"
+      />
+    </view>
+
+    <view class="actions">
+      <view class="action-btn {{detail.likedByMe ? 'active' : ''}}" bindtap="onToggleLike">
+        👍 {{detail.likeCount || 0}}
+      </view>
+      <view class="action-btn">💬 {{detail.commentCount || 0}}</view>
+    </view>
+  </view>
+
+  <view class="comment-card fade-in" wx:if="{{detail}}">
+    <view class="comment-title-row">
+      <view class="comment-title">评论区</view>
+      <view class="comment-count">{{detail.commentCount || 0}} 条</view>
+    </view>
+
+    <view class="comment-editor">
+      <view class="reply-tip" wx:if="{{replyTarget}}">
+        正在回复 {{replyTarget.nickname || ('用户' + replyTarget.commentId)}}
+        <text class="reply-cancel" bindtap="onCancelReply">取消</text>
+      </view>
+      <textarea
+        class="comment-input"
+        maxlength="1000"
+        placeholder="写下你的看法，友善交流更受欢迎..."
+        value="{{commentText}}"
+        bindinput="onCommentInput"
+        bindlinechange="onCommentLineChange"
+        style="height: {{commentInputHeight}}rpx;"
+      />
+      <view class="comment-submit-row">
+        <button class="comment-submit-btn" loading="{{commentSubmitting}}" bindtap="onSubmitComment">发布评论</button>
+      </view>
+    </view>
+
+    <view class="comment-empty" wx:if="{{!commentLoading && commentFlatList.length === 0}}">
+      <view class="comment-empty-icon">💬</view>
+      <view class="comment-empty-text">还没有评论，快来抢沙发</view>
+    </view>
+
+    <view wx:for="{{commentFlatList}}" wx:key="id" class="comment-item" style="{{item.indentStyle}}">
+      <view class="comment-avatar">{{item.avatarText}}</view>
+      <view class="comment-main">
+        <view class="comment-head">
+          <view class="comment-user">{{item.nickname || ('用户' + item.userId)}}</view>
+          <view class="comment-time">{{item.createdAt}}</view>
+        </view>
+        <view class="comment-bubble">
+          <view class="comment-content">
+            <text wx:if="{{item.replyToNickname}}" class="reply-prefix">回复 {{item.replyToNickname}}：</text>{{item.content}}
+          </view>
+        </view>
+        <view class="comment-op" data-id="{{item.id}}" data-parent-id="{{item.parentCommentId || item.id}}" data-nickname="{{item.nickname}}" bindtap="onReplyComment">
+          回复
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

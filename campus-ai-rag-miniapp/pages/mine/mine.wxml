@@ -1,26 +1,75 @@
 <view class="page">
-  <view class="profile-card">
-    <view class="title">个人中心</view>
-    <view class="desc">登录状态：{{isLogin ? '已登录' : '未登录'}}</view>
+  <view class="profile-card {{isLogin ? '' : 'guest'}}">
+    <view class="profile-top">
+      <image
+        wx:if="{{avatarPreviewUrl}}"
+        class="avatar"
+        src="{{avatarPreviewUrl}}"
+        mode="aspectFill"
+        bindtap="onChooseAvatar"
+      />
+      <view wx:else class="avatar avatar-placeholder" bindtap="{{isLogin ? 'onChooseAvatar' : ''}}">头像</view>
+      <view class="profile-meta">
+        <view class="name">{{isLogin ? (nickname || username || '微信用户') : '未登录'}}</view>
+        <view class="desc">{{isLogin ? (email || '已登录，点击头像可更换') : '登录后可使用提醒与社区功能'}}</view>
+      </view>
+    </view>
+    <view class="profile-actions" wx:if="{{!isLogin}}">
+      <button class="login-btn" bindtap="goLogin">去登录 / 注册</button>
+    </view>
   </view>
 
-  <view class="info-card">
-    <view class="info-row">
-      <text class="label">用户名</text>
-      <text class="value">{{username || '-'}}</text>
+  <view class="section-card" wx:if="{{isLogin}}">
+    <view class="section-title">社区与提醒</view>
+    <view class="menu-item" bindtap="goMyPosts">
+      <view class="menu-left">
+        <text class="menu-icon">📝</text>
+        <text class="menu-text">我的帖子</text>
+      </view>
+      <text class="menu-arrow">›</text>
     </view>
-    <view class="info-row">
-      <text class="label">邮箱</text>
-      <text class="value">{{email || '-'}}</text>
+    <view class="menu-item" bindtap="goScheduleReminder">
+      <view class="menu-left">
+        <text class="menu-icon">⏰</text>
+        <text class="menu-text">日程提醒</text>
+      </view>
+      <text class="menu-arrow">›</text>
     </view>
-    <view class="info-row">
-      <text class="label">Token</text>
-      <text class="value">{{token || '-'}}</text>
+    <view class="menu-item" bindtap="goNotificationCenter">
+      <view class="menu-left">
+        <text class="menu-icon">🔔</text>
+        <text class="menu-text">通知中心</text>
+      </view>
+      <view class="menu-right">
+        <text wx:if="{{unreadNoticeCount > 0}}" class="badge">{{unreadNoticeCount}}</text>
+        <text class="menu-arrow">›</text>
+      </view>
     </view>
   </view>
 
-  <view class="action-area">
-    <van-button wx:if="{{!isLogin}}" type="primary" block bindtap="goLogin">去登录/注册</van-button>
-    <van-button wx:else plain type="danger" block bindtap="onLogout">退出登录</van-button>
+  <view class="section-card" wx:if="{{isLogin}}">
+    <view class="section-title">算力点</view>
+    <view class="menu-item" bindtap="goPowerPointLogs">
+      <view class="menu-left">
+        <text class="menu-icon">💳</text>
+        <text class="menu-text">扣费明细</text>
+      </view>
+      <text class="menu-arrow">›</text>
+    </view>
+  </view>
+
+  <view class="section-card" wx:if="{{isLogin}}">
+    <view class="section-title">账号安全</view>
+    <view class="menu-item" bindtap="goChangePassword">
+      <view class="menu-left">
+        <text class="menu-icon">🔒</text>
+        <text class="menu-text">修改密码</text>
+      </view>
+      <text class="menu-arrow">›</text>
+    </view>
+  </view>
+
+  <view class="logout-wrap" wx:if="{{isLogin}}">
+    <button class="logout-btn" bindtap="onLogout">退出登录</button>
   </view>
 </view>

@@ -51,6 +51,7 @@ public class WxChatServiceImpl implements WxChatService {
         }
 
         String userId = WxAuthContextUtils.requireWxUserId();
+        Long userIdLong = parseUserId(userId);
         String finalModelCode = isBlank(dto.getModelCode()) ? aiChatRouter.getDefaultModelCode() : dto.getModelCode().trim();
         String convId = isBlank(dto.getConversationId()) ? newConversationId() : dto.getConversationId().trim();
 
@@ -60,7 +61,7 @@ public class WxChatServiceImpl implements WxChatService {
         String userMessage = dto.getMessage().trim();
 
         String composed = composeChatInput(summary, historyText, userMessage);
-        String answer = aiChatRouter.chat(finalModelCode, "CHAT", composed, null);
+        String answer = aiChatRouter.chat(userIdLong, finalModelCode, "CHAT", composed, null);
 
         // 写入历史（user + assistant）
         appendHistory(historyKey(userId, convId), "user", userMessage);
@@ -251,6 +252,14 @@ public class WxChatServiceImpl implements WxChatService {
 
     private boolean isBlank(String value) {
         return value == null || value.trim().isEmpty();
+    }
+
+    private Long parseUserId(String wxUserId) {
+        try {
+            return Long.parseLong(wxUserId);
+        } catch (Exception e) {
+            throw new BusinessException(StatusCodeEnum.UNAUTHORIZED, "用户未登录");
+        }
     }
 }
 

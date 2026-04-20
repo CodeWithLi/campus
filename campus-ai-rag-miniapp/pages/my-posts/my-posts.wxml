@@ -1,0 +1,41 @@
+<view class="page">
+  <view class="top-card fade-in">
+    <view class="page-title">我的帖子</view>
+    <view class="page-subtitle">查看和管理你的发帖记录</view>
+    <view class="tab-row">
+      <view class="tab-item" hover-class="tab-item-hover" hover-stay-time="70" bindtap="onAllPosts">社区帖子</view>
+      <view class="tab-item active">我的帖子</view>
+      <view class="tab-item" hover-class="tab-item-hover" hover-stay-time="70" bindtap="onCreatePost">去发帖</view>
+    </view>
+  </view>
+
+  <view wx:if="{{list.length === 0 && !loading}}" class="empty">
+    <view class="empty-title">你还没有发过帖子</view>
+    <view class="empty-text">点击上方去发帖，分享第一个想法。</view>
+  </view>
+
+  <view
+    class="post-card fade-in"
+    wx:for="{{list}}"
+    wx:key="id"
+    data-id="{{item.id}}"
+    bindtap="onOpenDetail"
+    hover-class="card-hover"
+    hover-stay-time="90"
+    style="animation-delay: {{(index % 8) * 60}}ms;"
+  >
+    <view class="title line-2">{{item.title}}</view>
+    <view class="content">{{item.contentPreview}}</view>
+    <view class="meta">
+      <view class="meta-time">{{item.createdAt || ''}}</view>
+      <view class="meta-stats">
+        <text class="stat-item">👍 {{item.likeCount || 0}}</text>
+        <text class="stat-item">💬 {{item.commentCount || 0}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="more-wrap" wx:if="{{hasMore}}">
+    <button class="more-btn" hover-class="btn-hover" loading="{{loadingMore}}" bindtap="onLoadMore">加载更多</button>
+  </view>
+</view>

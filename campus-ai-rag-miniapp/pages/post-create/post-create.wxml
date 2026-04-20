@@ -1,0 +1,87 @@
+<view class="page">
+  <view class="bg-orb orb-a"></view>
+  <view class="bg-orb orb-b"></view>
+  <view class="bg-orb orb-c"></view>
+
+  <view class="hero-card fade-in">
+    <view class="hero-row">
+      <view>
+        <view class="hero-title">发布帖子</view>
+        <view class="hero-subtitle">把灵感变成一条有温度的分享</view>
+      </view>
+      <view class="hero-tag">NEW</view>
+    </view>
+    <view class="tab-row">
+      <view class="tab-item" hover-class="tab-item-hover" hover-stay-time="70" bindtap="onGoPostList">社区帖子</view>
+      <view class="tab-item" hover-class="tab-item-hover" hover-stay-time="70" bindtap="onGoMyPosts">我的帖子</view>
+      <view class="tab-item active">去发帖</view>
+    </view>
+  </view>
+
+  <view class="section-card ai-card fade-in delay-1">
+    <view class="section-head">
+      <view class="section-title">AI 发帖助手</view>
+      <view class="section-chip">润色</view>
+    </view>
+    <textarea
+      class="textarea hint-textarea"
+      placeholder="输入你的发帖想法，AI 将帮你生成标题和正文"
+      maxlength="500"
+      value="{{hint}}"
+      bindinput="onHintInput"
+    />
+    <view class="row-end">
+      <button class="secondary-btn" hover-class="btn-hover" loading="{{generating}}" disabled="{{generating || !hint}}" bindtap="onGenerateByAi">
+        AI 生成
+      </button>
+    </view>
+  </view>
+
+  <view class="section-card fade-in delay-2">
+    <view class="section-head">
+      <view class="section-title">帖子内容</view>
+      <view class="section-chip blue">表达</view>
+    </view>
+    <input
+      class="input"
+      placeholder="请输入标题（最多80字）"
+      maxlength="80"
+      value="{{title}}"
+      bindinput="onTitleInput"
+    />
+    <textarea
+      class="textarea content-textarea"
+      placeholder="请输入正文（最多1000字）"
+      maxlength="1000"
+      value="{{content}}"
+      bindinput="onContentInput"
+    />
+    <view class="counter">{{contentLength}} / 1000</view>
+  </view>
+
+  <view class="section-card fade-in delay-3">
+    <view class="section-head">
+      <view class="section-title">图片（最多5张）</view>
+      <view class="section-chip purple">审核</view>
+    </view>
+    <view class="image-grid">
+      <block wx:for="{{imageUrls}}" wx:key="index">
+        <view class="image-item">
+          <image class="image" mode="aspectFill" src="{{imagePreviewUrls[index] || item}}" data-url="{{item}}" bindtap="onPreviewImage" />
+          <view class="image-delete" data-index="{{index}}" bindtap="onRemoveImage">×</view>
+        </view>
+      </block>
+      <view wx:if="{{imageUrls.length < 5}}" class="image-add" hover-class="image-add-hover" hover-stay-time="80" bindtap="onChooseImages">
+        <view class="add-plus">+</view>
+        <view class="add-text">上传图片</view>
+      </view>
+    </view>
+    <view class="tip">支持拍照和相册，上传后会自动检测合规。</view>
+  </view>
+
+  <view class="footer">
+    <button class="publish-btn" hover-class="btn-hover" loading="{{publishing}}" disabled="{{publishing}}" bindtap="onPublish">
+      发布帖子
+    </button>
+  </view>
+</view>

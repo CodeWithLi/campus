@@ -365,11 +365,9 @@ public class AiChatRouter {
     }
 
     private boolean shouldCharge(Long userId, String scene) {
-        if (userId == null || userId <= 0L) {
-            return false;
-        }
-        // INTERNAL 为系统内部调用（如摘要/标题），不单独扣点，避免重复扣费。
-        return !"INTERNAL".equalsIgnoreCase(scene);
+        // 仅当存在真实微信用户ID时扣费；
+        // 后台管理测试或系统调用（userId<=0）保持不扣费。
+        return userId != null && userId > 0L;
     }
 
     private void ensureMinimumChargeBalance(Long userId, String scene) {

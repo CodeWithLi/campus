@@ -6,9 +6,9 @@ import {
 } from '../../api/resume'
 import { listEnabledModelsApi } from '../../api/model'
 import { showError } from '../../utils/ui'
+import { buildWsUrl } from '../../config/env'
 
 const buildId = (prefix) => `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
-const BASE_URL = 'https://admin.baomi-ai.com/campus'
 const REALTIME_PATH = '/ws/wx/speech/realtime'
 
 Page({
@@ -249,7 +249,7 @@ Page({
 
   openRealtimeSocket() {
     return new Promise((resolve) => {
-      const wsUrl = `${BASE_URL.replace(/^https/, 'wss').replace(/^http/, 'ws')}${REALTIME_PATH}`
+      const wsUrl = buildWsUrl(REALTIME_PATH)
       const socketTask = wx.connectSocket({ url: wsUrl, timeout: 10000 })
       this.speechSocketTask = socketTask
 

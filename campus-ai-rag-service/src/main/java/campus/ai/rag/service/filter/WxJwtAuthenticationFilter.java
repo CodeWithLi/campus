@@ -37,7 +37,13 @@ public class WxJwtAuthenticationFilter extends OncePerRequestFilter {
         // 注意：应用配置了 context-path=/campus，getRequestURI() 会包含 /campus 前缀
         // 这里使用 servletPath（不含 context-path），避免过滤器因为前缀导致完全不生效
         String path = request.getServletPath();
-        return !path.startsWith("/wx/") || path.startsWith("/wx/auth/");
+        if (!path.startsWith("/wx/")) {
+            return true;
+        }
+        // 仅登录/注册/注册验证码跳过JWT解析，其它 wx/auth 接口（如改密）仍需解析当前登录态
+        return "/wx/auth/login".equals(path)
+                || "/wx/auth/register".equals(path)
+                || "/wx/auth/email-code".equals(path);
     }
 
     @Override

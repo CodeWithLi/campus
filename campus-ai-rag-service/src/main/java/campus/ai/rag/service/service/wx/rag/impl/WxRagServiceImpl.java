@@ -96,7 +96,7 @@ public class WxRagServiceImpl implements WxRagService {
         List<WxRagVO.Hit> hits = searchTopK(userIdLong, qVector, dto.getCategoryIds(), topK);
         String ragContext = buildRagContext(hits);
 
-        String answer = aiChatRouter.chat(finalModelCode, "RAG", dto.getQuestion().trim(), ragContext);
+        String answer = aiChatRouter.chat(userIdLong, finalModelCode, "RAG", dto.getQuestion().trim(), ragContext);
 
         WxRagVO vo = new WxRagVO();
         vo.setModelCode(finalModelCode);

@@ -45,6 +45,10 @@
   box-shadow: 0 8rpx 20rpx rgba(99, 102, 241, 0.06);
 }
 
+.feature-card:active {
+  transform: scale(0.99);
+}
+
 .feature-title {
   color: #333333;
   font-size: 28rpx;

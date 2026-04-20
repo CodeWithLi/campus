@@ -1,13 +1,12 @@
 import { getStorage } from '../utils/storage'
-
-const BASE_URL = 'https://admin.baomi-ai.com/campus'
+import { buildApiUrl } from '../config/env'
 
 export const transcribeSpeechApi = ({ filePath, scene = 'chat', durationMs = 0 }) =>
   new Promise((resolve, reject) => {
     const token = getStorage('TOKEN')
     const authorization = token ? `Bearer ${token}` : ''
     wx.uploadFile({
-      url: `${BASE_URL}/wx/speech/transcribe`,
+      url: buildApiUrl('/wx/speech/transcribe'),
       filePath,
       name: 'file',
       formData: {

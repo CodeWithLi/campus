@@ -21,6 +21,7 @@
             <el-option label="CHAT" value="CHAT" />
             <el-option label="RAG" value="RAG" />
             <el-option label="RESUME" value="RESUME" />
+            <el-option label="POST" value="POST" />
             <el-option label="INTERNAL" value="INTERNAL" />
           </el-select>
         </el-form-item>

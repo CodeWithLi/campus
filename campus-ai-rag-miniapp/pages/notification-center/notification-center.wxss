@@ -1,0 +1,104 @@
+.page {
+  min-height: 100vh;
+  background: #f5f7fb;
+  padding: 24rpx;
+  box-sizing: border-box;
+}
+
+.head-card {
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 22rpx;
+  box-shadow: 0 8rpx 22rpx rgba(15, 23, 42, 0.06);
+}
+
+.title {
+  font-size: 32rpx;
+  color: #111827;
+  font-weight: 700;
+}
+
+.sub {
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  color: #6b7280;
+}
+
+.read-all-btn {
+  margin-top: 14rpx;
+  border-radius: 12rpx;
+  background: #e0e7ff;
+  color: #3730a3;
+  font-size: 24rpx;
+}
+
+.read-all-btn::after {
+  border: none;
+}
+
+.empty-card {
+  margin-top: 14rpx;
+  padding: 44rpx 20rpx;
+  text-align: center;
+  background: #fff;
+  border-radius: 20rpx;
+  color: #94a3b8;
+}
+
+.empty-icon {
+  font-size: 44rpx;
+}
+
+.empty-text {
+  margin-top: 8rpx;
+  font-size: 24rpx;
+}
+
+.notice-item {
+  margin-top: 14rpx;
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 16rpx;
+  border: 1rpx solid #e5e7eb;
+}
+
+.notice-item.unread {
+  border-color: #bfdbfe;
+  background: #f8fbff;
+}
+
+.notice-item.read {
+  opacity: 0.86;
+}
+
+.notice-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.notice-type {
+  color: #2563eb;
+  font-size: 22rpx;
+  font-weight: 600;
+}
+
+.notice-time {
+  color: #9ca3af;
+  font-size: 20rpx;
+}
+
+.notice-title {
+  margin-top: 8rpx;
+  color: #1f2937;
+  font-size: 26rpx;
+  font-weight: 600;
+}
+
+.notice-content {
+  margin-top: 8rpx;
+  color: #475569;
+  font-size: 24rpx;
+  line-height: 1.5;
+}

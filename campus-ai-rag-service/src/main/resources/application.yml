@@ -78,12 +78,48 @@ app:
   ai:
     default-model-code: qwen_plus
   wx:
+    post:
+      # 发帖 AI：须为 ai_model_config 中 invoke_type=1（Spring AI）的模型，默认与通义千问 Plus 对齐
+      ai-model-code: qwen plus
+      max-content-length: 1000
+      max-title-length: 80
+      draft-ttl-hours: 2
+      max-image-count: 5
+      upload-dir: upload
     chat:
       conversation-ttl-days: 30
       title-prompt: 你是标题生成器。请根据【用户首轮问题】与【助手首轮回答】生成一个5-10个字的中文标题，不要加引号，不要加标点，不要解释，只输出标题。
       summary-prompt: 你是对话摘要助手。请把新增的多轮对话压缩成精炼的中文摘要，保留关键信息、条件、结论与待办。只输出摘要内容，不要解释。
       max-history-rounds: 8
       summary-compress-every: 15
+    reminder:
+      advance-minutes: 30
+      subscribe:
+        enabled: true
+        # 需要替换成你在微信公众平台配置的订阅消息模板ID
+        template-id: "HRGjPD_lk8nZd84kmHQnkFg6za4YJfFTi-ejdlzScMo"
+        page: pages/notification-center/notification-center
+        miniprogram-state: formal
+        lang: zh_CN
+        # 下方 key 需与模板字段匹配，不匹配会发送失败（errcode=47003）
+        title-key: thing9
+        time-key: time12
+        type-key: thing5
+  ifly:
+    # 讯飞开放平台文本合规（与下方星火语音/图片配置独立）
+    text-audit:
+      enabled: false
+      url: https://audit.iflyaisol.com/audit/v2/syncText
+      access-key-id: "caba4cc5c2e634ec94313d2f2c8d0c16"
+      access-key-secret: "ZTgzYmRjMjg2MmY3OWViODMwMzIyNDdj"
+      app-id: "6346119f"
+    image-audit:
+      enabled: false
+      url: https://audit.iflyaisol.com/audit/v2/image
+      access-key-id: "caba4cc5c2e634ec94313d2f2c8d0c16"
+      access-key-secret: "ZTgzYmRjMjg2MmY3OWViODMwMzIyNDdj"
+      app-id: "6346119f"
+      pass-cache-days: 30
 
 # 星火图片理解（用于文档内图片内容提取）
 xf:
@@ -113,6 +149,7 @@ xf:
     app-id: 6346119f
     api-key: caba4cc5c2e634ec94313d2f2c8d0c16
     api-secret: ZTgzYmRjMjg2MmY3OWViODMwMzIyNDdj
+
   fast-asr:
     # 极速语音转写服务 URL（按你的“极速语音转写”文档填写）
     url:

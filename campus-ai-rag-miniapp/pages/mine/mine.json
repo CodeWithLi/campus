@@ -1,6 +1,3 @@
 {
-  "navigationBarTitleText": "我的",
-  "usingComponents": {
-    "van-button": "@vant/weapp/button/index"
-  }
+  "navigationBarTitleText": "我的"
 }

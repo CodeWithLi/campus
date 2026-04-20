@@ -11,7 +11,7 @@ public interface SystemPromptRuntimeService {
     /**
      * 构建最终发送给大模型的消息内容（单条 userMessage）。
      *
-     * @param scene      CHAT / RAG / RESUME
+     * @param scene      CHAT / RAG / RESUME / POST
      * @param userMessage 用户输入
      * @param ragContext  检索上下文（仅 RAG 时有效）
      */

@@ -2,10 +2,9 @@ import { listEnabledModelsApi } from '../../api/model'
 import { ragApi, listRagConversationsApi, getRagConversationHistoryApi } from '../../api/rag'
 import { getStorage, setStorage } from '../../utils/storage'
 import { showError } from '../../utils/ui'
+import { buildApiUrl, buildWsUrl } from '../../config/env'
 
 const CHAT_HISTORY_KEY = 'RAG_CHAT_HISTORY_LIST'
-// const BASE_URL = 'http://10.0.4.168:8899'
-const BASE_URL = 'https://admin.baomi-ai.com/campus'
 const REALTIME_PATH = '/ws/wx/speech/realtime'
 
 
@@ -221,7 +220,7 @@ Page({
       const authorization = token ? `Bearer ${token}` : ''
 
       wx.uploadFile({
-        url: `${BASE_URL}/wx/kb/documents/upload`,
+        url: buildApiUrl('/wx/kb/documents/upload'),
         filePath,
         name: 'file',
         formData: { title, remark: remark || '' },
@@ -433,7 +432,7 @@ Page({
 
   openRealtimeSocket() {
     return new Promise((resolve) => {
-      const wsUrl = `${BASE_URL.replace(/^https/, 'wss').replace(/^http/, 'ws')}${REALTIME_PATH}`
+      const wsUrl = buildWsUrl(REALTIME_PATH)
       const socketTask = wx.connectSocket({ url: wsUrl, timeout: 10000 })
       this.speechSocketTask = socketTask
 

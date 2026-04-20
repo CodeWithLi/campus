@@ -6,7 +6,7 @@
 
   <view class="section-title">核心能力</view>
   <view class="card-list">
-    <view class="feature-card" wx:for="{{quickEntries}}" wx:key="key">
+    <view class="feature-card" wx:for="{{quickEntries}}" wx:key="key" data-key="{{item.key}}" bindtap="onTapEntry">
       <view class="feature-title">{{item.title}}</view>
       <view class="feature-desc">{{item.desc}}</view>
     </view>

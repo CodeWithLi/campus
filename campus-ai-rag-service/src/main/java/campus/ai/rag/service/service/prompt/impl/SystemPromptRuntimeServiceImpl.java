@@ -19,6 +19,7 @@ public class SystemPromptRuntimeServiceImpl implements SystemPromptRuntimeServic
     private static final String SCENE_CHAT = "CHAT";
     private static final String SCENE_RAG = "RAG";
     private static final String SCENE_RESUME = "RESUME";
+    private static final String SCENE_POST = "POST";
     private static final String SCENE_BOTH = "BOTH";
 
     private final AiSystemPromptMapper aiSystemPromptMapper;
@@ -71,8 +72,8 @@ public class SystemPromptRuntimeServiceImpl implements SystemPromptRuntimeServic
         if (s.isEmpty()) {
             return SCENE_CHAT;
         }
-        if (!SCENE_CHAT.equals(s) && !SCENE_RAG.equals(s) && !SCENE_RESUME.equals(s)) {
-            throw new BusinessException(StatusCodeEnum.BAD_REQUEST, "scene 仅支持 CHAT/RAG/RESUME");
+        if (!SCENE_CHAT.equals(s) && !SCENE_RAG.equals(s) && !SCENE_RESUME.equals(s) && !SCENE_POST.equals(s)) {
+            throw new BusinessException(StatusCodeEnum.BAD_REQUEST, "scene 仅支持 CHAT/RAG/RESUME/POST");
         }
         return s;
     }
