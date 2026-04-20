@@ -57,6 +57,7 @@ Page({
       const mapped = records.map((item) => ({
         sceneName: item.sceneName || '其他扣费',
         consumedPoints: Number(item.consumedPoints || 0),
+        consumedPointsText: Number(item.consumedPoints || 0).toFixed(2),
         createdAtText: formatTime(item.createdAt)
       }))
 

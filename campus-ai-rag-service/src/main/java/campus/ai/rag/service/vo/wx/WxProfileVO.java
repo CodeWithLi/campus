@@ -4,6 +4,8 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.math.BigDecimal;
+
 @Data
 @ApiModel("微信端个人资料")
 public class WxProfileVO {
@@ -22,4 +24,7 @@ public class WxProfileVO {
 
     @ApiModelProperty("头像URL（/upload/**）")
     private String avatarUrl;
+
+    @ApiModelProperty(value = "剩余算力点（两位小数）", example = "100.00")
+    private BigDecimal powerPoints;
 }

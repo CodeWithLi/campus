@@ -16,6 +16,7 @@ Page({
     email: '',
     avatarUrl: '',
     avatarPreviewUrl: '',
+    powerPoints: '0.00',
     isLogin: false,
     unreadNoticeCount: 0,
     avatarUploading: false
@@ -32,7 +33,8 @@ Page({
       nickname: userInfo.nickname || '',
       email: userInfo.email || '',
       avatarUrl: userInfo.avatarUrl || '',
-      avatarPreviewUrl: this.toFullUrl(userInfo.avatarUrl || '')
+      avatarPreviewUrl: this.toFullUrl(userInfo.avatarUrl || ''),
+      powerPoints: this.formatPoints(userInfo.powerPoints)
     })
     if (isLogin) {
       this.loadProfile()
@@ -50,7 +52,8 @@ Page({
         username: data.username || '',
         email: data.email || '',
         nickname: data.nickname || '',
-        avatarUrl: data.avatarUrl || ''
+        avatarUrl: data.avatarUrl || '',
+        powerPoints: data.powerPoints
       }
       setStorage(USER_INFO_KEY, userInfo)
       this.setData({
@@ -58,7 +61,8 @@ Page({
         email: userInfo.email,
         nickname: userInfo.nickname,
         avatarUrl: userInfo.avatarUrl,
-        avatarPreviewUrl: this.toFullUrl(userInfo.avatarUrl)
+        avatarPreviewUrl: this.toFullUrl(userInfo.avatarUrl),
+        powerPoints: this.formatPoints(userInfo.powerPoints)
       })
     } catch (e) {
       // ignore profile failure
@@ -101,6 +105,12 @@ Page({
   goPowerPointLogs() {
     wx.navigateTo({
       url: '/pages/power-points-log/power-points-log'
+    })
+  },
+
+  goPowerPointsCenter() {
+    wx.navigateTo({
+      url: '/pages/power-points-center/power-points-center'
     })
   },
 
@@ -165,5 +175,11 @@ Page({
     if (!path) return ''
     if (/^https?:\/\//.test(path)) return path
     return buildApiUrl(path)
+  },
+
+  formatPoints(value) {
+    const num = Number(value || 0)
+    if (!Number.isFinite(num)) return '0.00'
+    return num.toFixed(2)
   }
 })

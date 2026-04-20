@@ -4,6 +4,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
@@ -32,7 +33,7 @@ public class AdminWxUserVO {
     private String registerSource;
 
     @ApiModelProperty(value = "剩余算力点", example = "120")
-    private Integer powerPoints;
+    private BigDecimal powerPoints;
 
     @ApiModelProperty(value = "最后登录时间")
     private LocalDateTime lastLoginAt;

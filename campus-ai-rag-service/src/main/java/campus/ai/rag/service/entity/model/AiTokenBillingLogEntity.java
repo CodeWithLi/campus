@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
@@ -46,7 +47,7 @@ public class AiTokenBillingLogEntity {
     /**
      * 本次扣减算力点
      */
-    private Integer consumedPoints;
+    private BigDecimal consumedPoints;
 
     /**
      * 状态：1成功 0失败

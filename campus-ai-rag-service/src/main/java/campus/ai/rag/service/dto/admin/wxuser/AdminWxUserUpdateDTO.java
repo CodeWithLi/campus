@@ -4,6 +4,8 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.math.BigDecimal;
+
 @Data
 @ApiModel(value = "AdminWxUserUpdateDTO", description = "后台更新微信用户请求参数")
 public class AdminWxUserUpdateDTO {
@@ -18,6 +20,6 @@ public class AdminWxUserUpdateDTO {
     private Integer status;
 
     @ApiModelProperty(value = "剩余算力点（必须>=0）", example = "200")
-    private Integer powerPoints;
+    private BigDecimal powerPoints;
 }
 

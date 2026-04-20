@@ -1,0 +1,78 @@
+.page {
+  min-height: 100vh;
+  background: #f6f8fc;
+  padding: 24rpx;
+  box-sizing: border-box;
+}
+
+.balance-card {
+  border-radius: 24rpx;
+  padding: 26rpx 22rpx;
+  color: #ffffff;
+  background: linear-gradient(140deg, #10b981 0%, #3b82f6 100%);
+  box-shadow: 0 14rpx 30rpx rgba(16, 185, 129, 0.18);
+}
+
+.balance-title {
+  font-size: 24rpx;
+  opacity: 0.92;
+}
+
+.balance-value {
+  margin-top: 10rpx;
+  font-size: 54rpx;
+  font-weight: 800;
+  letter-spacing: 1rpx;
+}
+
+.balance-tip {
+  margin-top: 10rpx;
+  font-size: 24rpx;
+  opacity: 0.9;
+}
+
+.section-title {
+  margin-top: 18rpx;
+  margin-bottom: 12rpx;
+  font-size: 26rpx;
+  color: #64748b;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16rpx;
+}
+
+.pkg {
+  background: #ffffff;
+  border-radius: 20rpx;
+  border: 1rpx solid #e9edf7;
+  padding: 22rpx 18rpx;
+  box-shadow: 0 6rpx 18rpx rgba(15, 23, 42, 0.05);
+}
+
+.pkg-price {
+  font-size: 40rpx;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.pkg-points {
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  color: #475569;
+}
+
+.pkg-btn {
+  margin-top: 16rpx;
+  height: 64rpx;
+  line-height: 64rpx;
+  text-align: center;
+  border-radius: 16rpx;
+  background: rgba(59, 130, 246, 0.1);
+  color: #2563eb;
+  font-size: 26rpx;
+  font-weight: 700;
+}
+

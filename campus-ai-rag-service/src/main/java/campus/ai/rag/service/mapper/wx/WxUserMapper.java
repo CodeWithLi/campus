@@ -7,6 +7,8 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
+import java.math.BigDecimal;
+
 @Mapper
 public interface WxUserMapper extends BaseMapper<WxUserEntity> {
 
@@ -26,6 +28,9 @@ public interface WxUserMapper extends BaseMapper<WxUserEntity> {
      */
     @Update("UPDATE wx_user SET power_points = power_points - #{points} "
             + "WHERE id = #{userId} AND power_points >= #{points}")
-    int deductPowerPoints(@Param("userId") Long userId, @Param("points") int points);
+    int deductPowerPoints(@Param("userId") Long userId, @Param("points") BigDecimal points);
+
+    @Update("UPDATE wx_user SET power_points = power_points + #{points} WHERE id = #{userId}")
+    int addPowerPoints(@Param("userId") Long userId, @Param("points") BigDecimal points);
 }
 

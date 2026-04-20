@@ -11,11 +11,33 @@
       <view wx:else class="avatar avatar-placeholder" bindtap="{{isLogin ? 'onChooseAvatar' : ''}}">头像</view>
       <view class="profile-meta">
         <view class="name">{{isLogin ? (nickname || username || '微信用户') : '未登录'}}</view>
-        <view class="desc">{{isLogin ? (email || '已登录，点击头像可更换') : '登录后可使用提醒与社区功能'}}</view>
+        <view class="desc">
+          {{isLogin ? (email || '已登录，点击头像可更换') : '登录后可使用提醒与社区功能'}}
+        </view>
+        <view wx:if="{{isLogin}}" class="points-line">
+          <text class="points-label">算力点</text>
+          <text class="points-value">{{powerPoints}}</text>
+        </view>
       </view>
     </view>
     <view class="profile-actions" wx:if="{{!isLogin}}">
       <button class="login-btn" bindtap="goLogin">去登录 / 注册</button>
+    </view>
+  </view>
+
+  <view class="recharge-card-wrap" wx:if="{{isLogin}}">
+    <view class="recharge-card" bindtap="goPowerPointsCenter">
+      <view class="recharge-orb orb-1"></view>
+      <view class="recharge-orb orb-2"></view>
+      <view class="recharge-shine"></view>
+      <view class="recharge-main">
+        <view class="recharge-title">充值特惠！</view>
+        <view class="recharge-subtitle">1元=100算力点，享受更顺畅的AI体验</view>
+      </view>
+      <view class="recharge-side">
+        <view class="recharge-balance">⚡ {{powerPoints}}</view>
+        <view class="recharge-btn">去充值</view>
+      </view>
     </view>
   </view>
 

@@ -164,3 +164,14 @@ xf:
 springdoc:
   swagger-ui:
     path: /doc.html
+
+alipay:
+  app-id: 9021000145677065
+  gateway-url: https://openapi-sandbox.dl.alipaydev.com/gateway.do
+  notify-url: https://admin.baomi-ai.com/campus/wx/pay/alipay/notify
+  return-url: https://admin.baomi-ai.com/campus/wx/pay/alipay/return
+  sign-type: RSA2
+  charset: UTF-8
+  format: json
+  private-key-path: alipay/app_private_key_pkcs8.txt
+  alipay-public-key-path: alipay/alipay_public_key.txt

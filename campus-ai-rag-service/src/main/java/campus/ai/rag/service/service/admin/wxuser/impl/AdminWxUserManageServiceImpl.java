@@ -11,6 +11,7 @@ import campus.ai.rag.service.vo.admin.wxuser.AdminWxUserVO;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -59,7 +60,7 @@ public class AdminWxUserManageServiceImpl implements AdminWxUserManageService {
             user.setStatus(dto.getStatus());
         }
         if (dto.getPowerPoints() != null) {
-            if (dto.getPowerPoints() < 0) {
+            if (dto.getPowerPoints().compareTo(BigDecimal.ZERO) < 0) {
                 throw new BusinessException(StatusCodeEnum.BAD_REQUEST, "算力点不能小于0");
             }
             user.setPowerPoints(dto.getPowerPoints());
@@ -73,7 +74,7 @@ public class AdminWxUserManageServiceImpl implements AdminWxUserManageService {
         if (Objects.isNull(dto) || Objects.isNull(dto.getPowerPoints())) {
             throw new BusinessException(StatusCodeEnum.BAD_REQUEST, "算力点不能为空");
         }
-        if (dto.getPowerPoints() < 0) {
+        if (dto.getPowerPoints().compareTo(BigDecimal.ZERO) < 0) {
             throw new BusinessException(StatusCodeEnum.BAD_REQUEST, "算力点不能小于0");
         }
         WxUserEntity user = getRequiredUser(id);
@@ -116,7 +117,7 @@ public class AdminWxUserManageServiceImpl implements AdminWxUserManageService {
         vo.setAvatarUrl(user.getAvatarUrl());
         vo.setStatus(user.getStatus());
         vo.setRegisterSource(user.getRegisterSource());
-        vo.setPowerPoints(user.getPowerPoints() == null ? 0 : user.getPowerPoints());
+        vo.setPowerPoints(user.getPowerPoints() == null ? BigDecimal.ZERO : user.getPowerPoints());
         vo.setLastLoginAt(user.getLastLoginAt());
         vo.setCreatedAt(user.getCreatedAt());
         vo.setUpdatedAt(user.getUpdatedAt());

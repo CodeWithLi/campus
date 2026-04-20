@@ -21,6 +21,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -33,7 +35,7 @@ public class WxResumeServiceImpl implements WxResumeService {
     private static final String SCENE_RESUME = "RESUME";
     private static final double IN_PRICE_PER_1K = 0.01d;
     private static final double OUT_PRICE_PER_1K = 0.02d;
-    private static final int MIN_CHARGE_POINTS = 2;
+    private static final BigDecimal MIN_CHARGE_POINTS = new BigDecimal("2.00");
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private final AiChatRouter aiChatRouter;
@@ -137,12 +139,12 @@ public class WxResumeServiceImpl implements WxResumeService {
 
             int promptTokens = estimateTokensByChars(reqText.length());
             int completionTokens = estimateTokensByChars(linkText(vo).length());
-            int consumedPoints = calcConsumedPoints(promptTokens, completionTokens);
+            BigDecimal consumedPoints = calcConsumedPoints(promptTokens, completionTokens);
             doDeductPowerPoints(userId, consumedPoints);
             recordResumeBilling(userId, promptTokens, completionTokens, consumedPoints, null);
             return vo;
         } catch (RuntimeException ex) {
-            recordResumeBilling(userId, estimateTokensByChars(reqText.length()), 0, 0, ex.getMessage());
+            recordResumeBilling(userId, estimateTokensByChars(reqText.length()), 0, BigDecimal.ZERO, ex.getMessage());
             throw ex;
         }
     }
@@ -202,7 +204,7 @@ public class WxResumeServiceImpl implements WxResumeService {
         wxResumeGenerateRecordMapper.insert(record);
     }
 
-    private void recordResumeBilling(Long userId, int promptTokens, int completionTokens, int consumedPoints, String errMsg) {
+    private void recordResumeBilling(Long userId, int promptTokens, int completionTokens, BigDecimal consumedPoints, String errMsg) {
         AiTokenBillingLogEntity log = new AiTokenBillingLogEntity();
         log.setUserId(userId);
         log.setScene(SCENE_RESUME);
@@ -214,7 +216,7 @@ public class WxResumeServiceImpl implements WxResumeService {
         log.setTotalTokens(Math.max(0, promptTokens + completionTokens));
         log.setRequestChars(0);
         log.setResponseChars(0);
-        log.setConsumedPoints(Math.max(0, consumedPoints));
+        log.setConsumedPoints(consumedPoints == null ? BigDecimal.ZERO : consumedPoints.max(BigDecimal.ZERO));
         log.setStatus(errMsg == null ? 1 : 0);
         log.setErrorMessage(errMsg == null ? null : truncate(errMsg, 1000));
         aiTokenBillingLogMapper.insert(log);
@@ -309,11 +311,21 @@ public class WxResumeServiceImpl implements WxResumeService {
         return (int) Math.ceil(chars / 1.5d);
     }
 
-    private int calcConsumedPoints(int promptTokens, int completionTokens) {
-        double inCost = ((double) promptTokens / 1000d) * IN_PRICE_PER_1K;
-        double outCost = ((double) completionTokens / 1000d) * OUT_PRICE_PER_1K;
-        int cost = (int) Math.ceil(inCost + outCost);
-        return Math.max(MIN_CHARGE_POINTS, cost);
+    private BigDecimal calcConsumedPoints(int promptTokens, int completionTokens) {
+        int safePrompt = Math.max(0, promptTokens);
+        int safeCompletion = Math.max(0, completionTokens);
+
+        BigDecimal inCost = BigDecimal.valueOf(safePrompt)
+                .divide(new BigDecimal("1000"), 8, RoundingMode.HALF_UP)
+                .multiply(BigDecimal.valueOf(IN_PRICE_PER_1K));
+        BigDecimal outCost = BigDecimal.valueOf(safeCompletion)
+                .divide(new BigDecimal("1000"), 8, RoundingMode.HALF_UP)
+                .multiply(BigDecimal.valueOf(OUT_PRICE_PER_1K));
+        BigDecimal cost = inCost.add(outCost);
+        if (cost.compareTo(MIN_CHARGE_POINTS) < 0) {
+            cost = MIN_CHARGE_POINTS;
+        }
+        return cost.setScale(2, RoundingMode.CEILING);
     }
 
     private void ensureMinimumChargeBalance(Long userId) {
@@ -322,15 +334,16 @@ public class WxResumeServiceImpl implements WxResumeService {
         if (user == null || user.getStatus() == null || user.getStatus() != 1) {
             throw new BusinessException(StatusCodeEnum.BAD_REQUEST, "用户不存在或已被禁用");
         }
-        int balance = user.getPowerPoints() == null ? 0 : user.getPowerPoints();
-        if (balance < MIN_CHARGE_POINTS) {
+        BigDecimal balance = user.getPowerPoints() == null ? BigDecimal.ZERO : user.getPowerPoints();
+        if (balance.compareTo(MIN_CHARGE_POINTS) < 0) {
             throw new BusinessException(StatusCodeEnum.BAD_REQUEST, "算力点不足，请先充值");
         }
     }
 
-    private void doDeductPowerPoints(Long userId, int points) {
-        if (userId == null || userId <= 0L || points <= 0) return;
-        int affected = wxUserMapper.deductPowerPoints(userId, points);
+    private void doDeductPowerPoints(Long userId, BigDecimal points) {
+        if (userId == null || userId <= 0L || points == null || points.compareTo(BigDecimal.ZERO) <= 0) return;
+        BigDecimal p = points.setScale(2, RoundingMode.CEILING);
+        int affected = wxUserMapper.deductPowerPoints(userId, p);
         if (affected <= 0) {
             throw new BusinessException(StatusCodeEnum.BAD_REQUEST, "算力点不足，请先充值");
         }

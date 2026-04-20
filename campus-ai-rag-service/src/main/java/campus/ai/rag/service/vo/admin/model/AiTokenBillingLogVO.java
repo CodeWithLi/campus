@@ -4,6 +4,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
@@ -38,7 +39,7 @@ public class AiTokenBillingLogVO {
     private Integer totalTokens;
 
     @ApiModelProperty(value = "扣减算力点", example = "2")
-    private Integer consumedPoints;
+    private BigDecimal consumedPoints;
 
     @ApiModelProperty(value = "状态：1成功 0失败", example = "1")
     private Integer status;

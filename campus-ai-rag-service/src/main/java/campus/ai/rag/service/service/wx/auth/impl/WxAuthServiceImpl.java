@@ -24,6 +24,8 @@ import campus.ai.rag.service.vo.wx.WxPowerPointLogVO;
 import campus.ai.rag.service.vo.wx.WxProfileVO;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -36,6 +38,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
@@ -45,8 +48,6 @@ import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 @Service
 public class WxAuthServiceImpl implements WxAuthService {
@@ -161,7 +162,7 @@ public class WxAuthServiceImpl implements WxAuthService {
         userEntity.setAvatarUrl(DEFAULT_AVATAR_URL);
         userEntity.setStatus(1);
         userEntity.setRegisterSource(REGISTER_SOURCE_PASSWORD);
-        userEntity.setPowerPoints(0);
+        userEntity.setPowerPoints(BigDecimal.ZERO);
         wxUserMapper.insert(userEntity);
 
         WxUserAuthEntity passwordAuth = new WxUserAuthEntity();
@@ -274,6 +275,7 @@ public class WxAuthServiceImpl implements WxAuthService {
         vo.setNickname(trimOrEmpty(user.getNickname()));
         String avatar = trimOrEmpty(user.getAvatarUrl());
         vo.setAvatarUrl(isBlank(avatar) ? DEFAULT_AVATAR_URL : avatar);
+        vo.setPowerPoints(user.getPowerPoints() == null ? BigDecimal.ZERO : user.getPowerPoints());
         return vo;
     }
 
@@ -511,7 +513,7 @@ public class WxAuthServiceImpl implements WxAuthService {
         WxPowerPointLogVO vo = new WxPowerPointLogVO();
         vo.setScene(entity.getScene());
         vo.setSceneName(resolveSceneName(entity.getScene()));
-        vo.setConsumedPoints(entity.getConsumedPoints() == null ? 0 : entity.getConsumedPoints());
+        vo.setConsumedPoints(entity.getConsumedPoints() == null ? BigDecimal.ZERO : entity.getConsumedPoints());
         vo.setCreatedAt(entity.getCreatedAt());
         return vo;
     }

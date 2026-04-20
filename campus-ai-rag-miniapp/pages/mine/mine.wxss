@@ -60,6 +60,23 @@
   line-height: 1.4;
 }
 
+.points-line {
+  margin-top: 10rpx;
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.points-label {
+  font-size: 22rpx;
+  opacity: 0.9;
+}
+
+.points-value {
+  font-size: 26rpx;
+  font-weight: 700;
+}
+
 .profile-actions {
   margin-top: 20rpx;
 }
@@ -91,6 +108,176 @@
   font-size: 26rpx;
   color: #94a3b8;
   padding: 16rpx 0 8rpx;
+}
+
+.recharge-card-wrap {
+  margin-top: 16rpx;
+}
+
+.recharge-card {
+  border-radius: 20rpx;
+  padding: 22rpx 20rpx;
+  background: linear-gradient(135deg, #0f3f5e 0%, #146a7f 60%, #1b8aa2 100%);
+  box-shadow: 0 12rpx 28rpx rgba(13, 64, 92, 0.28);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18rpx;
+  position: relative;
+  overflow: hidden;
+  animation: rechargeFloat 3.8s ease-in-out infinite;
+}
+
+.recharge-main {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  z-index: 2;
+}
+
+.recharge-title {
+  color: #ffffff;
+  font-size: 40rpx;
+  font-weight: 800;
+  letter-spacing: 1rpx;
+}
+
+.recharge-subtitle {
+  margin-top: 8rpx;
+  color: rgba(232, 247, 255, 0.92);
+  font-size: 24rpx;
+}
+
+.recharge-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10rpx;
+  position: relative;
+  z-index: 2;
+}
+
+.recharge-balance {
+  color: #e4f9ff;
+  font-size: 24rpx;
+  font-weight: 600;
+  animation: balanceGlow 2.2s ease-in-out infinite;
+}
+
+.recharge-btn {
+  min-width: 136rpx;
+  height: 64rpx;
+  line-height: 64rpx;
+  text-align: center;
+  border-radius: 16rpx;
+  background: linear-gradient(135deg, #16ffe4 0%, #00f1c0 100%);
+  color: #02433d;
+  font-size: 26rpx;
+  font-weight: 700;
+  box-shadow: 0 8rpx 18rpx rgba(0, 241, 192, 0.35);
+  animation: btnPulse 1.9s ease-in-out infinite;
+}
+
+.recharge-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(2rpx);
+  opacity: 0.4;
+}
+
+.orb-1 {
+  width: 190rpx;
+  height: 190rpx;
+  right: -58rpx;
+  top: -72rpx;
+  background: radial-gradient(circle, rgba(69, 229, 255, 0.4) 0%, rgba(69, 229, 255, 0) 72%);
+  animation: orbMoveOne 5s ease-in-out infinite;
+}
+
+.orb-2 {
+  width: 150rpx;
+  height: 150rpx;
+  left: -45rpx;
+  bottom: -58rpx;
+  background: radial-gradient(circle, rgba(23, 255, 224, 0.3) 0%, rgba(23, 255, 224, 0) 72%);
+  animation: orbMoveTwo 6s ease-in-out infinite;
+}
+
+.recharge-shine {
+  position: absolute;
+  top: -20%;
+  left: -45%;
+  width: 30%;
+  height: 150%;
+  background: linear-gradient(
+    110deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.2) 46%,
+    rgba(255, 255, 255, 0.42) 52%,
+    rgba(255, 255, 255, 0) 60%
+  );
+  transform: skewX(-18deg);
+  animation: shineSweep 3.2s linear infinite;
+}
+
+@keyframes rechargeFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3rpx);
+  }
+}
+
+@keyframes orbMoveOne {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.34;
+  }
+  50% {
+    transform: translate(-10rpx, 8rpx) scale(1.1);
+    opacity: 0.48;
+  }
+}
+
+@keyframes orbMoveTwo {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translate(14rpx, -10rpx) scale(1.08);
+    opacity: 0.44;
+  }
+}
+
+@keyframes shineSweep {
+  0% {
+    left: -45%;
+  }
+  100% {
+    left: 130%;
+  }
+}
+
+@keyframes btnPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 8rpx 18rpx rgba(0, 241, 192, 0.35);
+  }
+  50% {
+    transform: scale(1.035);
+    box-shadow: 0 10rpx 24rpx rgba(0, 241, 192, 0.5);
+  }
+}
+
+@keyframes balanceGlow {
+  0%, 100% {
+    text-shadow: 0 0 0 rgba(203, 255, 245, 0);
+  }
+  50% {
+    text-shadow: 0 0 8rpx rgba(203, 255, 245, 0.55);
+  }
 }
 
 .menu-item {
@@ -146,9 +333,15 @@
 
 .logout-wrap {
   margin-top: 30rpx;
+  width: 100%;
+  text-align: center;
 }
 
 .logout-btn {
+  display: inline-block;
+  width: 360rpx;
+  margin: 0 auto;
+  padding: 0;
   border-radius: 14rpx;
   height: 82rpx;
   line-height: 82rpx;

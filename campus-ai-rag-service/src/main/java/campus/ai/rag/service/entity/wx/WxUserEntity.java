@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
@@ -38,7 +39,7 @@ public class WxUserEntity {
     /**
      * 剩余算力点
      */
-    private Integer powerPoints;
+    private BigDecimal powerPoints;
 
     private LocalDateTime lastLoginAt;
 

@@ -6,7 +6,7 @@
   <view class="card" wx:for="{{list}}" wx:key="index">
     <view class="line">
       <text class="scene">{{item.sceneName}}</text>
-      <text class="points">-{{item.consumedPoints}} 算力点</text>
+      <text class="points">-{{item.consumedPointsText}} 算力点</text>
     </view>
     <view class="time">{{item.createdAtText}}</view>
   </view>

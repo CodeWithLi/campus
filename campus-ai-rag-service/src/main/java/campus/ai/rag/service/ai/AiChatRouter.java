@@ -20,6 +20,8 @@ import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.openai.api.OpenAiApi;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +38,8 @@ public class AiChatRouter {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final double IN_PRICE_PER_1K = 0.01d;
     private static final double OUT_PRICE_PER_1K = 0.02d;
-    private static final int MIN_CHARGE_POINTS = 2;
+    private static final BigDecimal MIN_CHARGE_POINTS = new BigDecimal("2.00");
+    private static final BigDecimal BILLING_TOKEN_MULTIPLIER = new BigDecimal("1.5");
 
     private final String defaultModelCode;
     private final AiModelConfigMapper aiModelConfigMapper;
@@ -317,9 +320,9 @@ public class AiChatRouter {
         String billingType = (result.promptTokens == null || result.completionTokens == null || result.totalTokens == null)
                 ? "ESTIMATE_CHAR"
                 : result.billingType;
-        int consumedPoints = 0;
+        BigDecimal consumedPoints = BigDecimal.ZERO;
         if (errMsg == null && shouldCharge(userId, scene)) {
-            consumedPoints = calcConsumedPoints(promptTokens, completionTokens);
+            consumedPoints = calcConsumedPoints(promptTokens, completionTokens, totalTokens);
             doDeductPowerPoints(userId, consumedPoints);
         }
 
@@ -357,11 +360,47 @@ public class AiChatRouter {
         return (int) Math.ceil(chars / 1.5d);
     }
 
-    private int calcConsumedPoints(int promptTokens, int completionTokens) {
-        double inCost = ((double) promptTokens / 1000d) * IN_PRICE_PER_1K;
-        double outCost = ((double) completionTokens / 1000d) * OUT_PRICE_PER_1K;
-        int cost = (int) Math.ceil(inCost + outCost);
-        return Math.max(MIN_CHARGE_POINTS, cost);
+    private BigDecimal calcConsumedPoints(int promptTokens, int completionTokens, int totalTokens) {
+        int safePrompt = Math.max(0, promptTokens);
+        int safeCompletion = Math.max(0, completionTokens);
+        int safeTotal = Math.max(0, totalTokens);
+
+        // 计费 token：ceil(totalTokens * 1.5)
+        int billedTotal = BigDecimal.valueOf(safeTotal)
+                .multiply(BILLING_TOKEN_MULTIPLIER)
+                .setScale(0, RoundingMode.CEILING)
+                .intValue();
+
+        int billedPrompt;
+        int billedCompletion;
+        if (safeTotal <= 0 || billedTotal <= 0) {
+            billedPrompt = 0;
+            billedCompletion = 0;
+        } else {
+            // 按 prompt/completion 占比分摊到 billedTotal，避免丢失输入/输出不同单价
+            BigDecimal ratio = BigDecimal.valueOf(safePrompt)
+                    .divide(BigDecimal.valueOf(safeTotal), 8, RoundingMode.HALF_UP);
+            billedPrompt = BigDecimal.valueOf(billedTotal)
+                    .multiply(ratio)
+                    .setScale(0, RoundingMode.HALF_UP)
+                    .intValue();
+            billedPrompt = Math.max(0, Math.min(billedPrompt, billedTotal));
+            billedCompletion = billedTotal - billedPrompt;
+        }
+
+        BigDecimal inCost = BigDecimal.valueOf(billedPrompt)
+                .divide(new BigDecimal("1000"), 8, RoundingMode.HALF_UP)
+                .multiply(BigDecimal.valueOf(IN_PRICE_PER_1K));
+        BigDecimal outCost = BigDecimal.valueOf(billedCompletion)
+                .divide(new BigDecimal("1000"), 8, RoundingMode.HALF_UP)
+                .multiply(BigDecimal.valueOf(OUT_PRICE_PER_1K));
+
+        BigDecimal cost = inCost.add(outCost);
+        if (cost.compareTo(MIN_CHARGE_POINTS) < 0) {
+            cost = MIN_CHARGE_POINTS;
+        }
+        // 统一保留两位小数，且向上取整到分（避免少扣）
+        return cost.setScale(2, RoundingMode.CEILING);
     }
 
     private boolean shouldCharge(Long userId, String scene) {
@@ -378,17 +417,18 @@ public class AiChatRouter {
         if (user == null || user.getStatus() == null || user.getStatus() != 1) {
             throw new BusinessException(StatusCodeEnum.BAD_REQUEST, "用户不存在或已被禁用");
         }
-        int balance = user.getPowerPoints() == null ? 0 : user.getPowerPoints();
-        if (balance < MIN_CHARGE_POINTS) {
+        BigDecimal balance = user.getPowerPoints() == null ? BigDecimal.ZERO : user.getPowerPoints();
+        if (balance.compareTo(MIN_CHARGE_POINTS) < 0) {
             throw new BusinessException(StatusCodeEnum.BAD_REQUEST, "算力点不足，请先充值");
         }
     }
 
-    private void doDeductPowerPoints(Long userId, int points) {
-        if (points <= 0) {
+    private void doDeductPowerPoints(Long userId, BigDecimal points) {
+        if (points == null || points.compareTo(BigDecimal.ZERO) <= 0) {
             return;
         }
-        int affected = wxUserMapper.deductPowerPoints(userId, points);
+        BigDecimal p = points.setScale(2, RoundingMode.CEILING);
+        int affected = wxUserMapper.deductPowerPoints(userId, p);
         if (affected <= 0) {
             throw new BusinessException(StatusCodeEnum.BAD_REQUEST, "算力点不足，请先充值");
         }
