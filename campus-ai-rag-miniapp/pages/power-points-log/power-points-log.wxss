@@ -1,0 +1,54 @@
+.page {
+  min-height: 100vh;
+  background: #f6f8fc;
+  padding: 24rpx;
+  box-sizing: border-box;
+}
+
+.empty {
+  margin-top: 120rpx;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 28rpx;
+}
+
+.card {
+  background: #ffffff;
+  border-radius: 20rpx;
+  border: 1rpx solid #e9edf7;
+  padding: 20rpx 22rpx;
+  margin-bottom: 16rpx;
+  box-shadow: 0 6rpx 18rpx rgba(15, 23, 42, 0.05);
+}
+
+.line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.scene {
+  color: #0f172a;
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+.points {
+  color: #ef4444;
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
+.time {
+  margin-top: 10rpx;
+  color: #94a3b8;
+  font-size: 24rpx;
+}
+
+.footer {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 24rpx;
+  padding: 14rpx 0 18rpx;
+}
+
