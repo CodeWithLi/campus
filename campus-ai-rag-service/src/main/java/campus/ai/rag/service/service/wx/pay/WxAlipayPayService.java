@@ -18,5 +18,7 @@ public interface WxAlipayPayService {
     WxRechargeOrderVO getMyOrder(String orderNo);
 
     List<WxRechargeOrderVO> listMyOrders();
+
+    WxRechargeOrderVO queryAndSyncMyOrder(String orderNo);
 }
 

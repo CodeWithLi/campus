@@ -2,10 +2,21 @@
   <view class="balance-card">
     <view class="balance-title">当前算力点</view>
     <view class="balance-value">{{powerPoints}}</view>
-    <view class="balance-tip" bindtap="onExplain">1元=100算力点</view>
+    <view class="balance-actions">
+      <view class="balance-tip" bindtap="onExplain">1元=100算力点</view>
+      <view class="balance-refresh" bindtap="onRefreshBalance">一键刷新</view>
+    </view>
   </view>
 
   <view class="section-title">充值档位</view>
+  <view class="tip-card">
+    <view class="tip-title">支付宝沙箱说明</view>
+    <view class="tip-desc">小程序内无法直接拉起支付宝，充值后请复制链接到系统浏览器打开。</view>
+    <view wx:if="{{lastPayUrl}}" class="tip-link">{{lastPayUrl}}</view>
+    <view wx:if="{{lastPayUrl}}" class="tip-btn" bindtap="copyPayUrl">复制最新支付链接</view>
+  </view>
+  <view class="order-entry" bindtap="goRechargeOrders">查看充值订单</view>
+
   <view class="grid">
     <view
       class="pkg"

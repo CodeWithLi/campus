@@ -1,0 +1,16 @@
+<view class="page">
+  <view wx:if="{{!list.length && !loading}}" class="empty">暂无充值订单</view>
+
+  <view class="card" wx:for="{{list}}" wx:key="orderNo">
+    <view class="line">
+      <text class="order-no">{{item.orderNo}}</text>
+      <text class="status status-{{item.status}}">{{item.statusText}}</text>
+    </view>
+    <view class="meta">金额：￥{{item.amountText}} ｜ 到账：{{item.pointsText}} 算力点</view>
+    <view class="meta">时间：{{item.timeText}}</view>
+    <view wx:if="{{item.status === 'CREATED'}}" class="query-btn" data-order-no="{{item.orderNo}}" bindtap="onQueryOrder">
+      查询是否已支付
+    </view>
+  </view>
+</view>
+

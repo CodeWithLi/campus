@@ -14,6 +14,7 @@
     "pages/notification-center/notification-center",
     "pages/power-points-log/power-points-log",
     "pages/power-points-center/power-points-center",
+    "pages/recharge-orders/recharge-orders",
     "pages/pay-webview/pay-webview",
     "pages/change-password/change-password",
     "pages/mine/mine",

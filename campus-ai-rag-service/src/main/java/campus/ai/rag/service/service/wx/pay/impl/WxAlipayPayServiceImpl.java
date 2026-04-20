@@ -5,6 +5,7 @@ import campus.ai.rag.service.dto.wx.WxAlipayCreateOrderDTO;
 import campus.ai.rag.service.entity.wx.WxRechargeOrderEntity;
 import campus.ai.rag.service.exception.BusinessException;
 import campus.ai.rag.service.mapper.wx.WxRechargeOrderMapper;
+import campus.ai.rag.service.mapper.wx.WxPowerPointCreditLogMapper;
 import campus.ai.rag.service.mapper.wx.WxUserMapper;
 import campus.ai.rag.service.properties.AlipayProperties;
 import campus.ai.rag.service.service.wx.pay.WxAlipayPayService;
@@ -16,10 +17,14 @@ import com.alipay.api.AlipayClient;
 import com.alipay.api.AlipayConfig;
 import com.alipay.api.DefaultAlipayClient;
 import com.alipay.api.domain.AlipayTradeWapPayModel;
+import com.alipay.api.domain.AlipayTradeQueryModel;
 import com.alipay.api.internal.util.AlipaySignature;
+import com.alipay.api.request.AlipayTradeQueryRequest;
 import com.alipay.api.request.AlipayTradeWapPayRequest;
+import com.alipay.api.response.AlipayTradeQueryResponse;
 import com.alipay.api.response.AlipayTradeWapPayResponse;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,14 +32,18 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
 @Service
+@Slf4j
 public class WxAlipayPayServiceImpl implements WxAlipayPayService {
 
     private static final String CHANNEL = "ALIPAY_WAP";
@@ -48,13 +57,16 @@ public class WxAlipayPayServiceImpl implements WxAlipayPayService {
     );
 
     private final WxRechargeOrderMapper wxRechargeOrderMapper;
+    private final WxPowerPointCreditLogMapper wxPowerPointCreditLogMapper;
     private final WxUserMapper wxUserMapper;
     private final AlipayProperties alipayProperties;
 
     public WxAlipayPayServiceImpl(WxRechargeOrderMapper wxRechargeOrderMapper,
+                                  WxPowerPointCreditLogMapper wxPowerPointCreditLogMapper,
                                   WxUserMapper wxUserMapper,
                                   AlipayProperties alipayProperties) {
         this.wxRechargeOrderMapper = wxRechargeOrderMapper;
+        this.wxPowerPointCreditLogMapper = wxPowerPointCreditLogMapper;
         this.wxUserMapper = wxUserMapper;
         this.alipayProperties = alipayProperties;
     }
@@ -110,18 +122,23 @@ public class WxAlipayPayServiceImpl implements WxAlipayPayService {
     @Transactional(rollbackFor = Exception.class)
     public String handleNotify(Map<String, String> params) {
         if (params == null || params.isEmpty()) {
+            log.warn("[ALIPAY_NOTIFY] empty params");
             return "failure";
         }
-        if (!verifySign(params)) {
+        boolean signOk = verifySign(params);
+        if (!signOk) {
+            log.warn("[ALIPAY_NOTIFY] sign verify failed, out_trade_no={}", params.get("out_trade_no"));
             return "failure";
         }
 
         String outTradeNo = params.get("out_trade_no");
         String tradeStatus = params.get("trade_status");
         if (isBlank(outTradeNo) || isBlank(tradeStatus)) {
+            log.warn("[ALIPAY_NOTIFY] missing key params, out_trade_no={}, trade_status={}", outTradeNo, tradeStatus);
             return "failure";
         }
         if (!"TRADE_SUCCESS".equals(tradeStatus) && !"TRADE_FINISHED".equals(tradeStatus)) {
+            log.info("[ALIPAY_NOTIFY] ignore trade status, out_trade_no={}, trade_status={}", outTradeNo, tradeStatus);
             return "success";
         }
 
@@ -129,9 +146,11 @@ public class WxAlipayPayServiceImpl implements WxAlipayPayService {
                 .eq(WxRechargeOrderEntity::getOrderNo, outTradeNo)
                 .last("limit 1"));
         if (order == null) {
+            log.warn("[ALIPAY_NOTIFY] order not found, out_trade_no={}", outTradeNo);
             return "failure";
         }
         if ("PAID".equalsIgnoreCase(order.getStatus())) {
+            log.info("[ALIPAY_NOTIFY] order already paid, out_trade_no={}", outTradeNo);
             return "success";
         }
 
@@ -142,7 +161,11 @@ public class WxAlipayPayServiceImpl implements WxAlipayPayService {
                 parseNotifyTime(params.get("gmt_payment"))
         );
         if (changed > 0) {
-            wxUserMapper.addPowerPoints(order.getUserId(), order.getPoints());
+            creditPointsOnce(order);
+            log.info("[ALIPAY_NOTIFY] paid success, out_trade_no={}, trade_no={}, add_points={}",
+                    outTradeNo, params.get("trade_no"), order.getPoints());
+        } else {
+            log.warn("[ALIPAY_NOTIFY] mark paid skipped, out_trade_no={}, current_status={}", outTradeNo, order.getStatus());
         }
         return "success";
     }
@@ -167,6 +190,85 @@ public class WxAlipayPayServiceImpl implements WxAlipayPayService {
                 .eq(WxRechargeOrderEntity::getUserId, userId)
                 .orderByDesc(WxRechargeOrderEntity::getId));
         return list.stream().map(this::toVO).toList();
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public WxRechargeOrderVO queryAndSyncMyOrder(String orderNo) {
+        Long userId = parseUserId(WxAuthContextUtils.requireWxUserId());
+        WxRechargeOrderEntity order = wxRechargeOrderMapper.selectOne(new LambdaQueryWrapper<WxRechargeOrderEntity>()
+                .eq(WxRechargeOrderEntity::getUserId, userId)
+                .eq(WxRechargeOrderEntity::getOrderNo, orderNo)
+                .last("limit 1"));
+        if (order == null) {
+            throw new BusinessException(StatusCodeEnum.NOT_FOUND, "订单不存在");
+        }
+        if ("PAID".equalsIgnoreCase(order.getStatus()) || "CLOSED".equalsIgnoreCase(order.getStatus())) {
+            return toVO(order);
+        }
+
+        try {
+            AlipayClient client = new DefaultAlipayClient(buildAlipayConfig());
+            AlipayTradeQueryRequest request = new AlipayTradeQueryRequest();
+            AlipayTradeQueryModel model = new AlipayTradeQueryModel();
+            model.setOutTradeNo(order.getOrderNo());
+            request.setBizModel(model);
+            AlipayTradeQueryResponse response = client.execute(request);
+            if (!response.isSuccess()) {
+                log.warn("[ALIPAY_QUERY] query failed, order_no={}, code={}, sub_msg={}",
+                        order.getOrderNo(), response.getCode(), response.getSubMsg());
+                return toVO(order);
+            }
+
+            String tradeStatus = response.getTradeStatus();
+            if ("TRADE_SUCCESS".equals(tradeStatus) || "TRADE_FINISHED".equals(tradeStatus)) {
+                int changed = wxRechargeOrderMapper.markPaidIfCreated(
+                        order.getOrderNo(),
+                        response.getTradeNo(),
+                        response.getBuyerLogonId(),
+                        parseNotifyTime(response.getSendPayDate())
+                );
+                if (changed > 0) {
+                    creditPointsOnce(order);
+                    order.setStatus("PAID");
+                    order.setTradeNo(response.getTradeNo());
+                    order.setBuyerLogonId(response.getBuyerLogonId());
+                    order.setPaidAt(parseNotifyTime(response.getSendPayDate()));
+                    log.info("[ALIPAY_QUERY] sync paid success, order_no={}, trade_no={}", order.getOrderNo(), response.getTradeNo());
+                }
+            } else if ("TRADE_CLOSED".equals(tradeStatus)) {
+                int changed = wxRechargeOrderMapper.markClosedIfCreated(order.getOrderNo());
+                if (changed > 0) {
+                    order.setStatus("CLOSED");
+                }
+            }
+        } catch (AlipayApiException e) {
+            log.warn("[ALIPAY_QUERY] exception, order_no={}, msg={}", order.getOrderNo(), e.getMessage());
+        }
+        WxRechargeOrderEntity latest = wxRechargeOrderMapper.selectOne(new LambdaQueryWrapper<WxRechargeOrderEntity>()
+                .eq(WxRechargeOrderEntity::getId, order.getId())
+                .last("limit 1"));
+        return toVO(latest == null ? order : latest);
+    }
+
+    /**
+     * 强幂等：同一 order_no 只能加点一次。
+     */
+    private void creditPointsOnce(WxRechargeOrderEntity order) {
+        if (order == null || order.getUserId() == null || isBlank(order.getOrderNo())) {
+            return;
+        }
+        int inserted = wxPowerPointCreditLogMapper.insertIgnore(
+                order.getUserId(),
+                order.getOrderNo(),
+                CHANNEL,
+                order.getPoints()
+        );
+        if (inserted <= 0) {
+            log.warn("[ALIPAY_CREDIT] skip duplicated credit, order_no={}", order.getOrderNo());
+            return;
+        }
+        wxUserMapper.addPowerPoints(order.getUserId(), order.getPoints());
     }
 
     private String buildPayUrl(String orderNo, BigDecimal amountYuan, String subject) {
@@ -237,6 +339,18 @@ public class WxAlipayPayServiceImpl implements WxAlipayPayService {
         }
         try {
             return LocalDateTime.parse(value, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        } catch (Exception e) {
+            return LocalDateTime.now();
+        }
+    }
+
+    private LocalDateTime parseNotifyTime(Date value) {
+        if (value == null) {
+            return LocalDateTime.now();
+        }
+        try {
+            Instant instant = value.toInstant();
+            return LocalDateTime.ofInstant(instant, ZoneId.of("Asia/Shanghai"));
         } catch (Exception e) {
             return LocalDateTime.now();
         }

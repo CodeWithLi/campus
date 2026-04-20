@@ -57,6 +57,7 @@ public class SecurityConfig {
                         .requestMatchers("/admin/auth/login").permitAll()
                         .requestMatchers("/wx/auth/**").permitAll()
                         .requestMatchers("/wx/pay/alipay/notify").permitAll()
+                        .requestMatchers("/wx/pay/alipay/return").permitAll()
                         .requestMatchers("/admin/**").authenticated()
                         .requestMatchers("/wx/**").authenticated()
                         .anyRequest().permitAll()

@@ -108,6 +108,12 @@ Page({
     })
   },
 
+  goRechargeOrders() {
+    wx.navigateTo({
+      url: '/pages/recharge-orders/recharge-orders'
+    })
+  },
+
   goPowerPointsCenter() {
     wx.navigateTo({
       url: '/pages/power-points-center/power-points-center'

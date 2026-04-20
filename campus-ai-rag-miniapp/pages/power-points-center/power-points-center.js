@@ -16,6 +16,7 @@ Page({
   data: {
     powerPoints: '0.00',
     creating: false,
+    lastPayUrl: '',
     packages: [
       { price: 1, points: 100 },
       { price: 30, points: 3000 },
@@ -46,6 +47,18 @@ Page({
     }
   },
 
+  async onRefreshBalance() {
+    wx.showLoading({ title: '刷新中...' })
+    try {
+      await this.refreshBalance()
+      showSuccess('余额已刷新')
+    } catch (e) {
+      showError(e.message || '刷新失败')
+    } finally {
+      wx.hideLoading()
+    }
+  },
+
   onTapPackage(event) {
     if (this.data.creating) return
     const { price, points } = event.currentTarget.dataset || {}
@@ -55,6 +68,12 @@ Page({
 
   onExplain() {
     showSuccess('1元=100算力点（展示版）')
+  },
+
+  goRechargeOrders() {
+    wx.navigateTo({
+      url: '/pages/recharge-orders/recharge-orders'
+    })
   },
 
   async createOrderAndPay(price) {
@@ -70,9 +89,16 @@ Page({
         throw new Error('订单号获取失败')
       }
       const transitUrl = buildApiUrl(`/pay/h5?orderNo=${encodeURIComponent(orderNo)}`)
-      const encoded = encodeURIComponent(transitUrl)
-      wx.navigateTo({
-        url: `/pages/pay-webview/pay-webview?url=${encoded}&orderNo=${orderNo || ''}`
+      this.setData({ lastPayUrl: transitUrl })
+      wx.showModal({
+        title: '请在外部浏览器支付',
+        content: '微信小程序内无法直接唤起支付宝。点击“复制链接”，到系统浏览器打开并完成支付。',
+        confirmText: '复制链接',
+        cancelText: '稍后再说',
+        success: (modalRes) => {
+          if (!modalRes.confirm) return
+          this.copyPayUrl()
+        }
       })
     } catch (e) {
       showError(e.message || '下单失败')
@@ -80,6 +106,18 @@ Page({
       wx.hideLoading()
       this.setData({ creating: false })
     }
+  },
+
+  copyPayUrl() {
+    const url = this.data.lastPayUrl || ''
+    if (!url) {
+      showError('支付链接为空')
+      return
+    }
+    wx.setClipboardData({
+      data: url,
+      success: () => showSuccess('支付链接已复制')
+    })
   }
 })
 

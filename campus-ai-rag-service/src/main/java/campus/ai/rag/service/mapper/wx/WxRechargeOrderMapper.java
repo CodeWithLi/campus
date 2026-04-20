@@ -17,5 +17,8 @@ public interface WxRechargeOrderMapper extends BaseMapper<WxRechargeOrderEntity>
                           @Param("tradeNo") String tradeNo,
                           @Param("buyerLogonId") String buyerLogonId,
                           @Param("paidAt") LocalDateTime paidAt);
+
+    @Update("UPDATE wx_recharge_order SET status = 'CLOSED' WHERE order_no = #{orderNo} AND status = 'CREATED'")
+    int markClosedIfCreated(@Param("orderNo") String orderNo);
 }
 

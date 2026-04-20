@@ -1,0 +1,61 @@
+.page {
+  min-height: 100vh;
+  background: #f6f8fc;
+  padding: 24rpx;
+  box-sizing: border-box;
+}
+
+.empty {
+  margin-top: 120rpx;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 28rpx;
+}
+
+.card {
+  background: #fff;
+  border-radius: 18rpx;
+  border: 1rpx solid #e9edf7;
+  padding: 18rpx;
+  margin-bottom: 14rpx;
+}
+
+.line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10rpx;
+}
+
+.order-no {
+  font-size: 22rpx;
+  color: #334155;
+  word-break: break-all;
+}
+
+.status {
+  font-size: 22rpx;
+  font-weight: 700;
+}
+
+.status-PAID { color: #16a34a; }
+.status-CREATED { color: #f59e0b; }
+.status-CLOSED, .status-FAILED { color: #ef4444; }
+
+.meta {
+  margin-top: 10rpx;
+  color: #64748b;
+  font-size: 24rpx;
+}
+
+.query-btn {
+  margin-top: 12rpx;
+  display: inline-block;
+  padding: 10rpx 14rpx;
+  border-radius: 12rpx;
+  background: rgba(59, 130, 246, 0.12);
+  color: #1d4ed8;
+  font-size: 24rpx;
+  font-weight: 700;
+}
+

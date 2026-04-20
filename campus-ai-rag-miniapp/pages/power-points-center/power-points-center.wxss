@@ -31,11 +31,77 @@
   opacity: 0.9;
 }
 
+.balance-actions {
+  margin-top: 10rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.balance-refresh {
+  padding: 8rpx 14rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+  font-size: 22rpx;
+  font-weight: 700;
+}
+
 .section-title {
   margin-top: 18rpx;
   margin-bottom: 12rpx;
   font-size: 26rpx;
   color: #64748b;
+}
+
+.tip-card {
+  margin-bottom: 12rpx;
+  background: #ffffff;
+  border-radius: 16rpx;
+  border: 1rpx solid #e9edf7;
+  padding: 16rpx;
+}
+
+.tip-title {
+  font-size: 24rpx;
+  color: #334155;
+  font-weight: 700;
+}
+
+.tip-desc {
+  margin-top: 8rpx;
+  font-size: 22rpx;
+  color: #64748b;
+  line-height: 1.6;
+}
+
+.tip-link {
+  margin-top: 10rpx;
+  font-size: 20rpx;
+  color: #0f766e;
+  word-break: break-all;
+}
+
+.tip-btn {
+  margin-top: 10rpx;
+  display: inline-block;
+  padding: 10rpx 16rpx;
+  border-radius: 12rpx;
+  background: rgba(16, 185, 129, 0.12);
+  color: #047857;
+  font-size: 22rpx;
+  font-weight: 700;
+}
+
+.order-entry {
+  margin-bottom: 12rpx;
+  display: inline-block;
+  padding: 10rpx 14rpx;
+  border-radius: 12rpx;
+  background: rgba(59, 130, 246, 0.12);
+  color: #1d4ed8;
+  font-size: 24rpx;
+  font-weight: 700;
 }
 
 .grid {
