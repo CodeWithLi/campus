@@ -1,14 +1,88 @@
 <view class="page">
-  <view class="hero-card">
-    <view class="hero-title">校园智能助理</view>
+  <view class="bg-orb bg-orb-a"></view>
+  <view class="bg-orb bg-orb-b"></view>
+  <view class="bg-orb bg-orb-c"></view>
+
+  <view class="hero-card enter-rise">
+    <view class="hero-top">
+      <view class="hero-title">校园智能助理</view>
+      <view class="hero-pill" bindtap="goAiChat">立即开始 →</view>
+    </view>
     <view class="hero-subtitle">多模型 + RAG，帮你更快解决校园问题</view>
+    <view class="hero-badges">
+      <view class="badge">多模型</view>
+      <view class="badge">RAG</view>
+      <view class="badge">社区</view>
+      <view class="badge">提醒</view>
+    </view>
   </view>
 
-  <view class="section-title">核心能力</view>
-  <view class="card-list">
-    <view class="feature-card" wx:for="{{quickEntries}}" wx:key="key" data-key="{{item.key}}" bindtap="onTapEntry">
-      <view class="feature-title">{{item.title}}</view>
-      <view class="feature-desc">{{item.desc}}</view>
+  <swiper class="banner-swiper enter-rise delay-1" autoplay circular interval="4200" duration="450">
+    <swiper-item wx:for="{{banners}}" wx:key="key">
+      <view class="banner-card" style="background: {{item.gradient}};" data-action="{{item.action}}" bindtap="onBannerTap">
+        <view class="banner-badge">{{item.badge}}</view>
+        <view class="banner-title">{{item.title}}</view>
+        <view class="banner-desc">{{item.desc}}</view>
+        <view class="banner-btn">{{item.btnText}} →</view>
+      </view>
+    </swiper-item>
+  </swiper>
+
+  <view class="section-head enter-rise delay-2">
+    <view class="section-title title-sheen">快捷入口</view>
+    <view class="section-desc">一键直达常用功能</view>
+  </view>
+  <view class="entry-grid enter-rise delay-2">
+    <view class="entry-card" wx:for="{{quickEntries}}" wx:key="key" data-key="{{item.key}}" bindtap="onTapEntry">
+      <view class="entry-icon-wrap" style="background: {{item.iconBg}};">
+        <view class="entry-icon">{{item.icon}}</view>
+      </view>
+      <view class="entry-name">{{item.title}} <text class="entry-tag">{{item.tag}}</text></view>
+      <view class="entry-desc">{{item.desc}}</view>
+    </view>
+  </view>
+
+  <view wx:if="{{unreadNoticeCount > 0}}" class="notice-banner enter-rise delay-3" bindtap="goNotificationCenter">
+    <view class="notice-left">
+      <text class="notice-icon">🔔</text>
+      <text class="notice-text">你有 {{unreadNoticeCount}} 条未读提醒</text>
+    </view>
+    <text class="notice-action">去查看 ›</text>
+  </view>
+
+  <view class="section-head enter-rise delay-3">
+    <view class="section-title title-sheen">推荐</view>
+    <view class="section-desc">看看大家都在聊什么</view>
+  </view>
+
+  <view class="inspiration-card enter-rise delay-4">
+    <view class="inspiration-head">
+      <view class="inspiration-title">今日灵感</view>
+      <view class="inspiration-more" bindtap="goAi">去 AI 试试 ›</view>
+    </view>
+    <view class="chip-row">
+      <view class="chip" wx:for="{{inspirationList}}" wx:key="index" data-text="{{item}}" bindtap="onPickInspiration">
+        <text class="chip-dot"></text>
+        <text class="chip-text">{{item}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="recommend-card enter-rise delay-4">
+    <view class="recommend-head">
+      <view class="recommend-title">热门帖子</view>
+      <view class="recommend-more" bindtap="goCommunity">进入社区 ›</view>
+    </view>
+    <view wx:if="{{postLoading}}" class="recommend-loading">加载中...</view>
+    <view wx:elif="{{!posts.length}}" class="recommend-empty">暂无帖子，去发第一条吧</view>
+    <view wx:else class="post-list">
+      <view class="post-item" wx:for="{{posts}}" wx:key="id" data-id="{{item.id}}" bindtap="onOpenPost">
+        <view class="post-title">{{item.title}}</view>
+        <view class="post-sub">
+          <text class="post-meta">{{item.nickname || '同学'}} · 👍 {{item.likeCount || 0}} · 💬 {{item.commentCount || 0}}</text>
+          <text class="post-arrow">›</text>
+        </view>
+      </view>
     </view>
   </view>
 </view>
