@@ -33,4 +33,6 @@ public interface WxPostService {
     WxPostCommentVO createComment(Long postId, WxPostCommentCreateDTO dto);
 
     List<WxPostCommentVO> listComments(Long postId);
+
+    Boolean deleteMyPost(Long postId);
 }

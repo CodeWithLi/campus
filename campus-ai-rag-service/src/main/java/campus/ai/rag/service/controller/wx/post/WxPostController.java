@@ -18,6 +18,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -93,5 +94,11 @@ public class WxPostController {
     @Operation(summary = "评论列表（多级）")
     public Result<List<WxPostCommentVO>> comments(@PathVariable("postId") Long postId) {
         return Result.success(wxPostService.listComments(postId));
+    }
+
+    @DeleteMapping("/{postId}")
+    @Operation(summary = "删除我的帖子")
+    public Result<Boolean> delete(@PathVariable("postId") Long postId) {
+        return Result.success(wxPostService.deleteMyPost(postId));
     }
 }

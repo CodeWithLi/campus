@@ -32,7 +32,7 @@
     <view class="meta">
       <view class="meta-left">{{item.nickname || ('用户 ' + item.userId)}}</view>
       <view class="meta-right-wrap">
-        <view class="meta-right">{{item.createdAt || ''}}</view>
+        <view class="meta-right">{{item.displayTime || item.createdAt || ''}}</view>
         <view class="meta-stats">
           <text class="stat-item">👍 {{item.likeCount || 0}}</text>
           <text class="stat-item">💬 {{item.commentCount || 0}}</text>

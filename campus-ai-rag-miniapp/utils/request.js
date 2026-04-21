@@ -57,6 +57,9 @@ export const get = (url, data = {}, header = {}) =>
 export const post = (url, data = {}, header = {}) =>
   request({ url, method: 'POST', data, header })
 
+export const del = (url, data = {}, header = {}) =>
+  request({ url, method: 'DELETE', data, header })
+
 export const uploadFiles = (url, filePaths = [], name = 'files', formData = {}) =>
   new Promise((resolve, reject) => {
     if (!Array.isArray(filePaths) || filePaths.length === 0) {

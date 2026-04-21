@@ -404,6 +404,20 @@ public class WxPostServiceImpl implements WxPostService {
         return roots;
     }
 
+    @Override
+    public Boolean deleteMyPost(Long postId) {
+        ForumPostEntity post = mustGetPost(postId);
+        Long userId = parseUserId(WxAuthContextUtils.requireWxUserId());
+        if (!Objects.equals(post.getUserId(), userId)) {
+            throw new BusinessException(StatusCodeEnum.FORBIDDEN, "只能删除自己的帖子");
+        }
+        forumPostCommentMapper.delete(new LambdaQueryWrapper<ForumPostCommentEntity>()
+                .eq(ForumPostCommentEntity::getPostId, postId));
+        forumPostLikeMapper.delete(new LambdaQueryWrapper<ForumPostLikeEntity>()
+                .eq(ForumPostLikeEntity::getPostId, postId));
+        return forumPostMapper.deleteById(postId) > 0;
+    }
+
     private void assertSpringAiModel(String modelCode) {
         AiModelConfigEntity model = aiModelConfigMapper.selectOne(new LambdaQueryWrapper<AiModelConfigEntity>()
                 .eq(AiModelConfigEntity::getEnabled, 1)

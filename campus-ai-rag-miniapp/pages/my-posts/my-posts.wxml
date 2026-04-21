@@ -31,6 +31,7 @@
       <view class="meta-stats">
         <text class="stat-item">👍 {{item.likeCount || 0}}</text>
         <text class="stat-item">💬 {{item.commentCount || 0}}</text>
+        <text class="stat-delete" data-id="{{item.id}}" catchtap="onDeletePost">删除</text>
       </view>
     </view>
   </view>

@@ -1,5 +1,5 @@
-import { listMyPostsApi } from '../../api/post'
-import { showError } from '../../utils/ui'
+import { deleteMyPostApi, listMyPostsApi } from '../../api/post'
+import { showError, showSuccess } from '../../utils/ui'
 
 Page({
   data: {
@@ -49,6 +49,25 @@ Page({
     const id = e.currentTarget.dataset?.id
     if (!id) return
     wx.navigateTo({ url: `/pages/post-detail/post-detail?id=${id}` })
+  },
+
+  onDeletePost(e) {
+    const id = Number(e.currentTarget.dataset?.id || 0)
+    if (!id) return
+    wx.showModal({
+      title: '确认删除',
+      content: '删除后不可恢复，是否继续？',
+      success: async (res) => {
+        if (!res.confirm) return
+        try {
+          await deleteMyPostApi(id)
+          showSuccess('删除成功')
+          this.loadList(true)
+        } catch (err) {
+          showError(err.message || '删除失败')
+        }
+      }
+    })
   },
 
   onCreatePost() {

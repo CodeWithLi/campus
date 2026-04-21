@@ -1,7 +1,7 @@
 import { getStorage, removeStorage, setStorage } from '../../utils/storage'
-import { showSuccess } from '../../utils/ui'
+import { showError, showSuccess } from '../../utils/ui'
 import { listReminderNoticeApi } from '../../api/reminder'
-import { getProfileApi, uploadAvatarApi } from '../../api/auth'
+import { getProfileApi, updateNicknameApi, uploadAvatarApi } from '../../api/auth'
 import { buildApiUrl } from '../../config/env'
 
 const TOKEN_KEY = 'TOKEN'
@@ -162,6 +162,41 @@ Page({
           wx.showToast({ title: e.message || '头像上传失败', icon: 'none' })
         } finally {
           this.setData({ avatarUploading: false })
+        }
+      }
+    })
+  },
+
+  onEditNickname() {
+    if (!this.data.isLogin) return
+    wx.showModal({
+      title: '修改昵称',
+      editable: true,
+      placeholderText: '请输入2-20个字符',
+      content: this.data.nickname || '',
+      success: async (res) => {
+        if (!res.confirm) return
+        const nickname = (res.content || '').trim()
+        if (!nickname) {
+          showError('昵称不能为空')
+          return
+        }
+        if (nickname.length < 2 || nickname.length > 20) {
+          showError('昵称长度需在2-20个字符之间')
+          return
+        }
+        try {
+          await updateNicknameApi(nickname)
+          const userInfo = getStorage(USER_INFO_KEY) || {}
+          const nextUserInfo = {
+            ...userInfo,
+            nickname
+          }
+          setStorage(USER_INFO_KEY, nextUserInfo)
+          this.setData({ nickname })
+          showSuccess('昵称修改成功')
+        } catch (e) {
+          showError(e.message || '昵称修改失败')
         }
       }
     })

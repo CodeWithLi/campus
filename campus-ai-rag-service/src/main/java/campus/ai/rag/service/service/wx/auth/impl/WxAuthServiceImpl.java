@@ -3,6 +3,7 @@ package campus.ai.rag.service.service.wx.auth.impl;
 import campus.ai.rag.service.common.StatusCodeEnum;
 import campus.ai.rag.service.dto.wx.WxEmailCodeDTO;
 import campus.ai.rag.service.dto.wx.WxLoginDTO;
+import campus.ai.rag.service.dto.wx.WxNicknameUpdateDTO;
 import campus.ai.rag.service.dto.wx.WxPasswordUpdateDTO;
 import campus.ai.rag.service.dto.wx.WxRegisterDTO;
 import campus.ai.rag.service.entity.wx.WxUserAuthEntity;
@@ -337,6 +338,29 @@ public class WxAuthServiceImpl implements WxAuthService {
         } catch (IOException e) {
             throw new BusinessException(StatusCodeEnum.BAD_REQUEST, "头像保存失败");
         }
+    }
+
+    @Override
+    public Boolean updateNickname(WxNicknameUpdateDTO dto) {
+        if (dto == null || isBlank(dto.getNickname())) {
+            throw new BusinessException(StatusCodeEnum.BAD_REQUEST, "昵称不能为空");
+        }
+        String nickname = dto.getNickname().trim();
+        if (nickname.length() < 2) {
+            throw new BusinessException(StatusCodeEnum.BAD_REQUEST, "昵称至少2个字符");
+        }
+        if (nickname.length() > 20) {
+            throw new BusinessException(StatusCodeEnum.BAD_REQUEST, "昵称不能超过20个字符");
+        }
+        Long userId = parseUserId(WxAuthContextUtils.requireWxUserId());
+        WxUserEntity user = wxUserMapper.selectById(userId);
+        if (user == null) {
+            throw new BusinessException(StatusCodeEnum.NOT_FOUND, "用户不存在");
+        }
+        WxUserEntity update = new WxUserEntity();
+        update.setId(userId);
+        update.setNickname(nickname);
+        return wxUserMapper.updateById(update) > 0;
     }
 
     private String resolveOpenidByWxCode(String wxCode) {

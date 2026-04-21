@@ -1,4 +1,4 @@
-import { get, post, uploadFiles } from '../utils/request'
+import { del, get, post, uploadFiles } from '../utils/request'
 
 /** AI 生成标题与正文（服务端场景 POST，模型见 app.wx.post.ai-model-code） */
 export const postAiGenerate = (payload) => post('/wx/post/ai-generate', payload)
@@ -42,3 +42,5 @@ export const togglePostLikeApi = (postId) => post(`/wx/post/${postId}/like`)
 export const listPostCommentsApi = (postId) => get(`/wx/post/${postId}/comments`)
 
 export const createPostCommentApi = (postId, payload) => post(`/wx/post/${postId}/comments`, payload)
+
+export const deleteMyPostApi = (postId) => del(`/wx/post/${postId}`)

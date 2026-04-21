@@ -2,6 +2,7 @@ package campus.ai.rag.service.service.wx.auth;
 
 import campus.ai.rag.service.dto.wx.WxEmailCodeDTO;
 import campus.ai.rag.service.dto.wx.WxLoginDTO;
+import campus.ai.rag.service.dto.wx.WxNicknameUpdateDTO;
 import campus.ai.rag.service.dto.wx.WxPasswordUpdateDTO;
 import campus.ai.rag.service.dto.wx.WxRegisterDTO;
 import campus.ai.rag.service.vo.admin.AdminLoginVO;
@@ -27,5 +28,7 @@ public interface WxAuthService {
     WxPowerPointLogPageVO listPowerPointLogs(Long pageNum, Long pageSize);
 
     String uploadAvatar(MultipartFile file);
+
+    Boolean updateNickname(WxNicknameUpdateDTO dto);
 }
 

@@ -3,6 +3,7 @@ package campus.ai.rag.service.controller.wx.auth;
 import campus.ai.rag.service.common.Result;
 import campus.ai.rag.service.dto.wx.WxEmailCodeDTO;
 import campus.ai.rag.service.dto.wx.WxLoginDTO;
+import campus.ai.rag.service.dto.wx.WxNicknameUpdateDTO;
 import campus.ai.rag.service.dto.wx.WxPasswordUpdateDTO;
 import campus.ai.rag.service.dto.wx.WxRegisterDTO;
 import campus.ai.rag.service.service.wx.auth.WxAuthService;
@@ -97,6 +98,13 @@ public class WxAuthController {
     @Operation(summary = "上传头像")
     public Result<String> uploadAvatar(@RequestParam("file") MultipartFile file) {
         return Result.success(wxAuthService.uploadAvatar(file));
+    }
+
+    @PostMapping("/nickname/update")
+    @ApiOperation(value = "修改昵称")
+    @Operation(summary = "修改昵称")
+    public Result<Boolean> updateNickname(@RequestBody WxNicknameUpdateDTO dto) {
+        return Result.success(wxAuthService.updateNickname(dto));
     }
 }
 

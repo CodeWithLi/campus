@@ -17,7 +17,11 @@ Page({
     this.loadList(true)
   },
 
-  async loadList(reset = false) {
+  onPullDownRefresh() {
+    this.loadList(true, true)
+  },
+
+  async loadList(reset = false, fromPullDown = false) {
     const pageNo = reset ? 1 : this.data.pageNo
     const pageSize = this.data.pageSize
     this.setData({ loading: reset, loadingMore: !reset })
@@ -28,6 +32,7 @@ Page({
       const rows = Array.isArray(data.list) ? data.list : []
       const normalized = rows.map((item) => ({
         ...item,
+        displayTime: this.formatRelativeTime(item.createdAt),
         fullImageUrls: (item.imageUrls || []).map((u) => this.fullUrl(u))
       }))
       const list = reset ? normalized : [...this.data.list, ...normalized]
@@ -41,6 +46,9 @@ Page({
     } catch (e) {
       showError(e.message || '加载帖子失败')
     } finally {
+      if (fromPullDown) {
+        wx.stopPullDownRefresh()
+      }
       this.setData({ loading: false, loadingMore: false })
     }
   },
@@ -91,5 +99,21 @@ Page({
     if (!path) return ''
     if (/^https?:\/\//.test(path)) return path
     return buildApiUrl(path)
+  },
+
+  formatRelativeTime(datetime) {
+    if (!datetime) return ''
+    const parsed = new Date(datetime.replace(/-/g, '/'))
+    if (Number.isNaN(parsed.getTime())) return datetime
+    const diffMs = Date.now() - parsed.getTime()
+    if (diffMs < 0) return datetime
+    const minute = 60 * 1000
+    const hour = 60 * minute
+    const day = 24 * hour
+    if (diffMs < minute) return '刚刚'
+    if (diffMs < hour) return `${Math.floor(diffMs / minute)}分钟前`
+    if (diffMs < day) return `${Math.floor(diffMs / hour)}小时前`
+    if (diffMs < 7 * day) return `${Math.floor(diffMs / day)}天前`
+    return datetime
   }
 })

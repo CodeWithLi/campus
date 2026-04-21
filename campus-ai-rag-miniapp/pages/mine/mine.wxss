@@ -77,6 +77,20 @@
   font-weight: 700;
 }
 
+.name-edit-line {
+  margin-top: 10rpx;
+}
+
+.name-edit-btn {
+  display: inline-block;
+  font-size: 22rpx;
+  color: #eef2ff;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1rpx solid rgba(255, 255, 255, 0.36);
+  border-radius: 999rpx;
+  padding: 6rpx 14rpx;
+}
+
 .profile-actions {
   margin-top: 20rpx;
 }

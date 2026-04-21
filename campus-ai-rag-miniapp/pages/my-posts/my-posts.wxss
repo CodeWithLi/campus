@@ -121,6 +121,14 @@
   color: #64748b;
 }
 
+.stat-delete {
+  font-size: 22rpx;
+  color: #dc2626;
+  background: #fee2e2;
+  border-radius: 999rpx;
+  padding: 4rpx 12rpx;
+}
+
 .empty {
   margin: 180rpx 0 30rpx;
   text-align: center;

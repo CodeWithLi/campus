@@ -28,3 +28,6 @@ export const uploadAvatarApi = async (filePath) => {
   const res = await uploadFiles('/wx/auth/avatar/upload', [filePath], 'file')
   return res
 }
+
+export const updateNicknameApi = (nickname) =>
+  post('/wx/auth/nickname/update', { nickname })

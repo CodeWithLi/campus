@@ -18,6 +18,9 @@
           <text class="points-label">算力点</text>
           <text class="points-value">{{powerPoints}}</text>
         </view>
+        <view wx:if="{{isLogin}}" class="name-edit-line">
+          <text class="name-edit-btn" bindtap="onEditNickname">修改昵称</text>
+        </view>
       </view>
     </view>
     <view class="profile-actions" wx:if="{{!isLogin}}">
