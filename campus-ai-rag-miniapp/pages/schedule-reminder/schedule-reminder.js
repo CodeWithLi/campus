@@ -5,9 +5,7 @@ import {
   deleteReminderApi,
   listNoticeAgentRecordsApi,
   listReminderApi,
-  parseNoticeByAgentApi,
-  parseNoticeByImageModelApi,
-  parseNoticeByImageUnderstandApi
+  parseNoticeByImageVisionApi,
 } from '../../api/reminder'
 import { showError, showSuccess } from '../../utils/ui'
 import { REMINDER_SUBSCRIBE_TEMPLATE_ID } from '../../config/env'
@@ -126,47 +124,7 @@ Page({
     })
   },
 
-  async onUploadNotice() {
-    if (this.data.parsingNotice) return
-    wx.chooseMessageFile({
-      count: 1,
-      type: 'file',
-      extension: ['pdf', 'jpg', 'jpeg', 'png', 'bmp'],
-      success: async (res) => {
-        const file = res?.tempFiles?.[0]
-        const filePath = file?.path || file?.tempFilePath || ''
-        if (!filePath) return
-        this.setData({ parsingNotice: true })
-        wx.showLoading({ title: '解析中...' })
-        try {
-          const response = await parseNoticeByAgentApi(filePath)
-          const parsed = response?.data || null
-          if (parsed && Array.isArray(parsed.items)) {
-            parsed.items = parsed.items.map((it) => {
-              const remindAt = Number(it?.remindAt || 0)
-              return {
-                ...it,
-                remindAt,
-                dateText: this.toDateText(remindAt),
-                timeText: this.toTimeText(remindAt),
-                typeIndex: this.typeToIndex(it?.type)
-              }
-            })
-          }
-          this.setData({ agentResult: parsed })
-          this.loadAgentRecords()
-          showSuccess('通知解析完成')
-        } catch (e) {
-          showError(e.message || '通知解析失败')
-        } finally {
-          wx.hideLoading()
-          this.setData({ parsingNotice: false })
-        }
-      }
-    })
-  },
-
-  async onUploadNoticeByImageUnderstand() {
+  async onUploadNoticeByImageVision() {
     if (this.data.parsingNotice) return
     wx.chooseMedia({
       count: 1,
@@ -176,9 +134,9 @@ Page({
         const filePath = res?.tempFiles?.[0]?.tempFilePath || ''
         if (!filePath) return
         this.setData({ parsingNotice: true })
-        wx.showLoading({ title: '图片理解中...' })
+        wx.showLoading({ title: '图像理解中...' })
         try {
-          const response = await parseNoticeByImageUnderstandApi(filePath)
+          const response = await parseNoticeByImageVisionApi(filePath)
           const parsed = response?.data || null
           if (parsed && Array.isArray(parsed.items)) {
             parsed.items = parsed.items.map((it) => {
@@ -194,48 +152,9 @@ Page({
           }
           this.setData({ agentResult: parsed })
           this.loadAgentRecords()
-          showSuccess('图片理解解析完成')
+          showSuccess('图像与视频理解解析完成')
         } catch (e) {
-          showError(e.message || '图片理解解析失败')
-        } finally {
-          wx.hideLoading()
-          this.setData({ parsingNotice: false })
-        }
-      }
-    })
-  },
-
-  async onUploadNoticeByImageModel() {
-    if (this.data.parsingNotice) return
-    wx.chooseMedia({
-      count: 1,
-      mediaType: ['image'],
-      sourceType: ['album', 'camera'],
-      success: async (res) => {
-        const filePath = res?.tempFiles?.[0]?.tempFilePath || ''
-        if (!filePath) return
-        this.setData({ parsingNotice: true })
-        wx.showLoading({ title: '大模型识图中...' })
-        try {
-          const response = await parseNoticeByImageModelApi(filePath)
-          const parsed = response?.data || null
-          if (parsed && Array.isArray(parsed.items)) {
-            parsed.items = parsed.items.map((it) => {
-              const remindAt = Number(it?.remindAt || 0)
-              return {
-                ...it,
-                remindAt,
-                dateText: this.toDateText(remindAt),
-                timeText: this.toTimeText(remindAt),
-                typeIndex: this.typeToIndex(it?.type)
-              }
-            })
-          }
-          this.setData({ agentResult: parsed })
-          this.loadAgentRecords()
-          showSuccess('大模型解析完成')
-        } catch (e) {
-          showError(e.message || '大模型解析失败')
+          showError(e.message || '图像与视频理解解析失败')
         } finally {
           wx.hideLoading()
           this.setData({ parsingNotice: false })

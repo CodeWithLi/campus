@@ -88,6 +88,12 @@ public class WxScheduleReminderController {
         return Result.success(wxNoticeAgentService.parseByImageModel(file));
     }
 
+    @PostMapping("/agent/parse-image-vision")
+    @Operation(summary = "通知智能体解析（图像与视频理解-SpringAI）")
+    public Result<WxNoticeAgentParseVO> parseNoticeByImageVision(@RequestPart("file") org.springframework.web.multipart.MultipartFile file) {
+        return Result.success(wxNoticeAgentService.parseByImageVision(file));
+    }
+
     @PostMapping("/agent/create")
     @Operation(summary = "通知智能体批量创建提醒")
     public Result<List<WxScheduleReminderVO>> createByAgent(@RequestBody WxNoticeAgentCreateDTO dto) {

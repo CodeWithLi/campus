@@ -16,8 +16,15 @@ public class WebConfiguration implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedMethods(new String[]{"GET", "POST", "PUT", "DELETE"})
-                .allowedOrigins("*");
+                .allowedOrigins(
+                        "https://api.baomi-ai.com",
+                        "http://localhost:5173"
+                )
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedHeaders("*")
+                .exposedHeaders("Authorization")
+                .allowCredentials(false)
+                .maxAge(3600);
     }
 
     @Override

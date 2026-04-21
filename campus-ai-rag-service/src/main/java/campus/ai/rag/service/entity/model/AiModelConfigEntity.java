@@ -63,6 +63,11 @@ public class AiModelConfigEntity {
 
     private Integer enabled;
 
+    /**
+     * 是否支持图片对话：1=支持，0=不支持
+     */
+    private Integer supportsImageChat;
+
     private Integer sortNo;
 
     private String remark;

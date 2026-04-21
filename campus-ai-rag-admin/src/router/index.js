@@ -7,7 +7,7 @@ const router = createRouter({
     {
       path: '/',
       component: () => import('@/layout/index.vue'),
-      redirect: '/dashboard',
+      redirect: '/login',
       children: [
         {
           path: '/dashboard',
@@ -106,10 +106,6 @@ router.beforeEach((to) => {
 
   if (to.path !== '/login' && !userStore.token) {
     return '/login'
-  }
-
-  if (to.path === '/login' && userStore.token) {
-    return '/dashboard'
   }
 
   if (to.meta?.requiresSuperAdmin && !userStore.isSuperAdmin) {

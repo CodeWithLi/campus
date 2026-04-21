@@ -84,6 +84,18 @@ Page({
     this.sendMessage(message)
   },
 
+  onImageSelected(event) {
+    const filePath = event.detail?.filePath || ''
+    if (!filePath) return
+    const selectedModel = this.data.modelOptions[this.data.selectedModelIndex] || {}
+    const supportsImageChat = Number(selectedModel?.supportsImageChat || 0) === 1
+    if (!supportsImageChat) {
+      showError('当前大模型不支持上传图片')
+      return
+    }
+    this.sendMessage('', { filePath })
+  },
+
   onQuickAsk(event) {
     const message = event.currentTarget.dataset.text || ''
     this.sendMessage(message)
@@ -150,16 +162,30 @@ Page({
     })
   },
 
-  async sendMessage(message) {
-    if (!message || this.data.loading) {
+  async sendMessage(message, imagePayload = null) {
+    const hasImage = Boolean(imagePayload?.filePath)
+    if ((!message && !hasImage) || this.data.loading) {
       return
     }
+    let imageBase64 = ''
+    let imageMimeType = ''
+    if (hasImage) {
+      try {
+        const imageData = await this.readImageAsBase64(imagePayload.filePath)
+        imageBase64 = imageData.base64
+        imageMimeType = imageData.mimeType
+      } catch (e) {
+        showError(e.message || '图片读取失败')
+        return
+      }
+    }
+    const userDisplayText = hasImage ? `[图片]\n${message || '请帮我识别图片内容并回答。'}` : message
     const userMessageId = buildId('u')
     const thinkingId = buildId('a')
     const userMessage = {
       id: userMessageId,
       role: 'user',
-      content: message,
+      content: userDisplayText,
       createdAt: Date.now()
     }
     const thinkingMessage = {
@@ -179,7 +205,9 @@ Page({
       const response = await chatApi({
         modelCode: this.data.selectedModelCode || null,
         conversationId: this.data.conversationId || null,
-        message
+        message: message || null,
+        imageBase64: imageBase64 || null,
+        imageMimeType: imageMimeType || null
       })
       const conversationId = response?.data?.conversationId || this.data.conversationId
       const conversationTitle = response?.data?.conversationTitle || this.data.conversationTitle
@@ -473,5 +501,29 @@ Page({
     }
     const filtered = list.filter((item) => item.conversationId !== conversationId)
     setStorage(CHAT_HISTORY_KEY, [payload, ...filtered].slice(0, 30))
+  },
+  readImageAsBase64(filePath) {
+    return new Promise((resolve, reject) => {
+      if (!filePath) {
+        reject(new Error('图片路径为空'))
+        return
+      }
+      const fs = wx.getFileSystemManager()
+      fs.readFile({
+        filePath,
+        encoding: 'base64',
+        success: (res) => {
+          const base64 = res?.data || ''
+          if (!base64) {
+            reject(new Error('图片内容为空'))
+            return
+          }
+          const ext = (filePath.split('.').pop() || '').toLowerCase()
+          const mimeType = ext === 'png' ? 'image/png' : (ext === 'bmp' ? 'image/bmp' : 'image/jpeg')
+          resolve({ base64, mimeType })
+        },
+        fail: () => reject(new Error('读取图片失败'))
+      })
+    })
   }
 })

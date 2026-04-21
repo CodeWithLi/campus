@@ -22,6 +22,12 @@ import org.springframework.ai.openai.api.OpenAiApi;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +46,7 @@ public class AiChatRouter {
     private static final double OUT_PRICE_PER_1K = 0.02d;
     private static final BigDecimal MIN_CHARGE_POINTS = new BigDecimal("2.00");
     private static final BigDecimal BILLING_TOKEN_MULTIPLIER = new BigDecimal("1.5");
+    private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
 
     private final String defaultModelCode;
     private final AiModelConfigMapper aiModelConfigMapper;
@@ -108,6 +115,31 @@ public class AiChatRouter {
 
     public String getDefaultModelCode() {
         return defaultModelCode;
+    }
+
+    public String rawVisionChat(Long userId,
+                                String modelCode,
+                                String userMessage,
+                                String imageBase64,
+                                String imageMimeType) {
+        if (imageBase64 == null || imageBase64.trim().isEmpty()) {
+            throw new BusinessException(StatusCodeEnum.BAD_REQUEST, "图片内容不能为空");
+        }
+        String prompt = (userMessage == null || userMessage.trim().isEmpty())
+                ? "请先识别图片内容，再回答用户问题。"
+                : userMessage.trim();
+        AiModelConfigEntity modelConfig = resolveModel(modelCode);
+        if (!Objects.equals(modelConfig.getSupportsImageChat(), 1)) {
+            throw new BusinessException(StatusCodeEnum.BAD_REQUEST, "当前模型不支持图片对话");
+        }
+        try {
+            ChatInvokeResult result = visionHttpChat(modelConfig, prompt, imageBase64.trim(), imageMimeType);
+            recordBilling(safeUserId(userId), "INTERNAL", modelConfig, prompt, result, null);
+            return result.answer;
+        } catch (RuntimeException ex) {
+            recordBillingFailure(safeUserId(userId), "INTERNAL", modelConfig, prompt, ex.getMessage());
+            throw ex;
+        }
     }
 
     public void validate() {
@@ -263,6 +295,108 @@ public class AiChatRouter {
                 modelConfig.getGenericRespPath()
         );
         return ChatInvokeResult.of(content, null, null, null, "ESTIMATE_CHAR", null);
+    }
+
+    private ChatInvokeResult visionHttpChat(AiModelConfigEntity modelConfig,
+                                            String userMessage,
+                                            String imageBase64,
+                                            String imageMimeType) {
+        String endpoint = buildChatCompletionsEndpoint(modelConfig.getApiBaseUrl());
+        String mime = (imageMimeType == null || imageMimeType.trim().isEmpty()) ? "image/jpeg" : imageMimeType.trim();
+        String dataUrl = "data:" + mime + ";base64," + imageBase64;
+        Map<String, Object> body = new HashMap<>();
+        body.put("model", modelConfig.getModelNameRemote());
+        body.put("temperature", modelConfig.getTemperature());
+        body.put("max_tokens", modelConfig.getMaxTokens());
+        body.put("messages", List.of(Map.of(
+                "role", "user",
+                "content", List.of(
+                        Map.of("type", "text", "text", userMessage),
+                        Map.of("type", "image_url", "image_url", Map.of("url", dataUrl))
+                )
+        )));
+        try {
+            String bodyJson = OBJECT_MAPPER.writeValueAsString(body);
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(endpoint))
+                    .timeout(Duration.ofSeconds(120))
+                    .header("Content-Type", "application/json")
+                    .header("Authorization", "Bearer " + modelConfig.getApiKey())
+                    .POST(HttpRequest.BodyPublishers.ofString(bodyJson, StandardCharsets.UTF_8))
+                    .build();
+            HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+            if (response.statusCode() < 200 || response.statusCode() >= 300) {
+                throw new BusinessException(StatusCodeEnum.BUSINESS_ERROR,
+                        "视觉模型调用失败，status=" + response.statusCode() + "，body=" + truncate(response.body(), 300));
+            }
+            String responseText = response.body();
+            Map<String, Object> root = OBJECT_MAPPER.readValue(responseText, new TypeReference<>() {
+            });
+            String content = extractVisionContent(root);
+            Integer promptTokens = null;
+            Integer completionTokens = null;
+            Integer totalTokens = null;
+            Object usageObj = root.get("usage");
+            if (usageObj instanceof Map<?, ?> usage) {
+                promptTokens = toIntSafe(usage.get("prompt_tokens"));
+                completionTokens = toIntSafe(usage.get("completion_tokens"));
+                totalTokens = toIntSafe(usage.get("total_tokens"));
+            }
+            return ChatInvokeResult.of(content, promptTokens, completionTokens, totalTokens, "TOKEN_API", responseText);
+        } catch (BusinessException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new BusinessException(StatusCodeEnum.BUSINESS_ERROR, "视觉模型调用失败：" + e.getMessage());
+        }
+    }
+
+    private String extractVisionContent(Map<String, Object> root) {
+        Object choicesObj = root.get("choices");
+        if (!(choicesObj instanceof List<?> choices) || choices.isEmpty()) {
+            return "";
+        }
+        Object firstObj = choices.get(0);
+        if (!(firstObj instanceof Map<?, ?> first)) {
+            return "";
+        }
+        Object messageObj = first.get("message");
+        if (!(messageObj instanceof Map<?, ?> message)) {
+            return "";
+        }
+        Object contentObj = message.get("content");
+        if (contentObj instanceof String s) {
+            return s;
+        }
+        if (contentObj instanceof List<?> parts) {
+            StringBuilder sb = new StringBuilder();
+            for (Object partObj : parts) {
+                if (partObj instanceof Map<?, ?> part) {
+                    Object textObj = part.get("text");
+                    if (textObj != null) {
+                        sb.append(String.valueOf(textObj)).append('\n');
+                    }
+                }
+            }
+            return sb.toString().trim();
+        }
+        return contentObj == null ? "" : String.valueOf(contentObj);
+    }
+
+    private String buildChatCompletionsEndpoint(String apiBaseUrl) {
+        if (isBlank(apiBaseUrl)) {
+            throw new BusinessException(StatusCodeEnum.BAD_REQUEST, "springai模式下 api_base_url 不能为空");
+        }
+        String base = apiBaseUrl.trim();
+        if (base.endsWith("/chat/completions")) {
+            return base;
+        }
+        if (base.endsWith("/")) {
+            base = base.substring(0, base.length() - 1);
+        }
+        if (!base.endsWith("/v1")) {
+            base = base + "/v1";
+        }
+        return base + "/chat/completions";
     }
 
     private AiModelConfigEntity resolveModel(String modelCode) {

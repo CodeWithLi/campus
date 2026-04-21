@@ -4,7 +4,6 @@ const TOKEN_KEY = 'TOKEN'
 const LOGIN_STATUS_KEY = 'LOGIN_STATUS'
 const LOGIN_PAGE = '/pages/login/login'
 let loginPrompting = false
-let lastPromptAt = 0
 
 const PUBLIC_PAGE_ROUTES = new Set([
   'pages/home/home',
@@ -66,11 +65,6 @@ export const ensureLoginOrRedirect = (message = '未登录或登录已过期') =
   if (loginPrompting) {
     return false
   }
-  const now = Date.now()
-  if (now - lastPromptAt < 800) {
-    return false
-  }
-  lastPromptAt = now
   loginPrompting = true
   openLoginModal(message, 0)
   return false

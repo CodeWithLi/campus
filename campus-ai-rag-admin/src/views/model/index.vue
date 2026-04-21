@@ -25,6 +25,13 @@
             </el-tag>
           </template>
         </el-table-column>
+        <el-table-column label="图片对话" min-width="100">
+          <template #default="{ row }">
+            <el-tag :type="row.supportsImageChat === 1 ? 'success' : 'info'">
+              {{ row.supportsImageChat === 1 ? '支持' : '不支持' }}
+            </el-tag>
+          </template>
+        </el-table-column>
         <el-table-column prop="sortNo" label="排序" min-width="80" />
         <el-table-column prop="updatedAt" label="更新时间" min-width="180" />
         <el-table-column v-if="canEditModelConfig || canTestModelConfig" label="操作" fixed="right" min-width="240">
@@ -167,6 +174,14 @@
             </el-form-item>
           </el-col>
           <el-col :span="8">
+            <el-form-item label="图片对话" prop="supportsImageChat">
+              <el-select v-model="formData.supportsImageChat" class="full-width">
+                <el-option label="支持" :value="1" />
+                <el-option label="不支持" :value="0" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
             <el-form-item label="排序号" prop="sortNo">
               <el-input-number v-model="formData.sortNo" :min="0" :step="1" class="full-width" />
             </el-form-item>
@@ -301,6 +316,7 @@ const createDefaultFormData = () => ({
   genericRespPath: '',
   genericHeadersJson: '',
   enabled: 1,
+  supportsImageChat: 0,
   sortNo: 100,
   remark: ''
 })
@@ -454,6 +470,7 @@ const buildCreatePayload = () => {
     genericRespPath: formData.invokeType === INVOKE_TYPE_GENERIC_HTTP ? formData.genericRespPath : null,
     genericHeadersJson: formData.invokeType === INVOKE_TYPE_GENERIC_HTTP ? formData.genericHeadersJson : null,
     enabled: formData.enabled,
+    supportsImageChat: formData.supportsImageChat,
     sortNo: formData.sortNo,
     remark: formData.remark
   }
@@ -473,6 +490,7 @@ const buildUpdatePayload = () => {
     genericRespPath: formData.invokeType === INVOKE_TYPE_GENERIC_HTTP ? formData.genericRespPath : null,
     genericHeadersJson: formData.invokeType === INVOKE_TYPE_GENERIC_HTTP ? formData.genericHeadersJson : null,
     enabled: formData.enabled,
+    supportsImageChat: formData.supportsImageChat,
     sortNo: formData.sortNo,
     remark: formData.remark
   }

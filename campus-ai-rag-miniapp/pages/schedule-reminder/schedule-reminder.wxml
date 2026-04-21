@@ -41,11 +41,9 @@
   </view>
 
   <view class="card">
-    <view class="card-title">通知智能体（多模态）</view>
-    <button class="create-btn" loading="{{parsingNotice}}" bindtap="onUploadNotice">上传通知图片/PDF并解析</button>
-    <button class="create-btn secondary-btn" loading="{{parsingNotice}}" bindtap="onUploadNoticeByImageUnderstand">图片理解并解析（试验）</button>
-    <button class="create-btn model-btn" loading="{{parsingNotice}}" bindtap="onUploadNoticeByImageModel">图片直传大模型解析（A/B）</button>
-    <view class="tip">规则：PDF≤5页走逐页OCR，PDF&gt;5页走PDF OCR任务。</view>
+    <view class="card-title">课程识别智能体（专用）</view>
+    <button class="create-btn vision-btn" loading="{{parsingNotice}}" bindtap="onUploadNoticeByImageVision">上传课程表图片并识别</button>
+    <view class="tip">仅支持单张图片。专门用于课程识别：提取课程时间并生成“上课前提醒”。</view>
     <view wx:if="{{agentResult}}" class="agent-box">
       <view class="agent-route">路由：{{agentResult.route}}</view>
       <view class="agent-summary">{{agentResult.summary}}</view>

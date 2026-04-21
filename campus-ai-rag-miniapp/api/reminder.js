@@ -27,6 +27,11 @@ export const parseNoticeByImageModelApi = async (filePath) => {
   return uploadFiles('/wx/reminder/agent/parse-image-model', [filePath], 'file')
 }
 
+export const parseNoticeByImageVisionApi = async (filePath) => {
+  if (!filePath) throw new Error('请选择文件')
+  return uploadFiles('/wx/reminder/agent/parse-image-vision', [filePath], 'file')
+}
+
 export const createReminderByAgentApi = (items = [], recordId = null) =>
   post('/wx/reminder/agent/create', { items, recordId })
 

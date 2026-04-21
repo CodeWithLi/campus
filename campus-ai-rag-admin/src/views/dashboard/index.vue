@@ -2,7 +2,7 @@
   <div class="dashboard-page">
     <div class="dashboard-card">
       <h1 class="dashboard-title">Campus AI RAG Admin</h1>
-      <p class="dashboard-desc">登录已完成，后续我可以继续为你补后台布局和业务页面。</p>
+      <p class="dashboard-desc">登录已完成。</p>
     </div>
   </div>
 </template>

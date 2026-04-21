@@ -162,6 +162,7 @@ public class AdminModelConfigServiceImpl implements AdminModelConfigService {
         entity.setGenericRespPath(trimOrNull(dto.getGenericRespPath()));
         entity.setGenericHeadersJson(trimOrNull(dto.getGenericHeadersJson()));
         entity.setEnabled(dto.getEnabled() == null ? 1 : dto.getEnabled());
+        entity.setSupportsImageChat(dto.getSupportsImageChat() == null ? 0 : dto.getSupportsImageChat());
         entity.setSortNo(dto.getSortNo() == null ? 100 : dto.getSortNo());
         entity.setRemark(trimOrNull(dto.getRemark()));
     }
@@ -206,6 +207,9 @@ public class AdminModelConfigServiceImpl implements AdminModelConfigService {
         if (Objects.nonNull(dto.getEnabled())) {
             entity.setEnabled(dto.getEnabled());
         }
+        if (Objects.nonNull(dto.getSupportsImageChat())) {
+            entity.setSupportsImageChat(dto.getSupportsImageChat());
+        }
         if (Objects.nonNull(dto.getSortNo())) {
             entity.setSortNo(dto.getSortNo());
         }
@@ -231,6 +235,7 @@ public class AdminModelConfigServiceImpl implements AdminModelConfigService {
         vo.setGenericRespPath(entity.getGenericRespPath());
         vo.setGenericHeadersJson(entity.getGenericHeadersJson());
         vo.setEnabled(entity.getEnabled());
+        vo.setSupportsImageChat(entity.getSupportsImageChat() == null ? 0 : entity.getSupportsImageChat());
         vo.setSortNo(entity.getSortNo());
         vo.setRemark(entity.getRemark());
         vo.setCreatedAt(entity.getCreatedAt());

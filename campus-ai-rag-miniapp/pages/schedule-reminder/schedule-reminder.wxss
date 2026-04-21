@@ -69,14 +69,9 @@
   border: none;
 }
 
-.secondary-btn {
-  margin-top: 10rpx;
-  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-}
-
-.model-btn {
-  margin-top: 10rpx;
-  background: linear-gradient(135deg, #7c3aed 0%, #6366f1 100%);
+.vision-btn {
+  margin-top: 14rpx;
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
 }
 
 .tip {

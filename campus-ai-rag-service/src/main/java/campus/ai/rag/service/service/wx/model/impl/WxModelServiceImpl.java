@@ -34,6 +34,7 @@ public class WxModelServiceImpl implements WxModelService {
         vo.setModelName(entity.getModelName());
         vo.setProvider(entity.getProvider());
         vo.setInvokeType(entity.getInvokeType());
+        vo.setSupportsImageChat(entity.getSupportsImageChat() == null ? 0 : entity.getSupportsImageChat());
         vo.setSortNo(entity.getSortNo());
         return vo;
     }

@@ -1,5 +1,6 @@
-import { ensureLoginOrRedirect, isPublicPage } from './utils/auth-guard'
-import { getStorage, setStorage } from './utils/storage'
+import { ensureLoginOrRedirect, isLoggedIn, isPublicPage } from './utils/auth-guard'
+
+let firstShowChecked = false
 
 const wrapNavMethod = (methodName) => {
   const original = wx[methodName]
@@ -13,8 +14,6 @@ const wrapNavMethod = (methodName) => {
   }
 }
 
-const STARTUP_LOGIN_PROMPT_KEY = 'STARTUP_LOGIN_PROMPT_SHOWN'
-
 App({
   onLaunch() {
     wrapNavMethod('navigateTo')
@@ -23,22 +22,14 @@ App({
     wrapNavMethod('switchTab')
   },
   onShow() {
-    // 首次进入提示一次：用户可选择“去登录/先逛逛”
-    try {
-      const already = Boolean(getStorage(STARTUP_LOGIN_PROMPT_KEY))
-      if (already) return
-      // 只弹一次：无论用户选啥都记住，避免反复打扰
-      setStorage(STARTUP_LOGIN_PROMPT_KEY, true)
-      // 这里不直接跳转，走选择弹窗；冷启动延迟一下更稳
-      setTimeout(() => {
-        const pages = getCurrentPages()
-        const currentRoute = pages[pages.length - 1]?.route || ''
-        if (currentRoute === 'pages/login/login') return
-        ensureLoginOrRedirect('登录后可使用 AI、提醒解析、发帖互动等功能；不登录也可以先逛社区。')
-      }, 200)
-    } catch (e) {
-      // ignore
-    }
+    // 首次进入：未登录则强制跳登录页
+    if (firstShowChecked) return
+    firstShowChecked = true
+    if (isLoggedIn()) return
+    const pages = getCurrentPages()
+    const currentRoute = pages[pages.length - 1]?.route || ''
+    if (currentRoute === 'pages/login/login') return
+    wx.navigateTo({ url: '/pages/login/login' })
   },
   globalData: {
     userInfo: null

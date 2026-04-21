@@ -11,7 +11,7 @@
  Target Server Version : 80031 (8.0.31)
  File Encoding         : 65001
 
- Date: 21/04/2026 14:34:41
+ Date: 21/04/2026 16:47:47
 */
 
 SET NAMES utf8mb4;
@@ -37,6 +37,7 @@ CREATE TABLE `ai_model_config`  (
   `generic_resp_path` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '通用HTTP响应提取路径，支持 a.b[0].c；为空则返回原始响应文本',
   `generic_headers_json` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '通用HTTP额外请求头JSON对象，例如 {\"Authorization\":\"Bearer xxx\"}',
   `enabled` tinyint NOT NULL DEFAULT 1 COMMENT '启用状态：1=启用，0=禁用',
+  `supports_image_chat` tinyint NOT NULL DEFAULT 0 COMMENT '是否支持图片对话：1支持，0不支持',
   `sort_no` int NOT NULL DEFAULT 100 COMMENT '排序值（越小越靠前）',
   `remark` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '备注',
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -44,7 +45,7 @@ CREATE TABLE `ai_model_config`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uq_ai_model_config_code`(`model_code` ASC) USING BTREE,
   CONSTRAINT `ck_ai_model_invoke_type` CHECK (`invoke_type` in (1,2))
-) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '后台模型配置表（仅后台管理使用）' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '后台模型配置表（仅后台管理使用）' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for ai_system_prompt
@@ -97,7 +98,7 @@ CREATE TABLE `ai_token_billing_log`  (
   INDEX `idx_ai_token_billing_user_created`(`user_id` ASC, `created_at` ASC) USING BTREE,
   INDEX `idx_ai_token_billing_model_created`(`model_code` ASC, `created_at` ASC) USING BTREE,
   INDEX `idx_ai_token_billing_scene_created`(`scene` ASC, `created_at` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 64 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '模型token计费流水' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 74 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '模型token计费流水' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for forum_notice_agent_record
@@ -118,7 +119,7 @@ CREATE TABLE `forum_notice_agent_record`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_user_created`(`user_id` ASC, `created_at` ASC) USING BTREE,
   INDEX `idx_user_deleted_created`(`user_id` ASC, `deleted` ASC, `created_at` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 12 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '通知智能体解析记录表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 13 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '通知智能体解析记录表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for forum_post
@@ -154,7 +155,7 @@ CREATE TABLE `forum_post_comment`  (
   INDEX `idx_post_parent_created`(`post_id` ASC, `parent_comment_id` ASC, `created_at` ASC) USING BTREE,
   INDEX `idx_post_created`(`post_id` ASC, `created_at` ASC) USING BTREE,
   INDEX `idx_user_created`(`user_id` ASC, `created_at` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '帖子评论' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 9 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '帖子评论' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for forum_post_favorite
@@ -189,7 +190,7 @@ CREATE TABLE `forum_post_interaction_notice`  (
   INDEX `idx_receiver_created`(`receiver_user_id` ASC, `created_at` ASC) USING BTREE,
   INDEX `idx_post`(`post_id` ASC) USING BTREE,
   INDEX `idx_actor`(`actor_user_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '帖子互动通知表（点赞/评论）' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '帖子互动通知表（点赞/评论）' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for forum_post_like
@@ -436,7 +437,7 @@ CREATE TABLE `wx_power_point_credit_log`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uk_order_no`(`order_no` ASC) USING BTREE,
   INDEX `idx_user_id`(`user_id` ASC) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '算力点到账流水（用于幂等防重复加点）' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '算力点到账流水（用于幂等防重复加点）' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for wx_recharge_order
@@ -460,7 +461,7 @@ CREATE TABLE `wx_recharge_order`  (
   UNIQUE INDEX `uk_order_no`(`order_no` ASC) USING BTREE,
   INDEX `idx_user_id`(`user_id` ASC) USING BTREE,
   INDEX `idx_status`(`status` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 8 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '微信端充值订单' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 13 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '微信端充值订单' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for wx_resume_generate_record

@@ -16,6 +16,8 @@ public interface WxNoticeAgentService {
 
     WxNoticeAgentParseVO parseByImageModel(MultipartFile file);
 
+    WxNoticeAgentParseVO parseByImageVision(MultipartFile file);
+
     List<WxScheduleReminderVO> createBatch(WxNoticeAgentCreateDTO dto);
 
     List<WxNoticeAgentRecordVO> listRecords();

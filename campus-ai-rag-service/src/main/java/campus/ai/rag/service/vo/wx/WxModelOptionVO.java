@@ -16,6 +16,8 @@ public class WxModelOptionVO {
     private String provider;
     @ApiModelProperty(value = "调用方式：1=springai，2=http", example = "1")
     private Integer invokeType;
+    @ApiModelProperty(value = "是否支持图片对话：1=支持，0=不支持", example = "0")
+    private Integer supportsImageChat;
     @ApiModelProperty(value = "排序号（越小越靠前）", example = "10")
     private Integer sortNo;
 }

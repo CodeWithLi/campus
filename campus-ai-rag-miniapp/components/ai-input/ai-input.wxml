@@ -1,5 +1,6 @@
 <view class="input-wrap">
   <view class="voice-btn" bindtap="onVoiceTap">🎤</view>
+  <view class="image-btn" bindtap="onImageTap">🖼️</view>
   <view class="input-main">
     <textarea
       class="input-box"

@@ -67,7 +67,7 @@
   </scroll-view>
 
   <view class="input-area">
-    <ai-input loading="{{loading || voiceLoading}}" bind:send="onSendMessage" bind:voice="onVoiceTap" />
+    <ai-input loading="{{loading || voiceLoading}}" bind:send="onSendMessage" bind:voice="onVoiceTap" bind:image="onImageSelected" />
     <view wx:if="{{recording}}" class="voice-tip">正在录音并实时转写，点击麦克风结束</view>
     <view wx:if="{{recording && voiceLoading && liveSpeechText}}" class="voice-tip">实时识别：{{liveSpeechText}}</view>
     <view wx:if="{{!recording && voiceLoading}}" class="voice-tip">已停止录音，正在识别最后内容...</view>

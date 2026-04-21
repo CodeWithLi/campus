@@ -99,6 +99,8 @@ public class WxNoticeAgentServiceImpl implements WxNoticeAgentService {
     private String pdfOcrStartUrl;
     @Value("${xf.ocr.pdf.status-url:https://iocr.xfyun.cn/ocrzdq/v1/pdfOcr/status}")
     private String pdfOcrStatusUrl;
+    @Value("${app.notice-agent.vl-model-code:qwen3-vl-plus}")
+    private String noticeAgentVlModelCode;
 
     public WxNoticeAgentServiceImpl(RestTemplate restTemplate,
                                     AiChatRouter aiChatRouter,
@@ -240,8 +242,36 @@ public class WxNoticeAgentServiceImpl implements WxNoticeAgentService {
         }
     }
 
+    @Override
+    public WxNoticeAgentParseVO parseByImageVision(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new BusinessException(StatusCodeEnum.BAD_REQUEST, "文件不能为空");
+        }
+        String filename = file.getOriginalFilename() == null ? "unknown" : file.getOriginalFilename();
+        String ext = extension(filename);
+        if (!isImageExt(ext)) {
+            throw new BusinessException(StatusCodeEnum.BAD_REQUEST, "图像与视频理解仅支持 jpg/jpeg/png/bmp");
+        }
+        Long userId = parseUserId(WxAuthContextUtils.requireWxUserId());
+        try {
+            String rawText = callVisionModelByCode(file.getBytes(), ext, noticeAgentVlModelCode);
+            return extractReminderItems(userId, filename, ext, "IMAGE_VISION_SPRINGAI", rawText);
+        } catch (IOException e) {
+            throw new BusinessException(StatusCodeEnum.BUSINESS_ERROR, "图片读取失败：" + e.getMessage());
+        }
+    }
+
     private String callQwenPlusVision(byte[] imageBytes, String ext) {
         AiModelConfigEntity model = resolveDefaultModelConfig();
+        return callVisionByModelConfig(imageBytes, ext, model);
+    }
+
+    private String callVisionModelByCode(byte[] imageBytes, String ext, String modelCode) {
+        AiModelConfigEntity model = resolveModelConfigByCode(modelCode);
+        return callVisionByModelConfig(imageBytes, ext, model);
+    }
+
+    private String callVisionByModelConfig(byte[] imageBytes, String ext, AiModelConfigEntity model) {
         if (isBlank(model.getApiBaseUrl()) || isBlank(model.getApiKey()) || isBlank(model.getModelNameRemote())) {
             throw new BusinessException(StatusCodeEnum.BUSINESS_ERROR, "qwen模型配置不完整，请检查 ai_model_config");
         }
@@ -315,6 +345,26 @@ public class WxNoticeAgentServiceImpl implements WxNoticeAgentService {
                 .last("limit 1"));
         if (model == null) {
             throw new BusinessException(StatusCodeEnum.NOT_FOUND, "未找到默认模型配置: " + modelCode);
+        }
+        return model;
+    }
+
+    private AiModelConfigEntity resolveModelConfigByCode(String modelCode) {
+        String target = isBlank(modelCode) ? aiChatRouter.getDefaultModelCode() : modelCode.trim();
+        AiModelConfigEntity model = aiModelConfigMapper.selectOne(new LambdaQueryWrapper<AiModelConfigEntity>()
+                .eq(AiModelConfigEntity::getEnabled, 1)
+                .eq(AiModelConfigEntity::getModelCode, target)
+                .last("limit 1"));
+        if (model != null) {
+            return model;
+        }
+        String alt = target.contains("_") ? target.replace("_", " ") : target.replace(" ", "_");
+        model = aiModelConfigMapper.selectOne(new LambdaQueryWrapper<AiModelConfigEntity>()
+                .eq(AiModelConfigEntity::getEnabled, 1)
+                .eq(AiModelConfigEntity::getModelCode, alt)
+                .last("limit 1"));
+        if (model == null) {
+            throw new BusinessException(StatusCodeEnum.NOT_FOUND, "未找到可用模型配置: " + target);
         }
         return model;
     }
@@ -418,10 +468,12 @@ public class WxNoticeAgentServiceImpl implements WxNoticeAgentService {
             vo.setRoute(route);
             vo.setRawText(text);
             vo.setSummary(root.path("summary").asText(""));
-            List<WxNoticeAgentParseVO.ItemVO> items = extractItemsFromJson(root, vo.getSummary());
+            List<WxNoticeAgentParseVO.ItemVO> items = extractItemsFromJson(root, vo.getSummary(), cleanedText);
 
+            // 课程视觉专用路由：不做二次识别，减少重复推理开销
+            boolean allowRetryLlm = !"IMAGE_VISION_SPRINGAI".equalsIgnoreCase(route);
             // 一次提取为空，进行“课表专项二次提取”
-            if (items.isEmpty()) {
+            if (items.isEmpty() && allowRetryLlm) {
                 String retryPrompt = """
                         你正在处理课表OCR文本，请务必输出可创建提醒的JSON。
                         输出结构固定：{"summary":"...","items":[{"title":"课程名@地点","type":"activity","remindAt":毫秒时间戳,"source":"开始-结束"}]}
@@ -441,7 +493,7 @@ public class WxNoticeAgentServiceImpl implements WxNoticeAgentService {
                     if (isBlank(vo.getSummary())) {
                         vo.setSummary(retryRoot.path("summary").asText(""));
                     }
-                    items.addAll(extractItemsFromJson(retryRoot, vo.getSummary()));
+                    items.addAll(extractItemsFromJson(retryRoot, vo.getSummary(), cleanedText));
                 } catch (Exception ignore) {
                     // 二次提取失败走规则兜底
                 }
@@ -470,7 +522,7 @@ public class WxNoticeAgentServiceImpl implements WxNoticeAgentService {
         }
     }
 
-    private List<WxNoticeAgentParseVO.ItemVO> extractItemsFromJson(JsonNode root, String summary) {
+    private List<WxNoticeAgentParseVO.ItemVO> extractItemsFromJson(JsonNode root, String summary, String textHint) {
         List<WxNoticeAgentParseVO.ItemVO> items = new ArrayList<>();
         if (root == null || root.isNull()) {
             return items;
@@ -480,11 +532,14 @@ public class WxNoticeAgentServiceImpl implements WxNoticeAgentService {
             return items;
         }
         Set<String> dedup = new HashSet<>();
+        DateRange range = parseDateRange(summary);
+        if (range == null) {
+            range = parseDateRange(textHint);
+        }
         for (JsonNode n : arr) {
             String source = n.path("source").asText("");
             long ts = parseRemindAtFlexible(n.path("remindAt"));
-            ts = normalizeRemindAt(ts, source, summary);
-            DateRange range = parseDateRange(summary);
+            ts = normalizeRemindAt(ts, source, range);
             ts = adjustToRangeFuture(ts, source, range);
             if (ts <= 0) continue;
             String title = n.path("title").asText("");
@@ -502,18 +557,17 @@ public class WxNoticeAgentServiceImpl implements WxNoticeAgentService {
         return items;
     }
 
-    private long normalizeRemindAt(long ts, String source, String summary) {
-        DateRange range = parseDateRange(summary);
+    private long normalizeRemindAt(long ts, String source, DateRange range) {
         LocalTime sourceTime = parseStartTime(source);
-        if (range == null) {
-            return ts;
-        }
         LocalDateTime dt = ts > 0
                 ? LocalDateTime.ofInstant(java.time.Instant.ofEpochMilli(ts), ZoneId.systemDefault())
                 : null;
+        if (dt == null && sourceTime == null) {
+            return ts;
+        }
 
         // 修复“年错位”（例如识别成 2025，但总结范围是 2026-04-20~2026-04-26）
-        if (dt != null && (dt.toLocalDate().isBefore(range.start) || dt.toLocalDate().isAfter(range.end))) {
+        if (range != null && dt != null && (dt.toLocalDate().isBefore(range.start) || dt.toLocalDate().isAfter(range.end))) {
             LocalDate candidate = LocalDate.of(range.start.getYear(), dt.getMonthValue(), dt.getDayOfMonth());
             if (!candidate.isBefore(range.start) && !candidate.isAfter(range.end)) {
                 dt = LocalDateTime.of(candidate, dt.toLocalTime());
@@ -522,9 +576,9 @@ public class WxNoticeAgentServiceImpl implements WxNoticeAgentService {
 
         // 优先使用 source 时间段的开始时间-30 分钟
         if (sourceTime != null) {
-            LocalDate base = (dt != null) ? dt.toLocalDate() : LocalDate.now();
-            if (base.isBefore(range.start)) base = range.start;
-            if (base.isAfter(range.end)) base = range.end;
+            LocalDate base = (dt != null) ? dt.toLocalDate() : (range != null ? range.start : LocalDate.now());
+            if (range != null && base.isBefore(range.start)) base = range.start;
+            if (range != null && base.isAfter(range.end)) base = range.end;
             dt = LocalDateTime.of(base, sourceTime.minusMinutes(30));
         }
         return dt == null ? ts : dt.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
@@ -581,14 +635,28 @@ public class WxNoticeAgentServiceImpl implements WxNoticeAgentService {
     private DateRange parseDateRange(String summary) {
         if (isBlank(summary)) return null;
         Matcher m = DATE_RANGE_PATTERN.matcher(summary);
-        if (!m.find()) return null;
-        try {
-            LocalDate start = parseFlexibleDate(m.group(1), null);
-            LocalDate end = parseFlexibleDate(m.group(2), null);
-            if (start == null || end == null) {
+        if (m.find()) {
+            try {
+                LocalDate start = parseFlexibleDate(m.group(1), null);
+                LocalDate end = parseFlexibleDate(m.group(2), null);
+                if (start == null || end == null) {
+                    return null;
+                }
+                if (end.isBefore(start)) return null;
+                return new DateRange(start, end);
+            } catch (Exception e) {
                 return null;
             }
-            if (end.isBefore(start)) return null;
+        }
+        Matcher mdRange = Pattern.compile("(\\d{1,2})月(\\d{1,2})日.{0,8}(\\d{1,2})月(\\d{1,2})日").matcher(summary);
+        if (!mdRange.find()) return null;
+        try {
+            int year = LocalDate.now().getYear();
+            LocalDate start = LocalDate.of(year, Integer.parseInt(mdRange.group(1)), Integer.parseInt(mdRange.group(2)));
+            LocalDate end = LocalDate.of(year, Integer.parseInt(mdRange.group(3)), Integer.parseInt(mdRange.group(4)));
+            if (end.isBefore(start)) {
+                return null;
+            }
             return new DateRange(start, end);
         } catch (Exception e) {
             return null;

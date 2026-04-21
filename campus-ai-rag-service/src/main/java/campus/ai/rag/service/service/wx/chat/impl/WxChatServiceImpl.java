@@ -3,10 +3,13 @@ package campus.ai.rag.service.service.wx.chat.impl;
 import campus.ai.rag.service.ai.AiChatRouter;
 import campus.ai.rag.service.common.StatusCodeEnum;
 import campus.ai.rag.service.dto.wx.WxChatDTO;
+import campus.ai.rag.service.entity.model.AiModelConfigEntity;
 import campus.ai.rag.service.exception.BusinessException;
+import campus.ai.rag.service.mapper.model.AiModelConfigMapper;
 import campus.ai.rag.service.service.wx.chat.WxChatService;
 import campus.ai.rag.service.utils.WxAuthContextUtils;
 import campus.ai.rag.service.vo.wx.WxChatVO;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -21,6 +24,7 @@ public class WxChatServiceImpl implements WxChatService {
 
     private final AiChatRouter aiChatRouter;
     private final RedisTemplate<String, Object> redisTemplate;
+    private final AiModelConfigMapper aiModelConfigMapper;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Value("${app.wx.chat.conversation-ttl-days:30}")
@@ -39,14 +43,20 @@ public class WxChatServiceImpl implements WxChatService {
     private Integer summaryCompressEvery;
 
     public WxChatServiceImpl(AiChatRouter aiChatRouter,
-                             RedisTemplate<String, Object> redisTemplate) {
+                             RedisTemplate<String, Object> redisTemplate,
+                             AiModelConfigMapper aiModelConfigMapper) {
         this.aiChatRouter = aiChatRouter;
         this.redisTemplate = redisTemplate;
+        this.aiModelConfigMapper = aiModelConfigMapper;
     }
 
     @Override
     public WxChatVO chat(WxChatDTO dto) {
-        if (Objects.isNull(dto) || isBlank(dto.getMessage())) {
+        if (Objects.isNull(dto)) {
+            throw new BusinessException(StatusCodeEnum.BAD_REQUEST, "请求参数不能为空");
+        }
+        boolean hasImage = !isBlank(dto.getImageBase64());
+        if (isBlank(dto.getMessage()) && !hasImage) {
             throw new BusinessException(StatusCodeEnum.BAD_REQUEST, "消息内容不能为空");
         }
 
@@ -58,13 +68,22 @@ public class WxChatServiceImpl implements WxChatService {
         // 读取摘要与历史
         String summary = getString(metaKey(userId, convId), "summary");
         String historyText = buildHistoryText(historyKey(userId, convId));
-        String userMessage = dto.getMessage().trim();
-
+        String userMessage = isBlank(dto.getMessage()) ? "请识别图片并回答我关心的重点。" : dto.getMessage().trim();
         String composed = composeChatInput(summary, historyText, userMessage);
-        String answer = aiChatRouter.chat(userIdLong, finalModelCode, "CHAT", composed, null);
+        String answer;
+        if (hasImage) {
+            AiModelConfigEntity model = resolveModel(finalModelCode);
+            if (!Objects.equals(model.getSupportsImageChat(), 1)) {
+                throw new BusinessException(StatusCodeEnum.BAD_REQUEST, "当前大模型不支持上传图片对话");
+            }
+            answer = aiChatRouter.rawVisionChat(userIdLong, finalModelCode, composed, dto.getImageBase64(), dto.getImageMimeType());
+        } else {
+            answer = aiChatRouter.chat(userIdLong, finalModelCode, "CHAT", composed, null);
+        }
 
         // 写入历史（user + assistant）
-        appendHistory(historyKey(userId, convId), "user", userMessage);
+        String storedUserMessage = hasImage ? ("[图片]\n" + userMessage) : userMessage;
+        appendHistory(historyKey(userId, convId), "user", storedUserMessage);
         appendHistory(historyKey(userId, convId), "assistant", answer);
 
         // 首轮生成标题（用独立提示词，不走系统提示词）
@@ -260,6 +279,24 @@ public class WxChatServiceImpl implements WxChatService {
         } catch (Exception e) {
             throw new BusinessException(StatusCodeEnum.UNAUTHORIZED, "用户未登录");
         }
+    }
+
+    private AiModelConfigEntity resolveModel(String modelCode) {
+        String targetCode = isBlank(modelCode) ? aiChatRouter.getDefaultModelCode() : modelCode.trim();
+        AiModelConfigEntity model = aiModelConfigMapper.selectOne(new LambdaQueryWrapper<AiModelConfigEntity>()
+                .eq(AiModelConfigEntity::getEnabled, 1)
+                .eq(AiModelConfigEntity::getModelCode, targetCode)
+                .last("limit 1"));
+        if (model != null) return model;
+        String altCode = targetCode.contains("_") ? targetCode.replace("_", " ") : targetCode.replace(" ", "_");
+        model = aiModelConfigMapper.selectOne(new LambdaQueryWrapper<AiModelConfigEntity>()
+                .eq(AiModelConfigEntity::getEnabled, 1)
+                .eq(AiModelConfigEntity::getModelCode, altCode)
+                .last("limit 1"));
+        if (model == null) {
+            throw new BusinessException(StatusCodeEnum.NOT_FOUND, "未找到可用模型配置: " + targetCode);
+        }
+        return model;
     }
 }
 

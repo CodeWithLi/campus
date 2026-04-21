@@ -23,5 +23,11 @@ public class WxChatDTO {
      */
     @ApiModelProperty(value = "用户输入内容", required = true, example = "你好，请介绍一下你自己")
     private String message;
+
+    @ApiModelProperty(value = "图片base64（不含data:image前缀）", example = "iVBORw0KGgoAAA...")
+    private String imageBase64;
+
+    @ApiModelProperty(value = "图片MIME类型", example = "image/jpeg")
+    private String imageMimeType;
 }
 

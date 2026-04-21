@@ -40,6 +40,8 @@ public class AiModelConfigCreateDTO {
     private String genericHeadersJson;
     @ApiModelProperty(value = "启用状态：1=启用，0=禁用", example = "1")
     private Integer enabled;
+    @ApiModelProperty(value = "是否支持图片对话：1=支持，0=不支持", example = "0")
+    private Integer supportsImageChat;
     @ApiModelProperty(value = "排序号（越小越靠前）", example = "10")
     private Integer sortNo;
     @ApiModelProperty(value = "备注", example = "Spring AI方式调用")
