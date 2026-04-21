@@ -2,6 +2,7 @@ import {
   createPostCommentApi,
   getPostDetailApi,
   listPostCommentsApi,
+  reportPostApi,
   togglePostFavoriteApi,
   togglePostLikeApi
 } from '../../api/post'
@@ -24,6 +25,7 @@ Page({
     favoriting: false,
     commentLoading: false,
     commentSubmitting: false,
+    reporting: false,
     commentText: '',
     commentInputHeight: COMMENT_MIN_HEIGHT_RPX,
     replyTarget: null,
@@ -191,6 +193,49 @@ Page({
       showError(e.message || '收藏失败')
     } finally {
       this.setData({ favoriting: false })
+    }
+  },
+
+  async onReportPost() {
+    if (!this.ensureLogin()) return
+    if (this.data.reporting) return
+    const reasons = ['涉嫌违法违规', '色情低俗', '辱骂攻击', '广告营销', '其他原因（手动输入）']
+    const action = await new Promise((resolve) => {
+      wx.showActionSheet({
+        itemList: reasons,
+        success: (res) => resolve(res?.tapIndex),
+        fail: () => resolve(-1)
+      })
+    })
+    if (action < 0) return
+    let reason = reasons[action]
+    if (action === reasons.length - 1) {
+      const inputRes = await new Promise((resolve) => {
+        wx.showModal({
+          title: '举报理由',
+          editable: true,
+          placeholderText: '请输入举报理由（最多200字）',
+          success: (res) => resolve(res),
+          fail: () => resolve(null)
+        })
+      })
+      if (!inputRes?.confirm) return
+      reason = String(inputRes.content || '').trim()
+    }
+    if (!reason) {
+      showError('举报理由不能为空')
+      return
+    }
+    this.setData({ reporting: true })
+    try {
+      await reportPostApi(this.data.id, { reason })
+      const detail = { ...(this.data.detail || {}), reportedByMe: true }
+      this.setData({ detail })
+      showSuccess('举报成功，平台将尽快处理')
+    } catch (e) {
+      showError(e.message || '举报失败')
+    } finally {
+      this.setData({ reporting: false })
     }
   },
 

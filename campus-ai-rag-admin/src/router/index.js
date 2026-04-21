@@ -44,6 +44,24 @@ const router = createRouter({
           }
         },
         {
+          path: '/posts',
+          name: 'posts',
+          component: () => import('@/views/post/index.vue'),
+          meta: {
+            title: '帖子管理',
+            requiresAdmin: true
+          }
+        },
+        {
+          path: '/post-reports',
+          name: 'post-reports',
+          component: () => import('@/views/post-report/index.vue'),
+          meta: {
+            title: '帖子举报管理',
+            requiresAdmin: true
+          }
+        },
+        {
           path: '/prompts/system',
           name: 'system-prompts',
           component: () => import('@/views/prompt/index.vue'),

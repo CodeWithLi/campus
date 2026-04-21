@@ -33,6 +33,14 @@
         <span class="menu-dot"></span>
         <span>订单管理</span>
       </el-menu-item>
+      <el-menu-item v-if="userStore.isAdmin" index="/posts">
+        <span class="menu-dot"></span>
+        <span>帖子管理</span>
+      </el-menu-item>
+      <el-menu-item v-if="userStore.isAdmin" index="/post-reports">
+        <span class="menu-dot"></span>
+        <span>帖子举报管理</span>
+      </el-menu-item>
       <el-menu-item v-if="userStore.isAdmin" index="/wx-users">
         <span class="menu-dot"></span>
         <span>用户管理</span>

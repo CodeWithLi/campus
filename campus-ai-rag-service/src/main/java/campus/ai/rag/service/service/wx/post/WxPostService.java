@@ -3,6 +3,7 @@ package campus.ai.rag.service.service.wx.post;
 import campus.ai.rag.service.dto.wx.WxPostAiGenerateDTO;
 import campus.ai.rag.service.dto.wx.WxPostCommentCreateDTO;
 import campus.ai.rag.service.dto.wx.WxPostPublishDTO;
+import campus.ai.rag.service.dto.wx.WxPostReportDTO;
 import campus.ai.rag.service.vo.wx.WxPostAiGenerateVO;
 import campus.ai.rag.service.vo.wx.WxPostCommentVO;
 import campus.ai.rag.service.vo.wx.WxPostDetailVO;
@@ -11,6 +12,7 @@ import campus.ai.rag.service.vo.wx.WxPostInteractionPageVO;
 import campus.ai.rag.service.vo.wx.WxPostLikeVO;
 import campus.ai.rag.service.vo.wx.WxPostPageVO;
 import campus.ai.rag.service.vo.wx.WxPostPublishVO;
+import campus.ai.rag.service.vo.wx.WxPostReportVO;
 import campus.ai.rag.service.vo.wx.WxPostUploadImageVO;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -43,4 +45,6 @@ public interface WxPostService {
     WxPostPageVO myFavorites(Integer pageNo, Integer pageSize);
 
     WxPostInteractionPageVO myInteractions(Integer pageNo, Integer pageSize);
+
+    WxPostReportVO reportPost(Long postId, WxPostReportDTO dto);
 }

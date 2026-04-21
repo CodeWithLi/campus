@@ -29,6 +29,9 @@
       <view class="action-btn {{detail.favoritedByMe ? 'active' : ''}}" bindtap="onToggleFavorite">
         ⭐ {{detail.favoritedByMe ? '已收藏' : '收藏'}}
       </view>
+      <view class="action-btn {{detail.reportedByMe ? 'active' : ''}}" bindtap="onReportPost">
+        🚩 {{detail.reportedByMe ? '已举报' : '举报'}}
+      </view>
       <view class="action-btn">💬 {{detail.commentCount || 0}}</view>
     </view>
   </view>

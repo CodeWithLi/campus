@@ -50,3 +50,5 @@ export const deleteMyPostApi = (postId) => del(`/wx/post/${postId}`)
 export const listMyFavoritePostsApi = (params = {}) => get('/wx/post/my-favorites', params)
 
 export const listMyInteractionsApi = (params = {}) => get('/wx/post/my-interactions', params)
+
+export const reportPostApi = (postId, payload) => post(`/wx/post/${postId}/report`, payload)

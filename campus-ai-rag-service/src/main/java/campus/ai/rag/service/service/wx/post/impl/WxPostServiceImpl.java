@@ -5,11 +5,13 @@ import campus.ai.rag.service.common.StatusCodeEnum;
 import campus.ai.rag.service.dto.wx.WxPostAiGenerateDTO;
 import campus.ai.rag.service.dto.wx.WxPostCommentCreateDTO;
 import campus.ai.rag.service.dto.wx.WxPostPublishDTO;
+import campus.ai.rag.service.dto.wx.WxPostReportDTO;
 import campus.ai.rag.service.entity.forum.ForumPostCommentEntity;
 import campus.ai.rag.service.entity.forum.ForumPostEntity;
 import campus.ai.rag.service.entity.forum.ForumPostFavoriteEntity;
 import campus.ai.rag.service.entity.forum.ForumPostInteractionNoticeEntity;
 import campus.ai.rag.service.entity.forum.ForumPostLikeEntity;
+import campus.ai.rag.service.entity.forum.ForumPostReportEntity;
 import campus.ai.rag.service.entity.model.AiModelConfigEntity;
 import campus.ai.rag.service.exception.BusinessException;
 import campus.ai.rag.service.mapper.forum.ForumPostCommentMapper;
@@ -17,6 +19,7 @@ import campus.ai.rag.service.mapper.forum.ForumPostFavoriteMapper;
 import campus.ai.rag.service.mapper.forum.ForumPostInteractionNoticeMapper;
 import campus.ai.rag.service.mapper.forum.ForumPostMapper;
 import campus.ai.rag.service.mapper.forum.ForumPostLikeMapper;
+import campus.ai.rag.service.mapper.forum.ForumPostReportMapper;
 import campus.ai.rag.service.mapper.model.AiModelConfigMapper;
 import campus.ai.rag.service.mapper.wx.WxUserMapper;
 import campus.ai.rag.service.properties.WxPostProperties;
@@ -34,6 +37,7 @@ import campus.ai.rag.service.vo.wx.WxPostLikeVO;
 import campus.ai.rag.service.vo.wx.WxPostListItemVO;
 import campus.ai.rag.service.vo.wx.WxPostPageVO;
 import campus.ai.rag.service.vo.wx.WxPostPublishVO;
+import campus.ai.rag.service.vo.wx.WxPostReportVO;
 import campus.ai.rag.service.vo.wx.WxPostUploadImageVO;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -82,6 +86,7 @@ public class WxPostServiceImpl implements WxPostService {
     private final ForumPostCommentMapper forumPostCommentMapper;
     private final ForumPostFavoriteMapper forumPostFavoriteMapper;
     private final ForumPostInteractionNoticeMapper forumPostInteractionNoticeMapper;
+    private final ForumPostReportMapper forumPostReportMapper;
     private final IflyImageAuditService iflyImageAuditService;
     private final IflyTextAuditService iflyTextAuditService;
     private final RedisTemplate<String, Object> redisTemplate;
@@ -96,6 +101,7 @@ public class WxPostServiceImpl implements WxPostService {
                              ForumPostCommentMapper forumPostCommentMapper,
                              ForumPostFavoriteMapper forumPostFavoriteMapper,
                              ForumPostInteractionNoticeMapper forumPostInteractionNoticeMapper,
+                             ForumPostReportMapper forumPostReportMapper,
                              IflyImageAuditService iflyImageAuditService,
                              IflyTextAuditService iflyTextAuditService,
                              RedisTemplate<String, Object> redisTemplate) {
@@ -108,6 +114,7 @@ public class WxPostServiceImpl implements WxPostService {
         this.forumPostCommentMapper = forumPostCommentMapper;
         this.forumPostFavoriteMapper = forumPostFavoriteMapper;
         this.forumPostInteractionNoticeMapper = forumPostInteractionNoticeMapper;
+        this.forumPostReportMapper = forumPostReportMapper;
         this.iflyImageAuditService = iflyImageAuditService;
         this.iflyTextAuditService = iflyTextAuditService;
         this.redisTemplate = redisTemplate;
@@ -338,6 +345,43 @@ public class WxPostServiceImpl implements WxPostService {
         WxPostInteractionPageVO vo = new WxPostInteractionPageVO();
         vo.setTotal(result.getTotal());
         vo.setList(list);
+        return vo;
+    }
+
+    @Override
+    public WxPostReportVO reportPost(Long postId, WxPostReportDTO dto) {
+        ForumPostEntity post = mustGetPost(postId);
+        Long userId = parseUserId(WxAuthContextUtils.requireWxUserId());
+        if (Objects.equals(post.getUserId(), userId)) {
+            throw new BusinessException(StatusCodeEnum.BAD_REQUEST, "不能举报自己的帖子");
+        }
+        String reason = trimToNull(dto == null ? null : dto.getReason());
+        if (isBlank(reason)) {
+            throw new BusinessException(StatusCodeEnum.BAD_REQUEST, "举报理由不能为空");
+        }
+        if (reason.length() > 200) {
+            throw new BusinessException(StatusCodeEnum.BAD_REQUEST, "举报理由最多200字");
+        }
+        ForumPostReportEntity pending = forumPostReportMapper.selectOne(new LambdaQueryWrapper<ForumPostReportEntity>()
+                .eq(ForumPostReportEntity::getPostId, post.getId())
+                .eq(ForumPostReportEntity::getReporterUserId, userId)
+                .eq(ForumPostReportEntity::getStatus, "PENDING")
+                .last("limit 1"));
+        if (pending != null) {
+            throw new BusinessException(StatusCodeEnum.BAD_REQUEST, "你已举报该帖子，等待处理");
+        }
+        ForumPostReportEntity report = new ForumPostReportEntity();
+        report.setPostId(post.getId());
+        report.setReporterUserId(userId);
+        report.setReason(reason);
+        report.setStatus("PENDING");
+        report.setCreatedAt(LocalDateTime.now());
+        forumPostReportMapper.insert(report);
+
+        WxPostReportVO vo = new WxPostReportVO();
+        vo.setReportId(report.getId());
+        vo.setPostId(post.getId());
+        vo.setStatus(report.getStatus());
         return vo;
     }
 
@@ -738,6 +782,7 @@ public class WxPostServiceImpl implements WxPostService {
         vo.setCommentCount(countComment(entity.getId()));
         vo.setLikedByMe(isLikedByCurrentUser(entity.getId()));
         vo.setFavoritedByMe(isFavoritedByCurrentUser(entity.getId()));
+        vo.setReportedByMe(isReportedByCurrentUser(entity.getId()));
         vo.setIsAnonymous(anonymous);
         vo.setCreatedAt(formatDateTime(entity.getCreatedAt()));
         return vo;
@@ -826,6 +871,35 @@ public class WxPostServiceImpl implements WxPostService {
                 .eq(ForumPostFavoriteEntity::getUserId, userId)
                 .last("limit 1"));
         return favorite != null;
+    }
+
+    private boolean isReportedByCurrentUser(Long postId) {
+        String uid;
+        try {
+            uid = WxAuthContextUtils.requireWxUserId();
+        } catch (Exception e) {
+            return false;
+        }
+        Long userId;
+        try {
+            userId = Long.parseLong(uid);
+        } catch (Exception e) {
+            return false;
+        }
+        ForumPostReportEntity report = forumPostReportMapper.selectOne(new LambdaQueryWrapper<ForumPostReportEntity>()
+                .eq(ForumPostReportEntity::getPostId, postId)
+                .eq(ForumPostReportEntity::getReporterUserId, userId)
+                .eq(ForumPostReportEntity::getStatus, "PENDING")
+                .last("limit 1"));
+        return report != null;
+    }
+
+    private String trimToNull(String value) {
+        if (value == null) {
+            return null;
+        }
+        String t = value.trim();
+        return t.isEmpty() ? null : t;
     }
 
     private Map<Long, String> buildNicknameMap(Set<Long> userIds) {

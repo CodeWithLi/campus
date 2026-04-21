@@ -11,7 +11,7 @@
  Target Server Version : 80031 (8.0.31)
  File Encoding         : 65001
 
- Date: 21/04/2026 16:47:47
+ Date: 21/04/2026 17:50:58
 */
 
 SET NAMES utf8mb4;
@@ -90,6 +90,7 @@ CREATE TABLE `ai_token_billing_log`  (
   `request_chars` int NOT NULL DEFAULT 0 COMMENT '输入字符数',
   `response_chars` int NOT NULL DEFAULT 0 COMMENT '输出字符数',
   `consumed_points` decimal(10, 2) NOT NULL DEFAULT 0.00 COMMENT '本次扣减算力点',
+  `elapsed_ms` bigint NULL DEFAULT NULL COMMENT '请求耗时（毫秒）',
   `status` tinyint NOT NULL DEFAULT 1 COMMENT '状态：1成功 0失败',
   `error_message` varchar(1000) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '失败原因',
   `ext_json` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '扩展字段JSON（原始usage等）',
@@ -98,7 +99,7 @@ CREATE TABLE `ai_token_billing_log`  (
   INDEX `idx_ai_token_billing_user_created`(`user_id` ASC, `created_at` ASC) USING BTREE,
   INDEX `idx_ai_token_billing_model_created`(`model_code` ASC, `created_at` ASC) USING BTREE,
   INDEX `idx_ai_token_billing_scene_created`(`scene` ASC, `created_at` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 74 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '模型token计费流水' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 83 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '模型token计费流水' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for forum_notice_agent_record
@@ -155,7 +156,7 @@ CREATE TABLE `forum_post_comment`  (
   INDEX `idx_post_parent_created`(`post_id` ASC, `parent_comment_id` ASC, `created_at` ASC) USING BTREE,
   INDEX `idx_post_created`(`post_id` ASC, `created_at` ASC) USING BTREE,
   INDEX `idx_user_created`(`user_id` ASC, `created_at` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 9 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '帖子评论' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 10 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '帖子评论' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for forum_post_favorite
@@ -190,7 +191,7 @@ CREATE TABLE `forum_post_interaction_notice`  (
   INDEX `idx_receiver_created`(`receiver_user_id` ASC, `created_at` ASC) USING BTREE,
   INDEX `idx_post`(`post_id` ASC) USING BTREE,
   INDEX `idx_actor`(`actor_user_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '帖子互动通知表（点赞/评论）' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '帖子互动通知表（点赞/评论）' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for forum_post_like
@@ -206,6 +207,26 @@ CREATE TABLE `forum_post_like`  (
   INDEX `idx_post_created`(`post_id` ASC, `created_at` ASC) USING BTREE,
   INDEX `idx_user_created`(`user_id` ASC, `created_at` ASC) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '帖子点赞' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Table structure for forum_post_report
+-- ----------------------------
+DROP TABLE IF EXISTS `forum_post_report`;
+CREATE TABLE `forum_post_report`  (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `post_id` bigint NOT NULL COMMENT '帖子ID',
+  `reporter_user_id` bigint NOT NULL COMMENT '举报用户ID',
+  `reason` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '举报理由',
+  `status` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'PENDING' COMMENT '状态：PENDING/RESOLVED_VALID/RESOLVED_INVALID',
+  `handle_remark` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '处理备注',
+  `handled_by` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '处理人',
+  `handled_at` datetime NULL DEFAULT NULL COMMENT '处理时间',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_post_id`(`post_id` ASC) USING BTREE,
+  INDEX `idx_reporter_user_id`(`reporter_user_id` ASC) USING BTREE,
+  INDEX `idx_status_created_at`(`status` ASC, `created_at` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '帖子举报记录' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for forum_schedule_notice

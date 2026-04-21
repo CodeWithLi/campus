@@ -40,6 +40,9 @@ public class WxPostDetailVO {
     @ApiModelProperty("当前用户是否已收藏")
     private Boolean favoritedByMe;
 
+    @ApiModelProperty("当前用户是否已举报")
+    private Boolean reportedByMe;
+
     @ApiModelProperty("是否匿名发布")
     private Boolean isAnonymous;
 

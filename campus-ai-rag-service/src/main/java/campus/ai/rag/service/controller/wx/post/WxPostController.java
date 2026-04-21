@@ -4,6 +4,7 @@ import campus.ai.rag.service.common.Result;
 import campus.ai.rag.service.dto.wx.WxPostAiGenerateDTO;
 import campus.ai.rag.service.dto.wx.WxPostCommentCreateDTO;
 import campus.ai.rag.service.dto.wx.WxPostPublishDTO;
+import campus.ai.rag.service.dto.wx.WxPostReportDTO;
 import campus.ai.rag.service.service.wx.post.WxPostService;
 import campus.ai.rag.service.vo.wx.WxPostAiGenerateVO;
 import campus.ai.rag.service.vo.wx.WxPostCommentVO;
@@ -13,6 +14,7 @@ import campus.ai.rag.service.vo.wx.WxPostInteractionPageVO;
 import campus.ai.rag.service.vo.wx.WxPostLikeVO;
 import campus.ai.rag.service.vo.wx.WxPostPageVO;
 import campus.ai.rag.service.vo.wx.WxPostPublishVO;
+import campus.ai.rag.service.vo.wx.WxPostReportVO;
 import campus.ai.rag.service.vo.wx.WxPostUploadImageVO;
 import io.swagger.annotations.Api;
 import io.swagger.v3.oas.annotations.Operation;
@@ -122,5 +124,12 @@ public class WxPostController {
     @Operation(summary = "删除我的帖子")
     public Result<Boolean> delete(@PathVariable("postId") Long postId) {
         return Result.success(wxPostService.deleteMyPost(postId));
+    }
+
+    @PostMapping("/{postId}/report")
+    @Operation(summary = "举报帖子")
+    public Result<WxPostReportVO> report(@PathVariable("postId") Long postId,
+                                         @RequestBody WxPostReportDTO dto) {
+        return Result.success(wxPostService.reportPost(postId, dto));
     }
 }
