@@ -81,12 +81,13 @@ public class AiChatRouter {
         String promptedMessage = systemPromptRuntimeService.buildPromptedMessage(scene, userMessage, ragContext);
         AiModelConfigEntity modelConfig = resolveModel(modelCode);
         ensureMinimumChargeBalance(safeUserId(userId), safeScene(scene));
+        long startMs = System.currentTimeMillis();
         try {
             ChatInvokeResult result = invokeByType(modelConfig, promptedMessage);
-            recordBilling(safeUserId(userId), safeScene(scene), modelConfig, promptedMessage, result, null);
+            recordBilling(safeUserId(userId), safeScene(scene), modelConfig, promptedMessage, result, null, System.currentTimeMillis() - startMs);
             return result.answer;
         } catch (RuntimeException ex) {
-            recordBillingFailure(safeUserId(userId), safeScene(scene), modelConfig, promptedMessage, ex.getMessage());
+            recordBillingFailure(safeUserId(userId), safeScene(scene), modelConfig, promptedMessage, ex.getMessage(), System.currentTimeMillis() - startMs);
             throw ex;
         }
     }
@@ -103,12 +104,13 @@ public class AiChatRouter {
             throw new BusinessException(StatusCodeEnum.BAD_REQUEST, "消息内容不能为空");
         }
         AiModelConfigEntity modelConfig = resolveModel(modelCode);
+        long startMs = System.currentTimeMillis();
         try {
             ChatInvokeResult result = invokeByType(modelConfig, userMessage);
-            recordBilling(safeUserId(userId), "INTERNAL", modelConfig, userMessage, result, null);
+            recordBilling(safeUserId(userId), "INTERNAL", modelConfig, userMessage, result, null, System.currentTimeMillis() - startMs);
             return result.answer;
         } catch (RuntimeException ex) {
-            recordBillingFailure(safeUserId(userId), "INTERNAL", modelConfig, userMessage, ex.getMessage());
+            recordBillingFailure(safeUserId(userId), "INTERNAL", modelConfig, userMessage, ex.getMessage(), System.currentTimeMillis() - startMs);
             throw ex;
         }
     }
@@ -132,12 +134,13 @@ public class AiChatRouter {
         if (!Objects.equals(modelConfig.getSupportsImageChat(), 1)) {
             throw new BusinessException(StatusCodeEnum.BAD_REQUEST, "当前模型不支持图片对话");
         }
+        long startMs = System.currentTimeMillis();
         try {
             ChatInvokeResult result = visionHttpChat(modelConfig, prompt, imageBase64.trim(), imageMimeType);
-            recordBilling(safeUserId(userId), "INTERNAL", modelConfig, prompt, result, null);
+            recordBilling(safeUserId(userId), "INTERNAL", modelConfig, prompt, result, null, System.currentTimeMillis() - startMs);
             return result.answer;
         } catch (RuntimeException ex) {
-            recordBillingFailure(safeUserId(userId), "INTERNAL", modelConfig, prompt, ex.getMessage());
+            recordBillingFailure(safeUserId(userId), "INTERNAL", modelConfig, prompt, ex.getMessage(), System.currentTimeMillis() - startMs);
             throw ex;
         }
     }
@@ -455,7 +458,8 @@ public class AiChatRouter {
                                AiModelConfigEntity modelConfig,
                                String requestText,
                                ChatInvokeResult result,
-                               String errMsg) {
+                               String errMsg,
+                               Long elapsedMs) {
         if (result == null) {
             return;
         }
@@ -485,6 +489,7 @@ public class AiChatRouter {
         log.setRequestChars(requestChars);
         log.setResponseChars(responseChars);
         log.setConsumedPoints(consumedPoints);
+        log.setElapsedMs(elapsedMs == null ? null : Math.max(0L, elapsedMs));
         log.setStatus(errMsg == null ? 1 : 0);
         log.setErrorMessage(truncate(errMsg, 1000));
         log.setExtJson(truncate(result.extJson, 4000));
@@ -495,9 +500,10 @@ public class AiChatRouter {
                                       String scene,
                                       AiModelConfigEntity modelConfig,
                                       String requestText,
-                                      String errMsg) {
+                                      String errMsg,
+                                      Long elapsedMs) {
         ChatInvokeResult empty = ChatInvokeResult.of("", null, null, null, "ESTIMATE_CHAR", null);
-        recordBilling(userId, scene, modelConfig, requestText, empty, errMsg);
+        recordBilling(userId, scene, modelConfig, requestText, empty, errMsg, elapsedMs);
     }
 
     private int estimateTokensByChars(int chars) {

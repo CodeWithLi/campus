@@ -50,6 +50,11 @@ public class AiTokenBillingLogEntity {
     private BigDecimal consumedPoints;
 
     /**
+     * 请求耗时（毫秒）
+     */
+    private Long elapsedMs;
+
+    /**
      * 状态：1成功 0失败
      */
     private Integer status;

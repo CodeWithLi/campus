@@ -6,7 +6,7 @@ import { ElMessage } from 'element-plus'
 // 开发环境建议走 Vite 代理，避免浏览器 CORS 预检（OPTIONS）被 403 拦截
 // 生产环境可通过 VITE_API_BASE 覆盖为完整域名
 // const baseURL = import.meta.env.VITE_API_BASE || '/admin'
-const baseURL = import.meta.env.VITE_API_BASE || '/campus/admin'
+const baseURL = '/campus/admin'
 
 // 创建 axios 实例：统一配置 baseURL 与超时时间
 const instance = axios.create({

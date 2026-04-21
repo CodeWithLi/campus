@@ -52,3 +52,27 @@ export const getTokenBillingLogPage = (params) => {
     params
   })
 }
+
+export const getAiCallTrend = (params) => {
+  return request({
+    url: '/token-billing-logs/stats/trend',
+    method: 'get',
+    params
+  })
+}
+
+export const getTokenConsumptionTrend = (params) => {
+  return request({
+    url: '/token-billing-logs/stats/consumption',
+    method: 'get',
+    params
+  })
+}
+
+export const getModelUsageShare = (params) => {
+  return request({
+    url: '/token-billing-logs/stats/model-share',
+    method: 'get',
+    params
+  })
+}

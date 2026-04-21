@@ -67,6 +67,7 @@
           <el-table-column prop="completionTokens" label="输出Token" min-width="100" />
           <el-table-column prop="totalTokens" label="总Token" min-width="100" />
           <el-table-column prop="consumedPoints" label="扣减算力点" min-width="110" />
+          <el-table-column prop="elapsedMs" label="响应耗时(ms)" min-width="120" />
           <el-table-column label="状态" min-width="90">
             <template #default="{ row }">
               <el-tag :type="row.status === 1 ? 'success' : 'danger'">

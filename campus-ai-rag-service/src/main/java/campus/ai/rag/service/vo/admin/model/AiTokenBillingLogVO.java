@@ -41,6 +41,9 @@ public class AiTokenBillingLogVO {
     @ApiModelProperty(value = "扣减算力点", example = "2")
     private BigDecimal consumedPoints;
 
+    @ApiModelProperty(value = "请求耗时（毫秒）", example = "780")
+    private Long elapsedMs;
+
     @ApiModelProperty(value = "状态：1成功 0失败", example = "1")
     private Integer status;
 
