@@ -9,3 +9,6 @@ export const listResumeConversationsApi = () => get('/wx/resume/conversations')
 export const getResumeConversationHistoryApi = (conversationId) =>
   get(`/wx/resume/conversations/${conversationId}`)
 
+export const listResumeRecordsApi = (params = {}) =>
+  get('/wx/resume/records', params)
+

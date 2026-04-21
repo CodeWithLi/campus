@@ -155,18 +155,31 @@
   box-shadow: 0 12rpx 26rpx rgba(15, 23, 42, 0.08);
   position: relative;
   overflow: hidden;
+  isolation: isolate;
+}
+
+.banner-card::before {
+  content: '';
+  position: absolute;
+  width: 200rpx;
+  height: 200rpx;
+  right: -50rpx;
+  top: -70rpx;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0));
+  animation: bannerBlobFloat 7.6s ease-in-out infinite;
+  z-index: 0;
 }
 
 .banner-card::after {
   content: '';
   position: absolute;
-  top: 0;
-  left: -200rpx;
-  width: 150rpx;
-  height: 100%;
-  transform: skewX(-18deg);
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0));
-  animation: cardSheen 4.2s ease-in-out infinite;
+  inset: 0;
+  border-radius: 22rpx;
+  background: linear-gradient(120deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.26), rgba(255, 255, 255, 0.08));
+  opacity: 0.55;
+  animation: bannerBreath 3.8s ease-in-out infinite;
+  z-index: 0;
 }
 
 .banner-badge {
@@ -233,12 +246,14 @@
 .title-sheen::after {
   content: '';
   position: absolute;
-  top: 0;
-  left: -80%;
-  width: 60%;
-  height: 100%;
-  background: linear-gradient(90deg, rgba(79, 70, 229, 0), rgba(79, 70, 229, 0.22), rgba(79, 70, 229, 0));
-  animation: titleSheen 4.2s ease-in-out infinite;
+  left: 0;
+  right: 0;
+  bottom: -4rpx;
+  height: 4rpx;
+  border-radius: 999rpx;
+  background: linear-gradient(90deg, rgba(79, 70, 229, 0.18), rgba(99, 102, 241, 0.46), rgba(79, 70, 229, 0.18));
+  transform-origin: 50% 50%;
+  animation: titleUnderlineBreath 3.6s ease-in-out infinite;
 }
 
 .section-desc {
@@ -524,6 +539,28 @@
   100% { left: 110%; }
 }
 
+@keyframes bannerBreath {
+  0%, 100% {
+    opacity: 0.45;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.02);
+  }
+}
+
+@keyframes bannerBlobFloat {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.75;
+  }
+  50% {
+    transform: translate(-12rpx, 8rpx) scale(1.08);
+    opacity: 0.95;
+  }
+}
+
 @keyframes orbFloatA {
   0%, 100% { transform: translateY(0) translateX(0); }
   50% { transform: translateY(8rpx) translateX(-6rpx); }
@@ -548,6 +585,17 @@
   0% { left: -80%; }
   45% { left: 120%; }
   100% { left: 120%; }
+}
+
+@keyframes titleUnderlineBreath {
+  0%, 100% {
+    opacity: 0.45;
+    transform: scaleX(0.78);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scaleX(1);
+  }
 }
 
 @keyframes iconBob {

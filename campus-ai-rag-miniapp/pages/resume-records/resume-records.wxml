@@ -1,0 +1,35 @@
+<view class="page">
+  <view class="top-actions">
+    <button class="btn primary" bindtap="onGoResumeGenerate">去生成简历</button>
+  </view>
+
+  <view wx:if="{{list.length === 0 && !loading}}" class="empty">你还没有生成过简历</view>
+
+  <view class="card" wx:for="{{list}}" wx:key="id">
+    <view class="row">
+      <view class="template">{{item.templateType || '-'}}</view>
+      <view class="time">{{item.createdAt || ''}}</view>
+    </view>
+    <view class="job" wx:if="{{item.jobDirection}}">岗位方向：{{item.jobDirection}}</view>
+    <view class="preview">{{item.resumeTextPreview || ''}}</view>
+
+    <view class="links" wx:if="{{item.links && item.links.length > 0}}">
+      <view class="link-item" wx:for="{{item.links}}" wx:key="index">
+        <view class="link-line" wx:if="{{item.wordUrl}}">
+          <text class="link-label">Word:</text>
+          <text class="link-text">{{item.wordUrl}}</text>
+          <text class="link-op" data-url="{{item.wordUrl}}" bindtap="onCopyLink">复制</text>
+        </view>
+        <view class="link-line" wx:if="{{item.imgUrl}}">
+          <text class="link-label">图片:</text>
+          <text class="link-text">{{item.imgUrl}}</text>
+          <text class="link-op" data-url="{{item.imgUrl}}" bindtap="onCopyLink">复制</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="more-wrap" wx:if="{{hasMore}}">
+    <button class="btn ghost" loading="{{loadingMore}}" bindtap="onLoadMore">加载更多</button>
+  </view>
+</view>

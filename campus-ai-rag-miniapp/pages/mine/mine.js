@@ -90,6 +90,12 @@ Page({
     })
   },
 
+  goResumeRecords() {
+    wx.navigateTo({
+      url: '/pages/resume-records/resume-records'
+    })
+  },
+
   goScheduleReminder() {
     wx.navigateTo({
       url: '/pages/schedule-reminder/schedule-reminder'

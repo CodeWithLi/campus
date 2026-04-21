@@ -16,6 +16,10 @@ import campus.ai.rag.service.utils.WxAuthContextUtils;
 import campus.ai.rag.service.utils.XfResumeHttpUtils;
 import campus.ai.rag.service.vo.wx.WxResumeChatVO;
 import campus.ai.rag.service.vo.wx.WxResumeGenerateVO;
+import campus.ai.rag.service.vo.wx.WxResumeRecordItemVO;
+import campus.ai.rag.service.vo.wx.WxResumeRecordPageVO;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -25,6 +29,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -37,6 +42,7 @@ public class WxResumeServiceImpl implements WxResumeService {
     private static final double OUT_PRICE_PER_1K = 0.02d;
     private static final BigDecimal MIN_CHARGE_POINTS = new BigDecimal("2.00");
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final DateTimeFormatter DATE_TIME_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     private final AiChatRouter aiChatRouter;
     private final RedisTemplate<String, Object> redisTemplate;
@@ -147,6 +153,25 @@ public class WxResumeServiceImpl implements WxResumeService {
             recordResumeBilling(userId, estimateTokensByChars(reqText.length()), 0, BigDecimal.ZERO, ex.getMessage());
             throw ex;
         }
+    }
+
+    @Override
+    public WxResumeRecordPageVO listGenerateRecords(Integer pageNo, Integer pageSize) {
+        Long userId = parseUserId(WxAuthContextUtils.requireWxUserId());
+        int pNo = pageNo == null || pageNo <= 0 ? 1 : pageNo;
+        int pSize = pageSize == null || pageSize <= 0 ? 10 : Math.min(pageSize, 50);
+
+        Page<WxResumeGenerateRecordEntity> page = new Page<>(pNo, pSize);
+        Page<WxResumeGenerateRecordEntity> result = wxResumeGenerateRecordMapper.selectPage(page,
+                new LambdaQueryWrapper<WxResumeGenerateRecordEntity>()
+                        .eq(WxResumeGenerateRecordEntity::getUserId, userId)
+                        .orderByDesc(WxResumeGenerateRecordEntity::getId));
+
+        List<WxResumeRecordItemVO> list = result.getRecords().stream().map(this::toRecordItem).toList();
+        WxResumeRecordPageVO vo = new WxResumeRecordPageVO();
+        vo.setTotal(result.getTotal());
+        vo.setList(list);
+        return vo;
     }
 
     private String buildResumeGenerateInput(WxResumeGenerateDTO dto) {
@@ -371,6 +396,29 @@ public class WxResumeServiceImpl implements WxResumeService {
 
     private String toStr(Object obj) {
         return obj == null ? null : String.valueOf(obj);
+    }
+
+    private WxResumeRecordItemVO toRecordItem(WxResumeGenerateRecordEntity entity) {
+        WxResumeRecordItemVO vo = new WxResumeRecordItemVO();
+        vo.setId(entity.getId());
+        vo.setTemplateType(entity.getTemplateType());
+        vo.setJobDirection(entity.getJobDirection());
+        vo.setResumeTextPreview(truncate(entity.getResumeText(), 120));
+        vo.setLinks(parseLinks(entity.getLinksJson()));
+        vo.setCreatedAt(entity.getCreatedAt() == null ? "" : DATE_TIME_FMT.format(entity.getCreatedAt()));
+        return vo;
+    }
+
+    private List<WxResumeGenerateVO.LinkVO> parseLinks(String linksJson) {
+        if (isBlank(linksJson)) {
+            return List.of();
+        }
+        try {
+            return OBJECT_MAPPER.readValue(linksJson,
+                    OBJECT_MAPPER.getTypeFactory().constructCollectionType(List.class, WxResumeGenerateVO.LinkVO.class));
+        } catch (Exception e) {
+            return List.of();
+        }
     }
 
     private String toJsonString(Object obj) {

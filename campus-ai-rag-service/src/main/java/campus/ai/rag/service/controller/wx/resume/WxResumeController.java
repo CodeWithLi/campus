@@ -11,6 +11,7 @@ import campus.ai.rag.service.vo.wx.WxChatConversationDetailVO;
 import campus.ai.rag.service.vo.wx.WxChatConversationSummaryVO;
 import campus.ai.rag.service.vo.wx.WxResumeChatVO;
 import campus.ai.rag.service.vo.wx.WxResumeGenerateVO;
+import campus.ai.rag.service.vo.wx.WxResumeRecordPageVO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -21,6 +22,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -61,6 +63,14 @@ public class WxResumeController {
     @Operation(summary = "调用星火简历生成")
     public Result<WxResumeGenerateVO> generate(@RequestBody WxResumeGenerateDTO dto) {
         return Result.success(wxResumeService.generate(dto));
+    }
+
+    @GetMapping("/records")
+    @ApiOperation(value = "简历生成记录分页", notes = "读取 wx_resume_generate_record 当前用户记录")
+    @Operation(summary = "简历生成记录分页")
+    public Result<WxResumeRecordPageVO> records(@RequestParam(value = "pageNo", required = false) Integer pageNo,
+                                                @RequestParam(value = "pageSize", required = false) Integer pageSize) {
+        return Result.success(wxResumeService.listGenerateRecords(pageNo, pageSize));
     }
 
     @GetMapping("/conversations")

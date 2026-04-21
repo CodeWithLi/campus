@@ -4,11 +4,14 @@ import campus.ai.rag.service.dto.wx.WxResumeChatDTO;
 import campus.ai.rag.service.dto.wx.WxResumeGenerateDTO;
 import campus.ai.rag.service.vo.wx.WxResumeChatVO;
 import campus.ai.rag.service.vo.wx.WxResumeGenerateVO;
+import campus.ai.rag.service.vo.wx.WxResumeRecordPageVO;
 
 public interface WxResumeService {
 
     WxResumeChatVO chat(WxResumeChatDTO dto);
 
     WxResumeGenerateVO generate(WxResumeGenerateDTO dto);
+
+    WxResumeRecordPageVO listGenerateRecords(Integer pageNo, Integer pageSize);
 }
 

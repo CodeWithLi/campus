@@ -1,0 +1,105 @@
+.page {
+  min-height: 100vh;
+  background: #f5f7fa;
+  padding: 24rpx;
+  box-sizing: border-box;
+}
+
+.top-actions {
+  margin-bottom: 16rpx;
+}
+
+.card {
+  background: #fff;
+  border: 1rpx solid #e5e7eb;
+  border-radius: 16rpx;
+  padding: 20rpx;
+  margin-bottom: 14rpx;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.template {
+  font-size: 26rpx;
+  color: #1d4ed8;
+  font-weight: 600;
+}
+
+.time {
+  font-size: 22rpx;
+  color: #9ca3af;
+}
+
+.job {
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  color: #374151;
+}
+
+.preview {
+  margin-top: 10rpx;
+  font-size: 24rpx;
+  color: #4b5563;
+}
+
+.links {
+  margin-top: 12rpx;
+  border-top: 1rpx dashed #e5e7eb;
+  padding-top: 10rpx;
+}
+
+.link-line {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  margin-top: 6rpx;
+}
+
+.link-label {
+  color: #6b7280;
+  font-size: 22rpx;
+}
+
+.link-text {
+  flex: 1;
+  color: #2563eb;
+  font-size: 22rpx;
+  word-break: break-all;
+}
+
+.link-op {
+  color: #4338ca;
+  font-size: 22rpx;
+  padding: 6rpx 10rpx;
+  background: #eef2ff;
+  border-radius: 8rpx;
+}
+
+.empty {
+  text-align: center;
+  color: #6b7280;
+  margin-top: 120rpx;
+}
+
+.more-wrap {
+  margin-top: 10rpx;
+}
+
+.btn {
+  border-radius: 12rpx;
+  font-size: 26rpx;
+}
+
+.btn.primary {
+  background: #2563eb;
+  color: #fff;
+}
+
+.btn.ghost {
+  background: #eef2ff;
+  color: #4338ca;
+}

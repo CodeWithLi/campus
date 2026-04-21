@@ -43,6 +43,13 @@
 
   <view class="section-card" wx:if="{{isLogin}}">
     <view class="section-title">社区与提醒</view>
+    <view class="menu-item" bindtap="goResumeRecords">
+      <view class="menu-left">
+        <text class="menu-icon">📄</text>
+        <text class="menu-text">我的简历</text>
+      </view>
+      <text class="menu-arrow">›</text>
+    </view>
     <view class="menu-item" bindtap="goMyPosts">
       <view class="menu-left">
         <text class="menu-icon">📝</text>
