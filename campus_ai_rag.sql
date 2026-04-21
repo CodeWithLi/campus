@@ -1,17 +1,17 @@
 /*
  Navicat Premium Data Transfer
 
- Source Server         : localhost
+ Source Server         : 118.145.69.241
  Source Server Type    : MySQL
- Source Server Version : 80045 (8.0.45)
- Source Host           : localhost:3306
+ Source Server Version : 80031 (8.0.31)
+ Source Host           : localhost:3062
  Source Schema         : campus_ai_rag
 
  Target Server Type    : MySQL
- Target Server Version : 80045 (8.0.45)
+ Target Server Version : 80031 (8.0.31)
  File Encoding         : 65001
 
- Date: 14/04/2026 15:58:46
+ Date: 21/04/2026 14:34:41
 */
 
 SET NAMES utf8mb4;
@@ -44,13 +44,7 @@ CREATE TABLE `ai_model_config`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uq_ai_model_config_code`(`model_code` ASC) USING BTREE,
   CONSTRAINT `ck_ai_model_invoke_type` CHECK (`invoke_type` in (1,2))
-) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '后台模型配置表（仅后台管理使用）' ROW_FORMAT = Dynamic;
-
--- ----------------------------
--- Records of ai_model_config
--- ----------------------------
-INSERT INTO `ai_model_config` VALUES (1, 'qwen plus', '通义千问Plus', 1, 'qwen', 'https://dashscope.aliyuncs.com/compatible-mode', 'sk-01e2d69852854c8584ee673ed9d96ce9', 'qwen-plus', 0.70, 4096, NULL, NULL, NULL, NULL, 1, 10, 'Spring AI方式调用', '2026-04-09 17:01:41', '2026-04-09 17:02:49');
-INSERT INTO `ai_model_config` VALUES (2, 'Spark X2', '讯飞星火Spark X2模型', 2, 'xunfei', 'https://spark-api-open.xf-yun.com/x2/chat/completions', 'gdcDNSvCzHUeBWydOuFS:HEQZSIXfvtxLUCuDZBKK', 'spark-x', 0.70, 8192, NULL, NULL, NULL, NULL, 1, 20, 'HTTP方式调用', '2026-04-09 17:01:41', '2026-04-13 16:54:44');
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '后台模型配置表（仅后台管理使用）' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for ai_system_prompt
@@ -76,14 +70,227 @@ CREATE TABLE `ai_system_prompt`  (
   INDEX `idx_scene_enabled`(`scene` ASC, `enabled` ASC) USING BTREE,
   INDEX `idx_scene_default`(`scene` ASC, `is_default` ASC) USING BTREE,
   INDEX `idx_priority`(`priority` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = 'AI系统提示词表（后台管理端，仅管理员配置）' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = 'AI系统提示词表（后台管理端，仅管理员配置）' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
--- Records of ai_system_prompt
+-- Table structure for ai_token_billing_log
 -- ----------------------------
-INSERT INTO `ai_system_prompt` VALUES (1, 'SYS_CHAT_DEFAULT', '系统提示词-对话默认', 'CHAT', '你正在与用户进行自然对话，请作为“校园智能助理”提供帮助。\n\n---\n\n【一、对话目标】\n\n1. 帮助用户解决问题\n2. 提供清晰、实用的建议\n3. 保持自然、友好的交流体验\n\n---\n\n【二、能力范围】\n可以处理：\n\n* 学习问题（课程、论文、编程等）\n* 校园生活（请假、效率、时间管理等）\n* 技术问题（开发、项目等）\n* 文本生成（总结、文案、发帖等）\n\n---\n\n【三、多轮对话】\n\n1. 理解上下文\n2. 避免重复\n3. 必要时可简要追问\n\n---\n\n【四、回答风格（重点🔥）】\n\n1. 结构清晰（优先分点）\n2. 简洁自然，不冗长\n3. 优先给“可执行方案”\n4. 适当总结重点\n\n---\n\n【五、生成类任务】\n如用户要求：\n\n* 写文章\n* 写帖子\n* 优化内容\n\n👉 必须：\n\n1. 内容清晰、有结构\n2. 风格自然\n3. 符合用户场景（如学生）\n\n---\n\n【六、不确定处理】\n\n1. 信息不足可引导补充\n2. 不确定用“可能/建议”等表达\n3. 禁止编造事实\n\n---\n\n【七、体验优化】\n\n1. 避免机械回复\n2. 不使用模板化语言\n3. 保持对话感\n\n---\n\n请以自然、清晰、有帮助的方式进行回答。', 1, 10, 1, 3, '对话默认系统提示词', NULL, NULL, '2026-04-13 17:04:16', '2026-04-13 17:04:16');
-INSERT INTO `ai_system_prompt` VALUES (2, 'SYS_RAG_DEFAULT', '系统提示词-RAG默认', 'RAG', '你正在基于“校园知识库”回答用户问题，请严格遵守以下规则：\n\n---\n\n【一、回答原则（最高优先级🔥）】\n\n1. 必须优先依据提供的“知识内容”进行回答\n2. 不得脱离知识内容随意发挥\n3. 不得编造知识库中不存在的信息\n\n---\n\n【二、回答方式】\n\n1. 对知识内容进行理解后，用自然语言总结\n2. 避免逐字复制原文\n3. 可适当整理为：\n\n   * 分点说明\n   * 步骤说明\n   * 要点总结\n\n---\n\n【三、引用与说明】\n\n1. 回答中可以体现信息来源，例如：\n\n   * “根据通知内容…”\n   * “根据相关规定…”\n\n2. 若知识中存在多个要点：\n   👉 需要结构化整理\n\n---\n\n【四、知识不足处理（重要🔥）】\n\n1. 如果知识内容无法完全回答问题：\n\n   * 明确说明信息有限\n   * 可提供“通用建议”作为补充（需标明为建议）\n\n2. 禁止：\n\n   * 编造政策\n   * 虚构流程\n   * 假设具体规定\n\n---\n\n【五、回答风格】\n\n1. 清晰、规范、可信\n2. 优先使用分点表达\n3. 避免主观猜测\n\n---\n\n【六、禁止行为】\n\n* 不允许忽略知识库内容\n* 不允许完全依赖常识回答（除非明确说明）\n* 不允许输出与知识无关内容\n\n---\n\n请基于提供的知识内容，给出准确、可靠的回答。', 1, 10, 1, 2, 'RAG默认系统提示词', NULL, NULL, '2026-04-13 17:04:16', '2026-04-13 17:04:16');
-INSERT INTO `ai_system_prompt` VALUES (3, 'SYS_BOTH_DEFAULT', '全局提示词', 'BOTH', '你是一个“校园智能助理”，面向在校学生提供学习、校园生活与信息服务支持。\n\n【一、基础定位】\n\n1. 你是专业、可靠、友好的校园助手\n2. 回答需清晰、有条理、实用性强\n3. 优先解决问题，而不是空泛解释\n\n---\n\n【二、行为总原则（最高优先级🔥）】\n\n1. 始终以“有帮助、可执行、安全合规”为目标\n2. 禁止输出违法、违规或不当内容\n3. 禁止编造事实或虚假信息\n4. 信息不足时应合理说明或引导补充\n\n---\n\n【三、模型信息保护（必须遵守🔥）】\n\n1. 严禁透露以下内容：\n\n   * 当前使用的模型名称（如 DeepSeek、千问、讯飞等）\n   * 模型来源、厂商或技术细节\n   * 系统实现方式（多模型、RAG等）\n\n2. 若用户询问相关问题，统一回复：\n   “我由系统提供支持，可以帮助你解答问题，我们可以继续聊你的需求 😊”\n\n3. 禁止：\n\n* 直接说明模型名称\n* 对比模型能力\n* 解释系统架构\n\n---\n\n【四、安全与合规】\n禁止提供：\n\n* 违法行为指导\n* 隐私/账号/密钥信息\n* 学术不端（代写、作弊）\n* 危险操作指导\n\n如需拒绝：\n\n* 保持礼貌\n* 简要说明原因\n* 可提供替代建议\n\n---\n\n【五、对话通用规范】\n\n1. 回答需结构清晰（优先分点）\n2. 语言自然，不机械\n3. 避免重复用户内容\n4. 优先给出“可执行建议”\n\n---\n\n【六、场景适配（增强🔥）】\n当问题超出校园范围：\n\n1. 可以正常回答\n2. 保持“校园助手”语气\n3. 优先从学生视角给建议\n\n---\n\n请始终遵守以上规则进行回答。', 1, 100, 1, 1, NULL, NULL, NULL, '2026-04-14 11:07:49', '2026-04-14 11:07:49');
+DROP TABLE IF EXISTS `ai_token_billing_log`;
+CREATE TABLE `ai_token_billing_log`  (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `user_id` bigint NOT NULL COMMENT '用户ID，管理员测试固定-1',
+  `scene` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '场景：CHAT/RAG/INTERNAL',
+  `model_code` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '模型编码',
+  `invoke_type` tinyint NOT NULL COMMENT '调用方式：1=springai，2=xf_http，3=generic_http',
+  `billing_type` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '计费类型：TOKEN_API/ESTIMATE_CHAR',
+  `prompt_tokens` int NOT NULL DEFAULT 0 COMMENT '输入token',
+  `completion_tokens` int NOT NULL DEFAULT 0 COMMENT '输出token',
+  `total_tokens` int NOT NULL DEFAULT 0 COMMENT '总token',
+  `request_chars` int NOT NULL DEFAULT 0 COMMENT '输入字符数',
+  `response_chars` int NOT NULL DEFAULT 0 COMMENT '输出字符数',
+  `consumed_points` decimal(10, 2) NOT NULL DEFAULT 0.00 COMMENT '本次扣减算力点',
+  `status` tinyint NOT NULL DEFAULT 1 COMMENT '状态：1成功 0失败',
+  `error_message` varchar(1000) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '失败原因',
+  `ext_json` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '扩展字段JSON（原始usage等）',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_ai_token_billing_user_created`(`user_id` ASC, `created_at` ASC) USING BTREE,
+  INDEX `idx_ai_token_billing_model_created`(`model_code` ASC, `created_at` ASC) USING BTREE,
+  INDEX `idx_ai_token_billing_scene_created`(`scene` ASC, `created_at` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 64 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '模型token计费流水' ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Table structure for forum_notice_agent_record
+-- ----------------------------
+DROP TABLE IF EXISTS `forum_notice_agent_record`;
+CREATE TABLE `forum_notice_agent_record`  (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `user_id` bigint NOT NULL COMMENT '用户ID',
+  `file_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '上传文件名',
+  `file_ext` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '文件扩展名',
+  `route` varchar(40) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '解析路由：IMAGE_OCR/PDF_PAGE_OCR/PDF_API_OCR',
+  `raw_text` mediumtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT 'OCR原始文本',
+  `summary` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '结构化摘要',
+  `items_json` mediumtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '提醒候选JSON',
+  `item_count` int NOT NULL DEFAULT 0 COMMENT '提醒候选数量',
+  `deleted` tinyint NOT NULL DEFAULT 0 COMMENT '逻辑删除：0未删除，1已删除',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_user_created`(`user_id` ASC, `created_at` ASC) USING BTREE,
+  INDEX `idx_user_deleted_created`(`user_id` ASC, `deleted` ASC, `created_at` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 12 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '通知智能体解析记录表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Table structure for forum_post
+-- ----------------------------
+DROP TABLE IF EXISTS `forum_post`;
+CREATE TABLE `forum_post`  (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `user_id` bigint NOT NULL COMMENT 'wx_user.id',
+  `title` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `content` varchar(1000) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `image_urls` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '图片URL数组(JSON)',
+  `is_anonymous` tinyint NOT NULL DEFAULT 0 COMMENT '是否匿名发布：1匿名，0非匿名',
+  `text_compliance_skipped` tinyint NOT NULL DEFAULT 0 COMMENT '1=发布时跳过文本合规（与 AI 草稿一致）',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_user_created`(`user_id` ASC, `created_at` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '论坛帖子' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Table structure for forum_post_comment
+-- ----------------------------
+DROP TABLE IF EXISTS `forum_post_comment`;
+CREATE TABLE `forum_post_comment`  (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `post_id` bigint NOT NULL COMMENT 'forum_post.id',
+  `user_id` bigint NOT NULL COMMENT 'wx_user.id',
+  `content` varchar(1000) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '评论内容',
+  `parent_comment_id` bigint NULL DEFAULT NULL COMMENT '父评论ID（多级评论树）',
+  `reply_to_comment_id` bigint NULL DEFAULT NULL COMMENT '回复目标评论ID（显示“回复谁”）',
+  `deleted` tinyint NOT NULL DEFAULT 0 COMMENT '0=正常 1=删除',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_post_parent_created`(`post_id` ASC, `parent_comment_id` ASC, `created_at` ASC) USING BTREE,
+  INDEX `idx_post_created`(`post_id` ASC, `created_at` ASC) USING BTREE,
+  INDEX `idx_user_created`(`user_id` ASC, `created_at` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '帖子评论' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Table structure for forum_post_favorite
+-- ----------------------------
+DROP TABLE IF EXISTS `forum_post_favorite`;
+CREATE TABLE `forum_post_favorite`  (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `post_id` bigint NOT NULL COMMENT '帖子ID',
+  `user_id` bigint NOT NULL COMMENT '收藏用户ID',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '收藏时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `uk_post_user`(`post_id` ASC, `user_id` ASC) USING BTREE,
+  INDEX `idx_user_created`(`user_id` ASC, `created_at` ASC) USING BTREE,
+  INDEX `idx_post`(`post_id` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '帖子收藏关系表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Table structure for forum_post_interaction_notice
+-- ----------------------------
+DROP TABLE IF EXISTS `forum_post_interaction_notice`;
+CREATE TABLE `forum_post_interaction_notice`  (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `receiver_user_id` bigint NOT NULL COMMENT '接收互动通知的用户ID',
+  `actor_user_id` bigint NOT NULL COMMENT '触发互动的用户ID',
+  `post_id` bigint NOT NULL COMMENT '关联帖子ID',
+  `comment_id` bigint NULL DEFAULT NULL COMMENT '关联评论ID',
+  `interaction_type` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT 'LIKE/COMMENT',
+  `content_snapshot` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '互动内容摘要',
+  `is_read` tinyint NOT NULL DEFAULT 0 COMMENT '是否已读：0未读，1已读',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_receiver_created`(`receiver_user_id` ASC, `created_at` ASC) USING BTREE,
+  INDEX `idx_post`(`post_id` ASC) USING BTREE,
+  INDEX `idx_actor`(`actor_user_id` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '帖子互动通知表（点赞/评论）' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Table structure for forum_post_like
+-- ----------------------------
+DROP TABLE IF EXISTS `forum_post_like`;
+CREATE TABLE `forum_post_like`  (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `post_id` bigint NOT NULL COMMENT 'forum_post.id',
+  `user_id` bigint NOT NULL COMMENT 'wx_user.id',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `uq_post_user`(`post_id` ASC, `user_id` ASC) USING BTREE,
+  INDEX `idx_post_created`(`post_id` ASC, `created_at` ASC) USING BTREE,
+  INDEX `idx_user_created`(`user_id` ASC, `created_at` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '帖子点赞' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Table structure for forum_schedule_notice
+-- ----------------------------
+DROP TABLE IF EXISTS `forum_schedule_notice`;
+CREATE TABLE `forum_schedule_notice`  (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `user_id` bigint NOT NULL COMMENT 'wx_user.id',
+  `reminder_id` bigint NOT NULL COMMENT 'forum_schedule_reminder.id',
+  `title` varchar(120) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '提醒标题',
+  `remind_type` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT 'exam/ddl/activity',
+  `content` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '通知内容',
+  `is_read` tinyint NOT NULL DEFAULT 0 COMMENT '0=未读 1=已读',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_user_read_created`(`user_id` ASC, `is_read` ASC, `created_at` ASC) USING BTREE,
+  INDEX `idx_reminder_created`(`reminder_id` ASC, `created_at` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '提醒通知' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Table structure for forum_schedule_reminder
+-- ----------------------------
+DROP TABLE IF EXISTS `forum_schedule_reminder`;
+CREATE TABLE `forum_schedule_reminder`  (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `user_id` bigint NOT NULL COMMENT 'wx_user.id',
+  `title` varchar(120) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '提醒标题',
+  `remind_type` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT 'exam/ddl/activity',
+  `remind_at` datetime NOT NULL COMMENT '提醒目标时间',
+  `advance_minutes` int NOT NULL DEFAULT 30 COMMENT '提前提醒分钟数',
+  `notified` tinyint NOT NULL DEFAULT 0 COMMENT '0=未通知 1=已通知',
+  `deleted` tinyint NOT NULL DEFAULT 0 COMMENT '0=正常 1=删除',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_user_remind_time`(`user_id` ASC, `remind_at` ASC) USING BTREE,
+  INDEX `idx_due_scan`(`deleted` ASC, `notified` ASC, `remind_at` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '日程提醒' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Table structure for kb_category
+-- ----------------------------
+DROP TABLE IF EXISTS `kb_category`;
+CREATE TABLE `kb_category`  (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `category_code` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '分类编码（唯一）',
+  `category_name` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '分类名称',
+  `enabled` tinyint NOT NULL DEFAULT 1 COMMENT '是否启用：1启用，0禁用',
+  `sort_no` int NOT NULL DEFAULT 100 COMMENT '排序号（越小越靠前）',
+  `remark` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '备注',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `uk_kb_category_code`(`category_code` ASC) USING BTREE,
+  INDEX `idx_kb_category_enabled_sort`(`enabled` ASC, `sort_no` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '知识库分类表' ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Table structure for kb_document
+-- ----------------------------
+DROP TABLE IF EXISTS `kb_document`;
+CREATE TABLE `kb_document`  (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `category_id` bigint NOT NULL COMMENT '分类ID（关联 kb_category.id）',
+  `title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '文档标题',
+  `original_file_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '原始文件名',
+  `file_ext` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '文件后缀',
+  `content_type` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '文件MIME类型',
+  `file_size` bigint NOT NULL DEFAULT 0 COMMENT '文件大小（字节）',
+  `storage_path` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '文件存储路径',
+  `process_status` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'PENDING' COMMENT '处理状态：PENDING/PROCESSING/SUCCESS/FAILED',
+  `fail_reason` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '失败原因',
+  `retry_count` int NOT NULL DEFAULT 0 COMMENT '重试次数',
+  `embedding_model` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'text-embedding-v4' COMMENT '向量模型（固定千问 text-embedding-v4）',
+  `chunk_count` int NULL DEFAULT NULL COMMENT '切片数量',
+  `parsed_content` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '解析后的纯文本内容（用于后续切片和向量化）',
+  `image_understand_text` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '图片理解结果文本',
+  `processed_at` datetime NULL DEFAULT NULL COMMENT '处理完成时间',
+  `remark` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '备注',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_kb_document_category`(`category_id` ASC) USING BTREE,
+  INDEX `idx_kb_document_status`(`process_status` ASC) USING BTREE,
+  INDEX `idx_kb_document_created_at`(`created_at` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 12 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '知识库文档表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for rbac_permission
@@ -100,18 +307,7 @@ CREATE TABLE `rbac_permission`  (
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uq_rbac_perm_code`(`perm_code` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 8 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = 'RBAC 权限表' ROW_FORMAT = Dynamic;
-
--- ----------------------------
--- Records of rbac_permission
--- ----------------------------
-INSERT INTO `rbac_permission` VALUES (1, 'dashboard:view', '查看控制台', 'ADMIN', '/admin/dashboard/**', 'GET', '2026-04-09 16:05:57', '2026-04-09 16:05:57');
-INSERT INTO `rbac_permission` VALUES (2, 'user:view', '查看用户', 'ADMIN', '/admin/users/**', 'GET', '2026-04-09 16:05:57', '2026-04-09 16:05:57');
-INSERT INTO `rbac_permission` VALUES (3, 'user:edit', '编辑用户', 'ADMIN', '/admin/users/**', 'PUT', '2026-04-09 16:05:57', '2026-04-09 16:05:57');
-INSERT INTO `rbac_permission` VALUES (4, 'file:view', '查看文件', 'ADMIN', '/admin/files/**', 'GET', '2026-04-09 16:05:57', '2026-04-09 16:05:57');
-INSERT INTO `rbac_permission` VALUES (5, 'file:upload', '上传文件', 'ADMIN', '/admin/files/**', 'POST', '2026-04-09 16:05:57', '2026-04-09 16:05:57');
-INSERT INTO `rbac_permission` VALUES (6, 'admin:manage', '管理员管理', 'ADMIN', '/admin/admin-users/**', NULL, '2026-04-09 16:05:57', '2026-04-09 16:05:57');
-INSERT INTO `rbac_permission` VALUES (7, 'model:config', '模型配置管理', 'ADMIN', '/admin/models/**', NULL, '2026-04-09 16:05:57', '2026-04-09 16:05:57');
+) ENGINE = InnoDB AUTO_INCREMENT = 8 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = 'RBAC 权限表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for rbac_role
@@ -126,13 +322,7 @@ CREATE TABLE `rbac_role`  (
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uq_rbac_role_code`(`role_code` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = 'RBAC 角色表' ROW_FORMAT = Dynamic;
-
--- ----------------------------
--- Records of rbac_role
--- ----------------------------
-INSERT INTO `rbac_role` VALUES (1, 'SUPER_ADMIN', '超级管理员', 1, '2026-04-09 16:05:57', '2026-04-09 16:05:57');
-INSERT INTO `rbac_role` VALUES (2, 'ADMIN', '管理员', 1, '2026-04-09 16:05:57', '2026-04-09 16:05:57');
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = 'RBAC 角色表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for rbac_role_permission
@@ -148,23 +338,7 @@ CREATE TABLE `rbac_role_permission`  (
   INDEX `fk_rbac_role_perm_perm`(`permission_id` ASC) USING BTREE,
   CONSTRAINT `fk_rbac_role_perm_perm` FOREIGN KEY (`permission_id`) REFERENCES `rbac_permission` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `fk_rbac_role_perm_role` FOREIGN KEY (`role_id`) REFERENCES `rbac_role` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 15 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = 'RBAC 角色权限关联表' ROW_FORMAT = Dynamic;
-
--- ----------------------------
--- Records of rbac_role_permission
--- ----------------------------
-INSERT INTO `rbac_role_permission` VALUES (1, 1, 6, '2026-04-09 16:05:57');
-INSERT INTO `rbac_role_permission` VALUES (2, 1, 1, '2026-04-09 16:05:57');
-INSERT INTO `rbac_role_permission` VALUES (3, 1, 5, '2026-04-09 16:05:57');
-INSERT INTO `rbac_role_permission` VALUES (4, 1, 4, '2026-04-09 16:05:57');
-INSERT INTO `rbac_role_permission` VALUES (5, 1, 7, '2026-04-09 16:05:57');
-INSERT INTO `rbac_role_permission` VALUES (6, 1, 3, '2026-04-09 16:05:57');
-INSERT INTO `rbac_role_permission` VALUES (7, 1, 2, '2026-04-09 16:05:57');
-INSERT INTO `rbac_role_permission` VALUES (8, 2, 1, '2026-04-09 16:05:57');
-INSERT INTO `rbac_role_permission` VALUES (9, 2, 5, '2026-04-09 16:05:57');
-INSERT INTO `rbac_role_permission` VALUES (10, 2, 4, '2026-04-09 16:05:57');
-INSERT INTO `rbac_role_permission` VALUES (11, 2, 3, '2026-04-09 16:05:57');
-INSERT INTO `rbac_role_permission` VALUES (12, 2, 2, '2026-04-09 16:05:57');
+) ENGINE = InnoDB AUTO_INCREMENT = 13 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = 'RBAC 角色权限关联表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for rbac_user
@@ -182,13 +356,7 @@ CREATE TABLE `rbac_user`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uq_rbac_user_username`(`username` ASC) USING BTREE,
   UNIQUE INDEX `uq_rbac_super_admin_marker`(`super_admin_marker` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = 'RBAC 用户表' ROW_FORMAT = Dynamic;
-
--- ----------------------------
--- Records of rbac_user
--- ----------------------------
-INSERT INTO `rbac_user` VALUES (3, 'admin', '$2a$10$Pf.Pqw8mRJISWyPDoOaDlubOW0G37PTZ5FfPEJb.HVQeeP7mKrkyi', '管理员', 1, NULL, '2026-04-09 16:14:36', '2026-04-09 16:14:36');
-INSERT INTO `rbac_user` VALUES (4, 'super', '$2a$10$U5FQxxHq.W/57AIQgTc4fufJD6xwlGJ4o99ehKyyPyqk5xn9B6Qfe', '超级管理员', 1, 'Y', '2026-04-09 16:14:36', '2026-04-09 16:14:36');
+) ENGINE = InnoDB AUTO_INCREMENT = 17 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = 'RBAC 用户表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for rbac_user_role
@@ -204,13 +372,115 @@ CREATE TABLE `rbac_user_role`  (
   INDEX `fk_rbac_user_role_role`(`role_id` ASC) USING BTREE,
   CONSTRAINT `fk_rbac_user_role_role` FOREIGN KEY (`role_id`) REFERENCES `rbac_role` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `fk_rbac_user_role_user` FOREIGN KEY (`user_id`) REFERENCES `rbac_user` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = 'RBAC 用户角色关联表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 15 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = 'RBAC 用户角色关联表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
--- Records of rbac_user_role
+-- Table structure for wx_conversation
 -- ----------------------------
-INSERT INTO `rbac_user_role` VALUES (1, 3, 2, '2026-04-09 16:14:36');
-INSERT INTO `rbac_user_role` VALUES (2, 4, 1, '2026-04-09 16:14:36');
+DROP TABLE IF EXISTS `wx_conversation`;
+CREATE TABLE `wx_conversation`  (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `user_id` bigint NOT NULL COMMENT '微信用户ID',
+  `conversation_id` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '会话ID',
+  `scene` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '场景：CHAT/RAG',
+  `title` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '会话标题',
+  `summary` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '会话摘要',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `uq_wx_conv_user_scene_conv`(`user_id` ASC, `scene` ASC, `conversation_id` ASC) USING BTREE,
+  INDEX `idx_wx_conv_user_scene_updated`(`user_id` ASC, `scene` ASC, `updated_at` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '微信会话元数据' ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Table structure for wx_kb_document
+-- ----------------------------
+DROP TABLE IF EXISTS `wx_kb_document`;
+CREATE TABLE `wx_kb_document`  (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `user_id` bigint NOT NULL COMMENT '归属用户ID',
+  `category_id` bigint NULL DEFAULT NULL COMMENT '知识库分类ID',
+  `title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '文档标题',
+  `original_file_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '原始文件名',
+  `file_ext` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '文件扩展名',
+  `content_type` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '内容类型',
+  `file_size` bigint NULL DEFAULT NULL COMMENT '文件大小字节',
+  `storage_path` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '文件存储路径',
+  `process_status` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'PENDING' COMMENT '处理状态：PENDING/PROCESSING/SUCCESS/FAILED',
+  `fail_reason` varchar(1000) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '失败原因',
+  `retry_count` int NOT NULL DEFAULT 0 COMMENT '重试次数',
+  `embedding_model` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'text-embedding-v4' COMMENT '向量模型',
+  `chunk_count` int NOT NULL DEFAULT 0 COMMENT '切片数量',
+  `parsed_content` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '解析后的纯文本',
+  `processed_at` datetime NULL DEFAULT NULL COMMENT '处理完成时间',
+  `remark` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '备注',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_wx_kb_doc_user_created`(`user_id` ASC, `created_at` ASC) USING BTREE,
+  INDEX `idx_wx_kb_doc_user_status`(`user_id` ASC, `process_status` ASC) USING BTREE,
+  INDEX `idx_wx_kb_document_user_category`(`user_id` ASC, `category_id` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户个人知识库文档' ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Table structure for wx_power_point_credit_log
+-- ----------------------------
+DROP TABLE IF EXISTS `wx_power_point_credit_log`;
+CREATE TABLE `wx_power_point_credit_log`  (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `user_id` bigint NOT NULL COMMENT '微信用户ID',
+  `order_no` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '充值订单号（唯一，用于幂等）',
+  `channel` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'ALIPAY_WAP' COMMENT '渠道',
+  `points` decimal(10, 2) NOT NULL COMMENT '本次到账算力点',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `uk_order_no`(`order_no` ASC) USING BTREE,
+  INDEX `idx_user_id`(`user_id` ASC) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '算力点到账流水（用于幂等防重复加点）' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Table structure for wx_recharge_order
+-- ----------------------------
+DROP TABLE IF EXISTS `wx_recharge_order`;
+CREATE TABLE `wx_recharge_order`  (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `order_no` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '商户订单号',
+  `user_id` bigint NOT NULL COMMENT '微信用户ID',
+  `channel` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'ALIPAY_WAP' COMMENT '支付渠道',
+  `amount_yuan` decimal(10, 2) NOT NULL COMMENT '充值金额（元）',
+  `points` decimal(10, 2) NOT NULL COMMENT '到账算力点',
+  `subject` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '订单标题',
+  `status` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'CREATED' COMMENT 'CREATED/PAID/CLOSED/FAILED',
+  `trade_no` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '支付宝交易号',
+  `buyer_logon_id` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '买家账号',
+  `paid_at` datetime NULL DEFAULT NULL COMMENT '支付完成时间',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `uk_order_no`(`order_no` ASC) USING BTREE,
+  INDEX `idx_user_id`(`user_id` ASC) USING BTREE,
+  INDEX `idx_status`(`status` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 8 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '微信端充值订单' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Table structure for wx_resume_generate_record
+-- ----------------------------
+DROP TABLE IF EXISTS `wx_resume_generate_record`;
+CREATE TABLE `wx_resume_generate_record`  (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `user_id` bigint NOT NULL COMMENT '微信用户ID',
+  `sid` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT '' COMMENT '星火返回sid',
+  `template_type` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'CAMPUS' COMMENT '模板类型：CAMPUS/EXPERIENCED/INTERN',
+  `job_direction` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '岗位方向',
+  `resume_text` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '提交给生成接口的简历文本',
+  `links_json` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '生成链接JSON（原样存储）',
+  `link_count` int NOT NULL DEFAULT 0 COMMENT '链接数量',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_user_created`(`user_id` ASC, `created_at` ASC) USING BTREE,
+  INDEX `idx_sid`(`sid` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '微信端简历生成记录' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for wx_user
@@ -224,7 +494,7 @@ CREATE TABLE `wx_user`  (
   `avatar_url` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '头像URL',
   `status` tinyint NOT NULL DEFAULT 1 COMMENT '用户状态：1=正常，0=禁用',
   `register_source` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'PASSWORD' COMMENT '注册来源：PASSWORD/WX',
-  `power_points` int NOT NULL DEFAULT 0 COMMENT '剩余算力点',
+  `power_points` decimal(10, 2) NOT NULL DEFAULT 0.00 COMMENT '剩余算力点',
   `last_login_at` datetime NULL DEFAULT NULL COMMENT '最后登录时间',
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
@@ -232,12 +502,7 @@ CREATE TABLE `wx_user`  (
   UNIQUE INDEX `uk_wx_user_username`(`username` ASC) USING BTREE,
   UNIQUE INDEX `uk_wx_user_email`(`email` ASC) USING BTREE,
   INDEX `idx_wx_user_status`(`status` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '微信端用户主表（账号主体）' ROW_FORMAT = Dynamic;
-
--- ----------------------------
--- Records of wx_user
--- ----------------------------
-INSERT INTO `wx_user` VALUES (1, 'test', '123456@qq.com', 'test', NULL, 1, 'PASSWORD', 0, NULL, '2026-04-14 15:22:04', '2026-04-14 15:22:04');
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '微信端用户主表（账号主体）' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for wx_user_auth
@@ -258,12 +523,6 @@ CREATE TABLE `wx_user_auth`  (
   UNIQUE INDEX `uk_auth_type_key`(`auth_type` ASC, `auth_key` ASC) USING BTREE,
   INDEX `idx_wx_user_auth_user_id`(`user_id` ASC) USING BTREE,
   INDEX `idx_wx_user_auth_status`(`enabled` ASC, `allow_login` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '微信端用户登录凭据表（支持多登录方式绑定）' ROW_FORMAT = Dynamic;
-
--- ----------------------------
--- Records of wx_user_auth
--- ----------------------------
-INSERT INTO `wx_user_auth` VALUES (1, 1, 'PASSWORD', 'test', '$2a$10$UsJdwFjuMXJyzH7L93L8qegVhSbAh6YpWZz4v0OVUqAie4ZRgBO8S', NULL, 1, 1, '2026-04-14 15:22:04', '2026-04-14 15:22:04');
-INSERT INTO `wx_user_auth` VALUES (2, 1, 'WX_OPENID', 'oYeDu60_GACFEA48esFDhv-8jutw', NULL, 'WECHAT', 1, 1, '2026-04-14 15:22:04', '2026-04-14 15:22:04');
+) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '微信端用户登录凭据表（支持多登录方式绑定）' ROW_FORMAT = DYNAMIC;
 
 SET FOREIGN_KEY_CHECKS = 1;
