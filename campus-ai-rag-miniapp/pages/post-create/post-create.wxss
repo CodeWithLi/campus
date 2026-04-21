@@ -295,6 +295,19 @@
   font-size: 22rpx;
 }
 
+.switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6rpx 2rpx;
+}
+
+.switch-label {
+  color: #304362;
+  font-size: 27rpx;
+  font-weight: 500;
+}
+
 .footer {
   position: fixed;
   left: 0;

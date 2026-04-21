@@ -16,6 +16,7 @@ Page({
     aiContent: '',
     imageUrls: [],
     imagePreviewUrls: [],
+    isAnonymous: false,
     generating: false,
     publishing: false,
     uploading: false
@@ -126,6 +127,10 @@ Page({
     })
   },
 
+  onAnonymousChange(e) {
+    this.setData({ isAnonymous: Boolean(e.detail?.value) })
+  },
+
   async onPublish() {
     if (!this.ensureLogin()) return
     const title = (this.data.title || '').trim()
@@ -148,7 +153,8 @@ Page({
         title,
         content,
         draftId: this.data.draftId || null,
-        imageUrls: this.data.imageUrls
+        imageUrls: this.data.imageUrls,
+        isAnonymous: this.data.isAnonymous
       })
       showSuccess('发布成功')
       const postId = res?.data?.postId

@@ -6,6 +6,8 @@ import campus.ai.rag.service.dto.wx.WxPostPublishDTO;
 import campus.ai.rag.service.vo.wx.WxPostAiGenerateVO;
 import campus.ai.rag.service.vo.wx.WxPostCommentVO;
 import campus.ai.rag.service.vo.wx.WxPostDetailVO;
+import campus.ai.rag.service.vo.wx.WxPostFavoriteVO;
+import campus.ai.rag.service.vo.wx.WxPostInteractionPageVO;
 import campus.ai.rag.service.vo.wx.WxPostLikeVO;
 import campus.ai.rag.service.vo.wx.WxPostPageVO;
 import campus.ai.rag.service.vo.wx.WxPostPublishVO;
@@ -30,9 +32,15 @@ public interface WxPostService {
 
     WxPostLikeVO toggleLike(Long postId);
 
+    WxPostFavoriteVO toggleFavorite(Long postId);
+
     WxPostCommentVO createComment(Long postId, WxPostCommentCreateDTO dto);
 
     List<WxPostCommentVO> listComments(Long postId);
 
     Boolean deleteMyPost(Long postId);
+
+    WxPostPageVO myFavorites(Integer pageNo, Integer pageSize);
+
+    WxPostInteractionPageVO myInteractions(Integer pageNo, Integer pageSize);
 }

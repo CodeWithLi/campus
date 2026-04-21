@@ -79,6 +79,18 @@
     <view class="tip">支持拍照和相册，上传后会自动检测合规。</view>
   </view>
 
+  <view class="section-card fade-in delay-3">
+    <view class="section-head">
+      <view class="section-title">发布设置</view>
+      <view class="section-chip">隐私</view>
+    </view>
+    <view class="switch-row">
+      <view class="switch-label">匿名发布</view>
+      <switch color="#5a7dff" checked="{{isAnonymous}}" bindchange="onAnonymousChange" />
+    </view>
+    <view class="tip">开启后将展示为“匿名用户”。</view>
+  </view>
+
   <view class="footer">
     <button class="publish-btn" hover-class="btn-hover" loading="{{publishing}}" disabled="{{publishing}}" bindtap="onPublish">
       发布帖子

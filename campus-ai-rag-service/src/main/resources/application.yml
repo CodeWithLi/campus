@@ -76,7 +76,7 @@ pg:
 
 app:
   ai:
-    default-model-code: qwen_plus
+    default-model-code: qwen plus
   wx:
     post:
       # 发帖 AI：须为 ai_model_config 中 invoke_type=1（Spring AI）的模型，默认与通义千问 Plus 对齐
@@ -149,6 +149,23 @@ xf:
     app-id: 6346119f
     api-key: caba4cc5c2e634ec94313d2f2c8d0c16
     api-secret: ZTgzYmRjMjg2MmY3OWViODMwMzIyNDdj
+  ocr:
+    general:
+      # 按你给的 Java SDK demo：请求地址使用 cbm01 域名
+      host: cbm01.cn-huabei-1.xf-yun.com
+      # SDK 实现里签名 host 取 requestUrl 自身 host（即 cbm01.cn-huabei-1.xf-yun.com）
+      sign-host: cbm01.cn-huabei-1.xf-yun.com
+      path: /v1/private/se75ocrbm
+      app-id: 6346119f
+      # 必须使用「通用文档识别(OCR大模型)」页面生成的那一组 key/secret（不要复用星火/合规等其他能力的）
+      # 这一组来自你截图的“通用文档识别(OCR大模型)”控制台页面
+      api-key: caba4cc5c2e634ec94313d2f2c8d0c16
+      api-secret: ZTgzYmRjMjg2MmY3OWViODMwMzIyNDdj
+    pdf:
+      app-id: 6346119f
+      api-secret: ZTgzYmRjMjg2MmY3OWViODMwMzIyNDdj
+      start-url: https://iocr.xfyun.cn/ocrzdq/v1/pdfOcr/start
+      status-url: https://iocr.xfyun.cn/ocrzdq/v1/pdfOcr/status
 
   fast-asr:
     # 极速语音转写服务 URL（按你的“极速语音转写”文档填写）

@@ -8,6 +8,8 @@ import campus.ai.rag.service.service.wx.post.WxPostService;
 import campus.ai.rag.service.vo.wx.WxPostAiGenerateVO;
 import campus.ai.rag.service.vo.wx.WxPostCommentVO;
 import campus.ai.rag.service.vo.wx.WxPostDetailVO;
+import campus.ai.rag.service.vo.wx.WxPostFavoriteVO;
+import campus.ai.rag.service.vo.wx.WxPostInteractionPageVO;
 import campus.ai.rag.service.vo.wx.WxPostLikeVO;
 import campus.ai.rag.service.vo.wx.WxPostPageVO;
 import campus.ai.rag.service.vo.wx.WxPostPublishVO;
@@ -77,10 +79,30 @@ public class WxPostController {
         return Result.success(wxPostService.myPosts(pageNo, pageSize));
     }
 
+    @GetMapping("/my-favorites")
+    @Operation(summary = "我的收藏")
+    public Result<WxPostPageVO> myFavorites(@RequestParam(value = "pageNo", required = false) Integer pageNo,
+                                            @RequestParam(value = "pageSize", required = false) Integer pageSize) {
+        return Result.success(wxPostService.myFavorites(pageNo, pageSize));
+    }
+
+    @GetMapping("/my-interactions")
+    @Operation(summary = "我的互动（收到的点赞/评论）")
+    public Result<WxPostInteractionPageVO> myInteractions(@RequestParam(value = "pageNo", required = false) Integer pageNo,
+                                                          @RequestParam(value = "pageSize", required = false) Integer pageSize) {
+        return Result.success(wxPostService.myInteractions(pageNo, pageSize));
+    }
+
     @PostMapping("/{postId}/like")
     @Operation(summary = "帖子点赞/取消点赞")
     public Result<WxPostLikeVO> toggleLike(@PathVariable("postId") Long postId) {
         return Result.success(wxPostService.toggleLike(postId));
+    }
+
+    @PostMapping("/{postId}/favorite")
+    @Operation(summary = "帖子收藏/取消收藏")
+    public Result<WxPostFavoriteVO> toggleFavorite(@PathVariable("postId") Long postId) {
+        return Result.success(wxPostService.toggleFavorite(postId));
     }
 
     @PostMapping("/{postId}/comments")

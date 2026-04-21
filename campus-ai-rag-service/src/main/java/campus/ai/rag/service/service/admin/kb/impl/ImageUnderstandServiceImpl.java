@@ -142,6 +142,19 @@ public class ImageUnderstandServiceImpl implements ImageUnderstandService {
         return items;
     }
 
+    @Override
+    public String understandSingleImage(byte[] imageBytes) {
+        validateConfig();
+        if (imageBytes == null || imageBytes.length == 0) {
+            throw new BusinessException(StatusCodeEnum.BAD_REQUEST, "图片不能为空");
+        }
+        NormalizedImage normalized = normalizeToSparkPng(imageBytes);
+        if (normalized.bytes.length > MAX_IMAGE_BYTES) {
+            throw new BusinessException(StatusCodeEnum.BAD_REQUEST, "图片超过4MB，暂不支持");
+        }
+        return callSparkImageUnderstand(normalized.bytes);
+    }
+
     private List<ImagePayload> extractDocxImages(Long documentId, Path filePath) {
         if (filePath == null || !Files.exists(filePath)) {
             throw new BusinessException(StatusCodeEnum.NOT_FOUND, "文档文件不存在");

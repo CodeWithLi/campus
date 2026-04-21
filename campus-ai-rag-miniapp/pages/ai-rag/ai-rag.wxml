@@ -18,6 +18,21 @@
     <view class="top-icon history-icon" bindtap="goHistory">☰</view>
   </view>
 
+  <view class="category-bar">
+    <text class="category-label">检索分类</text>
+    <picker
+      mode="selector"
+      range="{{categoryOptions}}"
+      range-key="categoryName"
+      value="{{selectedCategoryIndex}}"
+      bindchange="onCategoryChange"
+    >
+      <view class="category-picker">
+        {{categoryOptions[selectedCategoryIndex].categoryName || '全部分类'}} ▾
+      </view>
+    </picker>
+  </view>
+
   <scroll-view
     class="chat-scroll"
     scroll-y

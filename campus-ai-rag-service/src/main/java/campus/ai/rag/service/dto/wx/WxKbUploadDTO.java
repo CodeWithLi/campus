@@ -11,6 +11,9 @@ public class WxKbUploadDTO {
     @ApiModelProperty(value = "文档标题", required = true, example = "我的课程笔记")
     private String title;
 
+    @ApiModelProperty(value = "分类ID", required = true, example = "1")
+    private Long categoryId;
+
     @ApiModelProperty(value = "备注")
     private String remark;
 }

@@ -90,6 +90,18 @@ Page({
     })
   },
 
+  goMyFavorites() {
+    wx.navigateTo({
+      url: '/pages/my-favorites/my-favorites'
+    })
+  },
+
+  goMyInteractions() {
+    wx.navigateTo({
+      url: '/pages/my-interactions/my-interactions'
+    })
+  },
+
   goResumeRecords() {
     wx.navigateTo({
       url: '/pages/resume-records/resume-records'

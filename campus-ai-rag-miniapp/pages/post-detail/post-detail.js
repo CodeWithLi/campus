@@ -2,6 +2,7 @@ import {
   createPostCommentApi,
   getPostDetailApi,
   listPostCommentsApi,
+  togglePostFavoriteApi,
   togglePostLikeApi
 } from '../../api/post'
 import { getStorage } from '../../utils/storage'
@@ -20,6 +21,7 @@ Page({
     detail: null,
     loading: false,
     liking: false,
+    favoriting: false,
     commentLoading: false,
     commentSubmitting: false,
     commentText: '',
@@ -171,6 +173,24 @@ Page({
       showError(e.message || '点赞失败')
     } finally {
       this.setData({ liking: false })
+    }
+  },
+
+  async onToggleFavorite() {
+    if (!this.ensureLogin()) return
+    if (this.data.favoriting) return
+    this.setData({ favoriting: true })
+    try {
+      const res = await togglePostFavoriteApi(this.data.id)
+      const favorite = res?.data || {}
+      const detail = { ...(this.data.detail || {}) }
+      detail.favoritedByMe = Boolean(favorite.favorited)
+      this.setData({ detail })
+      showSuccess(detail.favoritedByMe ? '已收藏' : '已取消收藏')
+    } catch (e) {
+      showError(e.message || '收藏失败')
+    } finally {
+      this.setData({ favoriting: false })
     }
   },
 

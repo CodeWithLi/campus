@@ -1,5 +1,5 @@
 import { listEnabledModelsApi } from '../../api/model'
-import { ragApi, listRagConversationsApi, getRagConversationHistoryApi } from '../../api/rag'
+import { ragApi, listKbCategoriesApi, listRagConversationsApi, getRagConversationHistoryApi } from '../../api/rag'
 import { getStorage, setStorage } from '../../utils/storage'
 import { showError } from '../../utils/ui'
 import { buildApiUrl, buildWsUrl } from '../../config/env'
@@ -15,6 +15,8 @@ Page({
     modelOptions: [],
     selectedModelCode: '',
     selectedModelIndex: 0,
+    categoryOptions: [{ id: 0, categoryName: '全部分类' }],
+    selectedCategoryIndex: 0,
 
     chatList: [],
     anchorKey: 0,
@@ -52,6 +54,7 @@ Page({
     this.initRecorder()
     this.setData({ conversationId })
     await this.loadModels()
+    await this.loadCategories()
     if (conversationId) {
       await this.restoreConversation(conversationId)
     }
@@ -90,6 +93,22 @@ Page({
       selectedModelIndex,
       selectedModelCode: selectedModel?.modelCode || ''
     })
+  },
+
+  async loadCategories() {
+    try {
+      const res = await listKbCategoriesApi()
+      const list = Array.isArray(res?.data) ? res.data : []
+      const categoryOptions = [{ id: 0, categoryName: '全部分类' }, ...list]
+      this.setData({ categoryOptions, selectedCategoryIndex: 0 })
+    } catch (e) {
+      this.setData({ categoryOptions: [{ id: 0, categoryName: '全部分类' }], selectedCategoryIndex: 0 })
+    }
+  },
+
+  onCategoryChange(event) {
+    const selectedCategoryIndex = Number(event.detail.value || 0)
+    this.setData({ selectedCategoryIndex })
   },
 
   onQuickAsk(event) {
@@ -182,6 +201,14 @@ Page({
       this.setData({ uploading: true })
       wx.showLoading({ title: '上传中...' })
 
+      const selectedCategory = this.data.categoryOptions[this.data.selectedCategoryIndex] || {}
+      const categoryId = Number(selectedCategory.id || 0)
+      if (!categoryId) {
+        wx.hideLoading()
+        this.setData({ uploading: false })
+        showError('请先选择分类后再上传文档')
+        return
+      }
       wx.chooseMessageFile({
         count: 1,
         type: 'file',
@@ -197,7 +224,7 @@ Page({
           const originalFileName = tempFile.name || tempFile.fileName || '文档'
           const title = originalFileName
 
-          await this.uploadKbdocument({ filePath, title, remark: '' })
+          await this.uploadKbdocument({ filePath, title, remark: '', categoryId })
 
           wx.hideLoading()
           this.setData({ uploading: false })
@@ -214,7 +241,7 @@ Page({
     }
   },
 
-  uploadKbdocument({ filePath, title, remark }) {
+  uploadKbdocument({ filePath, title, remark, categoryId }) {
     return new Promise((resolve, reject) => {
       const token = getStorage('TOKEN')
       const authorization = token ? `Bearer ${token}` : ''
@@ -223,7 +250,7 @@ Page({
         url: buildApiUrl('/wx/kb/documents/upload'),
         filePath,
         name: 'file',
-        formData: { title, remark: remark || '' },
+        formData: { title, remark: remark || '', categoryId: String(categoryId || '') },
         header: { Authorization: authorization },
         success: (res) => {
           try {
@@ -311,7 +338,7 @@ Page({
         modelCode: this.data.selectedModelCode || null,
         conversationId: this.data.conversationId || null,
         question: message,
-        categoryIds: null,
+        categoryIds: this.getSelectedCategoryIds(),
         topK: 5,
         fileDocumentIds: docIds
       })
@@ -623,5 +650,12 @@ Page({
     } catch (e) {
       // ignore
     }
+  },
+
+  getSelectedCategoryIds() {
+    const selectedCategory = this.data.categoryOptions[this.data.selectedCategoryIndex] || {}
+    const categoryId = Number(selectedCategory.id || 0)
+    if (!categoryId) return null
+    return [categoryId]
   }
 })

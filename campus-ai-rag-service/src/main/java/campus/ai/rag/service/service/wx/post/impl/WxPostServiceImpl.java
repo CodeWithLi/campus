@@ -7,10 +7,14 @@ import campus.ai.rag.service.dto.wx.WxPostCommentCreateDTO;
 import campus.ai.rag.service.dto.wx.WxPostPublishDTO;
 import campus.ai.rag.service.entity.forum.ForumPostCommentEntity;
 import campus.ai.rag.service.entity.forum.ForumPostEntity;
+import campus.ai.rag.service.entity.forum.ForumPostFavoriteEntity;
+import campus.ai.rag.service.entity.forum.ForumPostInteractionNoticeEntity;
 import campus.ai.rag.service.entity.forum.ForumPostLikeEntity;
 import campus.ai.rag.service.entity.model.AiModelConfigEntity;
 import campus.ai.rag.service.exception.BusinessException;
 import campus.ai.rag.service.mapper.forum.ForumPostCommentMapper;
+import campus.ai.rag.service.mapper.forum.ForumPostFavoriteMapper;
+import campus.ai.rag.service.mapper.forum.ForumPostInteractionNoticeMapper;
 import campus.ai.rag.service.mapper.forum.ForumPostMapper;
 import campus.ai.rag.service.mapper.forum.ForumPostLikeMapper;
 import campus.ai.rag.service.mapper.model.AiModelConfigMapper;
@@ -23,6 +27,9 @@ import campus.ai.rag.service.utils.WxAuthContextUtils;
 import campus.ai.rag.service.vo.wx.WxPostAiGenerateVO;
 import campus.ai.rag.service.vo.wx.WxPostCommentVO;
 import campus.ai.rag.service.vo.wx.WxPostDetailVO;
+import campus.ai.rag.service.vo.wx.WxPostFavoriteVO;
+import campus.ai.rag.service.vo.wx.WxPostInteractionItemVO;
+import campus.ai.rag.service.vo.wx.WxPostInteractionPageVO;
 import campus.ai.rag.service.vo.wx.WxPostLikeVO;
 import campus.ai.rag.service.vo.wx.WxPostListItemVO;
 import campus.ai.rag.service.vo.wx.WxPostPageVO;
@@ -73,6 +80,8 @@ public class WxPostServiceImpl implements WxPostService {
     private final ForumPostMapper forumPostMapper;
     private final ForumPostLikeMapper forumPostLikeMapper;
     private final ForumPostCommentMapper forumPostCommentMapper;
+    private final ForumPostFavoriteMapper forumPostFavoriteMapper;
+    private final ForumPostInteractionNoticeMapper forumPostInteractionNoticeMapper;
     private final IflyImageAuditService iflyImageAuditService;
     private final IflyTextAuditService iflyTextAuditService;
     private final RedisTemplate<String, Object> redisTemplate;
@@ -85,6 +94,8 @@ public class WxPostServiceImpl implements WxPostService {
                              ForumPostMapper forumPostMapper,
                              ForumPostLikeMapper forumPostLikeMapper,
                              ForumPostCommentMapper forumPostCommentMapper,
+                             ForumPostFavoriteMapper forumPostFavoriteMapper,
+                             ForumPostInteractionNoticeMapper forumPostInteractionNoticeMapper,
                              IflyImageAuditService iflyImageAuditService,
                              IflyTextAuditService iflyTextAuditService,
                              RedisTemplate<String, Object> redisTemplate) {
@@ -95,6 +106,8 @@ public class WxPostServiceImpl implements WxPostService {
         this.forumPostMapper = forumPostMapper;
         this.forumPostLikeMapper = forumPostLikeMapper;
         this.forumPostCommentMapper = forumPostCommentMapper;
+        this.forumPostFavoriteMapper = forumPostFavoriteMapper;
+        this.forumPostInteractionNoticeMapper = forumPostInteractionNoticeMapper;
         this.iflyImageAuditService = iflyImageAuditService;
         this.iflyTextAuditService = iflyTextAuditService;
         this.redisTemplate = redisTemplate;
@@ -219,6 +232,7 @@ public class WxPostServiceImpl implements WxPostService {
         entity.setTitle(title);
         entity.setContent(content);
         entity.setImageUrls(toJson(imageUrls));
+        entity.setIsAnonymous(Boolean.TRUE.equals(dto.getIsAnonymous()) ? 1 : 0);
         entity.setTextComplianceSkipped(textComplianceSkipped ? 1 : 0);
         entity.setCreatedAt(LocalDateTime.now());
         forumPostMapper.insert(entity);
@@ -244,7 +258,7 @@ public class WxPostServiceImpl implements WxPostService {
         vo.setTotal(result.getTotal());
         List<WxPostListItemVO> items = new ArrayList<>();
         for (ForumPostEntity entity : result.getRecords()) {
-            items.add(toListItem(entity));
+            items.add(toListItem(entity, true));
         }
         vo.setList(items);
         return vo;
@@ -282,6 +296,52 @@ public class WxPostServiceImpl implements WxPostService {
     }
 
     @Override
+    public WxPostPageVO myFavorites(Integer pageNo, Integer pageSize) {
+        Long userId = parseUserId(WxAuthContextUtils.requireWxUserId());
+        int pNo = safePageNo(pageNo);
+        int pSize = safePageSize(pageSize);
+        Page<ForumPostFavoriteEntity> page = new Page<>(pNo, pSize);
+        Page<ForumPostFavoriteEntity> result = forumPostFavoriteMapper.selectPage(page,
+                new LambdaQueryWrapper<ForumPostFavoriteEntity>()
+                        .eq(ForumPostFavoriteEntity::getUserId, userId)
+                        .orderByDesc(ForumPostFavoriteEntity::getId));
+        List<WxPostListItemVO> items = new ArrayList<>();
+        for (ForumPostFavoriteEntity f : result.getRecords()) {
+            if (f == null || f.getPostId() == null) {
+                continue;
+            }
+            ForumPostEntity post = forumPostMapper.selectById(f.getPostId());
+            if (post != null) {
+                items.add(toListItem(post));
+            }
+        }
+        WxPostPageVO vo = new WxPostPageVO();
+        vo.setTotal(result.getTotal());
+        vo.setList(items);
+        return vo;
+    }
+
+    @Override
+    public WxPostInteractionPageVO myInteractions(Integer pageNo, Integer pageSize) {
+        Long userId = parseUserId(WxAuthContextUtils.requireWxUserId());
+        int pNo = safePageNo(pageNo);
+        int pSize = safePageSize(pageSize);
+        Page<ForumPostInteractionNoticeEntity> page = new Page<>(pNo, pSize);
+        Page<ForumPostInteractionNoticeEntity> result = forumPostInteractionNoticeMapper.selectPage(page,
+                new LambdaQueryWrapper<ForumPostInteractionNoticeEntity>()
+                        .eq(ForumPostInteractionNoticeEntity::getReceiverUserId, userId)
+                        .orderByDesc(ForumPostInteractionNoticeEntity::getId));
+        List<WxPostInteractionItemVO> list = new ArrayList<>();
+        for (ForumPostInteractionNoticeEntity entity : result.getRecords()) {
+            list.add(toInteractionItem(entity));
+        }
+        WxPostInteractionPageVO vo = new WxPostInteractionPageVO();
+        vo.setTotal(result.getTotal());
+        vo.setList(list);
+        return vo;
+    }
+
+    @Override
     public WxPostLikeVO toggleLike(Long postId) {
         ForumPostEntity post = mustGetPost(postId);
         Long userId = parseUserId(WxAuthContextUtils.requireWxUserId());
@@ -300,12 +360,39 @@ public class WxPostServiceImpl implements WxPostService {
             like.setUserId(userId);
             like.setCreatedAt(LocalDateTime.now());
             forumPostLikeMapper.insert(like);
+            createInteractionNoticeIfNeeded(post.getUserId(), userId, post.getId(), null, "LIKE", "赞了你的帖子");
             liked = true;
         }
         WxPostLikeVO vo = new WxPostLikeVO();
         vo.setPostId(post.getId());
         vo.setLiked(liked);
         vo.setLikeCount(countLike(post.getId()));
+        return vo;
+    }
+
+    @Override
+    public WxPostFavoriteVO toggleFavorite(Long postId) {
+        ForumPostEntity post = mustGetPost(postId);
+        Long userId = parseUserId(WxAuthContextUtils.requireWxUserId());
+        ForumPostFavoriteEntity exists = forumPostFavoriteMapper.selectOne(new LambdaQueryWrapper<ForumPostFavoriteEntity>()
+                .eq(ForumPostFavoriteEntity::getPostId, post.getId())
+                .eq(ForumPostFavoriteEntity::getUserId, userId)
+                .last("limit 1"));
+        boolean favorited;
+        if (exists != null) {
+            forumPostFavoriteMapper.deleteById(exists.getId());
+            favorited = false;
+        } else {
+            ForumPostFavoriteEntity favorite = new ForumPostFavoriteEntity();
+            favorite.setPostId(post.getId());
+            favorite.setUserId(userId);
+            favorite.setCreatedAt(LocalDateTime.now());
+            forumPostFavoriteMapper.insert(favorite);
+            favorited = true;
+        }
+        WxPostFavoriteVO vo = new WxPostFavoriteVO();
+        vo.setPostId(post.getId());
+        vo.setFavorited(favorited);
         return vo;
     }
 
@@ -350,6 +437,10 @@ public class WxPostServiceImpl implements WxPostService {
         entity.setDeleted(0);
         entity.setCreatedAt(LocalDateTime.now());
         forumPostCommentMapper.insert(entity);
+        createInteractionNoticeIfNeeded(post.getUserId(), userId, post.getId(), entity.getId(), "COMMENT", content);
+        if (replyTo != null && replyTo.getUserId() != null && !Objects.equals(replyTo.getUserId(), post.getUserId())) {
+            createInteractionNoticeIfNeeded(replyTo.getUserId(), userId, post.getId(), entity.getId(), "COMMENT", content);
+        }
 
         Map<Long, String> nicknameMap = new HashMap<>();
         nicknameMap.put(userId, resolveNickname(userId));
@@ -415,6 +506,10 @@ public class WxPostServiceImpl implements WxPostService {
                 .eq(ForumPostCommentEntity::getPostId, postId));
         forumPostLikeMapper.delete(new LambdaQueryWrapper<ForumPostLikeEntity>()
                 .eq(ForumPostLikeEntity::getPostId, postId));
+        forumPostFavoriteMapper.delete(new LambdaQueryWrapper<ForumPostFavoriteEntity>()
+                .eq(ForumPostFavoriteEntity::getPostId, postId));
+        forumPostInteractionNoticeMapper.delete(new LambdaQueryWrapper<ForumPostInteractionNoticeEntity>()
+                .eq(ForumPostInteractionNoticeEntity::getPostId, postId));
         return forumPostMapper.deleteById(postId) > 0;
     }
 
@@ -610,30 +705,40 @@ public class WxPostServiceImpl implements WxPostService {
     }
 
     private WxPostListItemVO toListItem(ForumPostEntity entity) {
+        return toListItem(entity, false);
+    }
+
+    private WxPostListItemVO toListItem(ForumPostEntity entity, boolean revealIdentity) {
         WxPostListItemVO vo = new WxPostListItemVO();
+        boolean anonymous = Objects.equals(entity.getIsAnonymous(), 1);
         vo.setId(entity.getId());
         vo.setUserId(entity.getUserId());
-        vo.setNickname(resolveNickname(entity.getUserId()));
+        vo.setNickname(anonymous && !revealIdentity ? "匿名用户" : resolveNickname(entity.getUserId()));
         vo.setTitle(entity.getTitle());
         vo.setContentPreview(truncate(entity.getContent(), 120));
         vo.setImageUrls(parseImageUrls(entity.getImageUrls()));
         vo.setLikeCount(countLike(entity.getId()));
         vo.setCommentCount(countComment(entity.getId()));
+        vo.setFavoritedByMe(isFavoritedByCurrentUser(entity.getId()));
+        vo.setIsAnonymous(anonymous);
         vo.setCreatedAt(formatDateTime(entity.getCreatedAt()));
         return vo;
     }
 
     private WxPostDetailVO toDetail(ForumPostEntity entity) {
         WxPostDetailVO vo = new WxPostDetailVO();
+        boolean anonymous = Objects.equals(entity.getIsAnonymous(), 1);
         vo.setId(entity.getId());
         vo.setUserId(entity.getUserId());
-        vo.setNickname(resolveNickname(entity.getUserId()));
+        vo.setNickname(anonymous ? "匿名用户" : resolveNickname(entity.getUserId()));
         vo.setTitle(entity.getTitle());
         vo.setContent(entity.getContent());
         vo.setImageUrls(parseImageUrls(entity.getImageUrls()));
         vo.setLikeCount(countLike(entity.getId()));
         vo.setCommentCount(countComment(entity.getId()));
         vo.setLikedByMe(isLikedByCurrentUser(entity.getId()));
+        vo.setFavoritedByMe(isFavoritedByCurrentUser(entity.getId()));
+        vo.setIsAnonymous(anonymous);
         vo.setCreatedAt(formatDateTime(entity.getCreatedAt()));
         return vo;
     }
@@ -701,6 +806,26 @@ public class WxPostServiceImpl implements WxPostService {
                 .eq(ForumPostLikeEntity::getUserId, userId)
                 .last("limit 1"));
         return like != null;
+    }
+
+    private boolean isFavoritedByCurrentUser(Long postId) {
+        String uid;
+        try {
+            uid = WxAuthContextUtils.requireWxUserId();
+        } catch (Exception e) {
+            return false;
+        }
+        Long userId;
+        try {
+            userId = Long.parseLong(uid);
+        } catch (Exception e) {
+            return false;
+        }
+        ForumPostFavoriteEntity favorite = forumPostFavoriteMapper.selectOne(new LambdaQueryWrapper<ForumPostFavoriteEntity>()
+                .eq(ForumPostFavoriteEntity::getPostId, postId)
+                .eq(ForumPostFavoriteEntity::getUserId, userId)
+                .last("limit 1"));
+        return favorite != null;
     }
 
     private Map<Long, String> buildNicknameMap(Set<Long> userIds) {
@@ -781,6 +906,45 @@ public class WxPostServiceImpl implements WxPostService {
             return "";
         }
         return DATE_TIME_FMT.format(value);
+    }
+
+    private WxPostInteractionItemVO toInteractionItem(ForumPostInteractionNoticeEntity entity) {
+        WxPostInteractionItemVO vo = new WxPostInteractionItemVO();
+        vo.setId(entity.getId());
+        vo.setInteractionType(entity.getInteractionType());
+        vo.setActorUserId(entity.getActorUserId());
+        vo.setActorNickname(resolveNickname(entity.getActorUserId()));
+        vo.setPostId(entity.getPostId());
+        ForumPostEntity post = entity.getPostId() == null ? null : forumPostMapper.selectById(entity.getPostId());
+        vo.setPostTitle(post == null ? "帖子已删除" : post.getTitle());
+        vo.setCommentId(entity.getCommentId());
+        vo.setContentSnapshot(entity.getContentSnapshot());
+        vo.setCreatedAt(formatDateTime(entity.getCreatedAt()));
+        return vo;
+    }
+
+    private void createInteractionNoticeIfNeeded(Long receiverUserId,
+                                                 Long actorUserId,
+                                                 Long postId,
+                                                 Long commentId,
+                                                 String interactionType,
+                                                 String contentSnapshot) {
+        if (receiverUserId == null || receiverUserId <= 0L) {
+            return;
+        }
+        if (actorUserId == null || Objects.equals(receiverUserId, actorUserId)) {
+            return;
+        }
+        ForumPostInteractionNoticeEntity notice = new ForumPostInteractionNoticeEntity();
+        notice.setReceiverUserId(receiverUserId);
+        notice.setActorUserId(actorUserId);
+        notice.setPostId(postId);
+        notice.setCommentId(commentId);
+        notice.setInteractionType(interactionType);
+        notice.setContentSnapshot(truncate(contentSnapshot, 100));
+        notice.setIsRead(0);
+        notice.setCreatedAt(LocalDateTime.now());
+        forumPostInteractionNoticeMapper.insert(notice);
     }
 
     private static class PostDraftCache implements java.io.Serializable {

@@ -274,6 +274,19 @@ public class AiChatRouter {
         if (Objects.nonNull(model)) {
             return model;
         }
+        // 兼容 "qwen_plus" 与 "qwen plus" 这类编码差异
+        String altCode = targetCode.contains("_")
+                ? targetCode.replace("_", " ")
+                : targetCode.replace(" ", "_");
+        if (!Objects.equals(altCode, targetCode)) {
+            AiModelConfigEntity alt = aiModelConfigMapper.selectOne(new LambdaQueryWrapper<AiModelConfigEntity>()
+                    .eq(AiModelConfigEntity::getEnabled, 1)
+                    .eq(AiModelConfigEntity::getModelCode, altCode)
+                    .last("limit 1"));
+            if (Objects.nonNull(alt)) {
+                return alt;
+            }
+        }
         throw new BusinessException(StatusCodeEnum.NOT_FOUND, "未找到可用模型配置: " + targetCode);
     }
 

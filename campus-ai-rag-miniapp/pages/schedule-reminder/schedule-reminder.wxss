@@ -69,6 +69,16 @@
   border: none;
 }
 
+.secondary-btn {
+  margin-top: 10rpx;
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+}
+
+.model-btn {
+  margin-top: 10rpx;
+  background: linear-gradient(135deg, #7c3aed 0%, #6366f1 100%);
+}
+
 .tip {
   margin-top: 10rpx;
   font-size: 22rpx;
@@ -93,6 +103,32 @@
   gap: 14rpx;
 }
 
+.swipe-wrap {
+  position: relative;
+  overflow: hidden;
+  margin-top: 12rpx;
+  border-radius: 14rpx;
+}
+
+.swipe-item {
+  margin-top: 0;
+  transition: transform 0.18s ease;
+}
+
+.swipe-delete {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 150rpx;
+  background: #ef4444;
+  color: #fff;
+  font-size: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .item-main {
   min-width: 0;
   flex: 1;
@@ -104,13 +140,116 @@
   font-weight: 600;
 }
 
+.item-title-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .item-sub {
   margin-top: 6rpx;
   color: #6b7280;
   font-size: 22rpx;
 }
 
+.item-sub-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .item-del {
   color: #ef4444;
   font-size: 22rpx;
+}
+
+.agent-box {
+  margin-top: 14rpx;
+  background: #f8fbff;
+  border: 1rpx solid #dbeafe;
+  border-radius: 14rpx;
+  padding: 14rpx;
+}
+
+.agent-route {
+  color: #1d4ed8;
+  font-size: 22rpx;
+}
+
+.agent-summary {
+  margin-top: 8rpx;
+  color: #334155;
+  font-size: 24rpx;
+}
+
+.agent-item {
+  margin-top: 10rpx;
+  padding: 10rpx 12rpx;
+  border-radius: 12rpx;
+  background: #ffffff;
+  border: 1rpx solid #e5e7eb;
+}
+
+.dialog-mask {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99;
+}
+
+.dialog-card {
+  width: 88%;
+  max-height: 78vh;
+  background: #fff;
+  border-radius: 18rpx;
+  padding: 20rpx;
+  box-sizing: border-box;
+}
+
+.dialog-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.dialog-sub {
+  margin-top: 8rpx;
+  color: #64748b;
+  font-size: 22rpx;
+  word-break: break-all;
+}
+
+.dialog-body {
+  margin-top: 14rpx;
+  max-height: 54vh;
+}
+
+.dialog-label {
+  margin-top: 10rpx;
+  color: #1d4ed8;
+  font-size: 24rpx;
+  font-weight: 600;
+}
+
+.dialog-text {
+  margin-top: 6rpx;
+  color: #1f2937;
+  font-size: 24rpx;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.dialog-item {
+  margin-top: 8rpx;
+  padding: 8rpx 10rpx;
+  border-radius: 10rpx;
+  border: 1rpx solid #e2e8f0;
+  background: #f8fafc;
 }

@@ -11,6 +11,8 @@
     "pages/post-list/post-list",
     "pages/post-detail/post-detail",
     "pages/my-posts/my-posts",
+    "pages/my-favorites/my-favorites",
+    "pages/my-interactions/my-interactions",
     "pages/schedule-reminder/schedule-reminder",
     "pages/notification-center/notification-center",
     "pages/power-points-log/power-points-log",

@@ -36,4 +36,10 @@ public class WxPostListItemVO {
 
     @ApiModelProperty("创建时间")
     private String createdAt;
+
+    @ApiModelProperty("当前用户是否已收藏")
+    private Boolean favoritedByMe;
+
+    @ApiModelProperty("是否匿名发布")
+    private Boolean isAnonymous;
 }

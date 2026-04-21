@@ -141,7 +141,7 @@ public class WxRagServiceImpl implements WxRagService {
         int userTopK = Math.max(0, topK - systemTopK);
 
         List<WxRagVO.Hit> systemHits = searchSystemTopK(qVectorLiteral, categoryIds, systemTopK);
-        List<WxRagVO.Hit> userHits = userTopK <= 0 ? List.of() : searchUserTopK(userId, qVectorLiteral, userTopK);
+        List<WxRagVO.Hit> userHits = userTopK <= 0 ? List.of() : searchUserTopK(userId, qVectorLiteral, categoryIds, userTopK);
 
         List<WxRagVO.Hit> merged = new ArrayList<>(systemHits.size() + userHits.size());
         merged.addAll(systemHits);
@@ -205,22 +205,41 @@ public class WxRagServiceImpl implements WxRagService {
         return hits;
     }
 
-    private List<WxRagVO.Hit> searchUserTopK(Long userId, String qVectorLiteral, int topK) {
+    private List<WxRagVO.Hit> searchUserTopK(Long userId, String qVectorLiteral, List<Long> categoryIds, int topK) {
         if (topK <= 0) return List.of();
         if (userId == null || userId <= 0) {
             // 未识别到用户时，不做个人库检索，避免越权
             return List.of();
         }
+        List<Long> allowedDocIds = resolveAllowedUserDocIds(userId, categoryIds);
+        if (allowedDocIds != null && allowedDocIds.isEmpty()) {
+            return List.of();
+        }
 
-        String sql = ""
-                + "SELECT c.document_id, c.chunk_index, c.content, "
-                + "(c.embedding <-> ?::vector) AS distance "
-                + "FROM wx_kb_chunk c "
-                + "WHERE c.user_id = ? "
-                + "ORDER BY c.embedding <-> ?::vector "
-                + "LIMIT ? ";
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT c.document_id, c.chunk_index, c.content, ");
+        sql.append("(c.embedding <-> ?::vector) AS distance ");
+        sql.append("FROM wx_kb_chunk c ");
+        sql.append("WHERE c.user_id = ? ");
 
-        List<WxRagVO.Hit> hits = pgJdbcTemplate.query(sql, new Object[]{qVectorLiteral, userId, qVectorLiteral, topK}, (rs, rowNum) -> {
+        List<Object> params = new ArrayList<>();
+        params.add(qVectorLiteral);
+        params.add(userId);
+        if (allowedDocIds != null) {
+            sql.append("AND c.document_id IN (");
+            StringJoiner joiner = new StringJoiner(",");
+            for (Long id : allowedDocIds) {
+                joiner.add("?");
+                params.add(id);
+            }
+            sql.append(joiner).append(") ");
+        }
+        sql.append("ORDER BY c.embedding <-> ?::vector ");
+        sql.append("LIMIT ? ");
+        params.add(qVectorLiteral);
+        params.add(topK);
+
+        List<WxRagVO.Hit> hits = pgJdbcTemplate.query(sql.toString(), params.toArray(), (rs, rowNum) -> {
             WxRagVO.Hit hit = new WxRagVO.Hit();
             hit.setScope(SCOPE_USER);
             hit.setDocumentId(rs.getLong("document_id"));
@@ -231,6 +250,27 @@ public class WxRagServiceImpl implements WxRagService {
         });
         fillUserMysqlDocumentTitle(userId, hits);
         return hits;
+    }
+
+    /**
+     * @return null 表示不做过滤；空集合表示过滤后无文档
+     */
+    private List<Long> resolveAllowedUserDocIds(Long userId, List<Long> categoryIds) {
+        if (categoryIds == null) {
+            return null;
+        }
+        List<Long> filtered = categoryIds.stream().filter(Objects::nonNull).distinct().toList();
+        if (filtered.isEmpty()) {
+            return null;
+        }
+        List<WxKbDocumentEntity> docs = wxKbDocumentMapper.selectList(new LambdaQueryWrapper<WxKbDocumentEntity>()
+                .select(WxKbDocumentEntity::getId)
+                .eq(WxKbDocumentEntity::getUserId, userId)
+                .in(WxKbDocumentEntity::getCategoryId, filtered));
+        if (docs == null || docs.isEmpty()) {
+            return List.of();
+        }
+        return docs.stream().map(WxKbDocumentEntity::getId).filter(Objects::nonNull).distinct().toList();
     }
 
     /**

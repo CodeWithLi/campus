@@ -11,5 +11,10 @@ public interface ImageUnderstandService {
      * 抽取文档中的图片并调用模型理解，返回逐图结果。
      */
     List<KbDocumentImagePreviewVO.Item> understandImages(Long documentId, Path filePath, String fileExt);
+
+    /**
+     * 对单张图片执行图片理解，返回文本结果。
+     */
+    String understandSingleImage(byte[] imageBytes);
 }
 

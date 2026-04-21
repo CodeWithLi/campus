@@ -11,7 +11,7 @@ public class WxPostProperties {
     /**
      * 发帖助手使用的模型编码，须对应 ai_model_config 中 invoke_type=SpringAI 的配置（默认 qwen_plus）。
      */
-    private String aiModelCode = "qwen_plus";
+    private String aiModelCode = "qwen plus";
 
     /**
      * 帖子正文最大字符数（与前端展示一致，按 Java 字符串长度计）。

@@ -15,6 +15,7 @@ public class WxKbDocumentEntity {
     private Long id;
 
     private Long userId;
+    private Long categoryId;
     private String title;
     private String originalFileName;
     private String fileExt;

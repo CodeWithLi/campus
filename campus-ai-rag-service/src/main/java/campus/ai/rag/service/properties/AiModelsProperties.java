@@ -8,7 +8,7 @@ public class AiModelsProperties {
     /**
      * 默认模型编码（例如：qwen / spark）。
      */
-    private String defaultModelCode = "qwen_plus";
+    private String defaultModelCode = "qwen plus";
 
     public String getDefaultModelCode() {
         return defaultModelCode;

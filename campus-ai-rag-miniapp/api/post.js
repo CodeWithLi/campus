@@ -39,8 +39,14 @@ export const listMyPostsApi = (params = {}) => get('/wx/post/my', params)
 
 export const togglePostLikeApi = (postId) => post(`/wx/post/${postId}/like`)
 
+export const togglePostFavoriteApi = (postId) => post(`/wx/post/${postId}/favorite`)
+
 export const listPostCommentsApi = (postId) => get(`/wx/post/${postId}/comments`)
 
 export const createPostCommentApi = (postId, payload) => post(`/wx/post/${postId}/comments`, payload)
 
 export const deleteMyPostApi = (postId) => del(`/wx/post/${postId}`)
+
+export const listMyFavoritePostsApi = (params = {}) => get('/wx/post/my-favorites', params)
+
+export const listMyInteractionsApi = (params = {}) => get('/wx/post/my-interactions', params)

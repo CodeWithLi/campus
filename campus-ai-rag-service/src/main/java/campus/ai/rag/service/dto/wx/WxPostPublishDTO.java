@@ -24,4 +24,7 @@ public class WxPostPublishDTO {
 
     @ApiModelProperty(value = "帖子图片 URL 列表，最多 5 张")
     private List<String> imageUrls;
+
+    @ApiModelProperty(value = "是否匿名发布：true=匿名，false=非匿名")
+    private Boolean isAnonymous;
 }

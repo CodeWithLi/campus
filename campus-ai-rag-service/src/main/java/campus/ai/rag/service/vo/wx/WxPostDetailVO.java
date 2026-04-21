@@ -37,6 +37,12 @@ public class WxPostDetailVO {
     @ApiModelProperty("当前用户是否已点赞")
     private Boolean likedByMe;
 
+    @ApiModelProperty("当前用户是否已收藏")
+    private Boolean favoritedByMe;
+
+    @ApiModelProperty("是否匿名发布")
+    private Boolean isAnonymous;
+
     @ApiModelProperty("创建时间")
     private String createdAt;
 }

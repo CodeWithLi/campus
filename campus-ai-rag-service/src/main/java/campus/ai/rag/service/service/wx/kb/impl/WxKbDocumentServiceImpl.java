@@ -2,8 +2,10 @@ package campus.ai.rag.service.service.wx.kb.impl;
 
 import campus.ai.rag.service.common.StatusCodeEnum;
 import campus.ai.rag.service.dto.wx.WxKbUploadDTO;
+import campus.ai.rag.service.entity.kb.KbCategoryEntity;
 import campus.ai.rag.service.entity.kb.WxKbDocumentEntity;
 import campus.ai.rag.service.exception.BusinessException;
+import campus.ai.rag.service.mapper.kb.KbCategoryMapper;
 import campus.ai.rag.service.mapper.kb.WxKbDocumentMapper;
 import campus.ai.rag.service.service.admin.kb.DocumentParseService;
 import campus.ai.rag.service.service.wx.kb.WxKbDocumentService;
@@ -46,6 +48,7 @@ public class WxKbDocumentServiceImpl implements WxKbDocumentService {
     private static final int CHUNK_OVERLAP = 120;
 
     private final WxKbDocumentMapper wxKbDocumentMapper;
+    private final KbCategoryMapper kbCategoryMapper;
     private final DocumentParseService documentParseService;
     private final RestTemplate restTemplate;
     private final JdbcTemplate pgJdbcTemplate;
@@ -55,6 +58,7 @@ public class WxKbDocumentServiceImpl implements WxKbDocumentService {
     private final ExecutorService asyncExecutor = Executors.newFixedThreadPool(2);
 
     public WxKbDocumentServiceImpl(WxKbDocumentMapper wxKbDocumentMapper,
+                                   KbCategoryMapper kbCategoryMapper,
                                    DocumentParseService documentParseService,
                                    RestTemplate restTemplate,
                                    @Qualifier("pgJdbcTemplate") JdbcTemplate pgJdbcTemplate,
@@ -62,6 +66,7 @@ public class WxKbDocumentServiceImpl implements WxKbDocumentService {
                                    @Value("${spring.ai.openai.base-url:https://dashscope.aliyuncs.com/compatible-mode/v1}") String embeddingBaseUrl,
                                    @Value("${spring.ai.openai.embedding.options.dimensions:1024}") Integer embeddingDimensions) {
         this.wxKbDocumentMapper = wxKbDocumentMapper;
+        this.kbCategoryMapper = kbCategoryMapper;
         this.documentParseService = documentParseService;
         this.restTemplate = restTemplate;
         this.pgJdbcTemplate = pgJdbcTemplate;
@@ -93,6 +98,7 @@ public class WxKbDocumentServiceImpl implements WxKbDocumentService {
 
         WxKbDocumentEntity entity = new WxKbDocumentEntity();
         entity.setUserId(userId);
+        entity.setCategoryId(dto.getCategoryId());
         entity.setTitle(dto.getTitle().trim());
         entity.setOriginalFileName(originalName);
         entity.setFileExt(ext);
@@ -269,6 +275,13 @@ public class WxKbDocumentServiceImpl implements WxKbDocumentService {
     private void validateUpload(WxKbUploadDTO dto, MultipartFile file) {
         if (dto == null || isBlank(dto.getTitle())) {
             throw new BusinessException(StatusCodeEnum.BAD_REQUEST, "title 不能为空");
+        }
+        if (dto.getCategoryId() == null || dto.getCategoryId() <= 0) {
+            throw new BusinessException(StatusCodeEnum.BAD_REQUEST, "categoryId 不能为空");
+        }
+        KbCategoryEntity category = kbCategoryMapper.selectById(dto.getCategoryId());
+        if (category == null || category.getEnabled() == null || category.getEnabled() != 1) {
+            throw new BusinessException(StatusCodeEnum.BAD_REQUEST, "分类不存在或已禁用");
         }
         if (file == null || file.isEmpty()) {
             throw new BusinessException(StatusCodeEnum.BAD_REQUEST, "上传文件不能为空");

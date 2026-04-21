@@ -39,4 +39,83 @@
       <view class="item-del" data-id="{{item.id}}" bindtap="onDeleteReminder">删除</view>
     </view>
   </view>
+
+  <view class="card">
+    <view class="card-title">通知智能体（多模态）</view>
+    <button class="create-btn" loading="{{parsingNotice}}" bindtap="onUploadNotice">上传通知图片/PDF并解析</button>
+    <button class="create-btn secondary-btn" loading="{{parsingNotice}}" bindtap="onUploadNoticeByImageUnderstand">图片理解并解析（试验）</button>
+    <button class="create-btn model-btn" loading="{{parsingNotice}}" bindtap="onUploadNoticeByImageModel">图片直传大模型解析（A/B）</button>
+    <view class="tip">规则：PDF≤5页走逐页OCR，PDF&gt;5页走PDF OCR任务。</view>
+    <view wx:if="{{agentResult}}" class="agent-box">
+      <view class="agent-route">路由：{{agentResult.route}}</view>
+      <view class="agent-summary">{{agentResult.summary}}</view>
+      <view wx:for="{{agentResult.items}}" wx:key="index" class="agent-item">
+        <input class="input" value="{{item.title}}" data-index="{{index}}" bindinput="onAgentTitleInput" placeholder="提醒标题" />
+        <view class="row">
+          <view class="field">
+            <view class="label">类型</view>
+            <picker mode="selector" range="{{typeOptions}}" range-key="label" value="{{item.typeIndex}}" data-index="{{index}}" bindchange="onAgentTypeChange">
+              <view class="picker">{{typeOptions[item.typeIndex].label}}</view>
+            </picker>
+          </view>
+          <view class="field">
+            <view class="label">日期</view>
+            <picker mode="date" value="{{item.dateText}}" data-index="{{index}}" bindchange="onAgentDateChange">
+              <view class="picker">{{item.dateText}}</view>
+            </picker>
+          </view>
+          <view class="field">
+            <view class="label">时间</view>
+            <picker mode="time" value="{{item.timeText}}" data-index="{{index}}" bindchange="onAgentTimeChange">
+              <view class="picker">{{item.timeText}}</view>
+            </picker>
+          </view>
+        </view>
+      </view>
+      <button class="create-btn" loading="{{creatingByAgent}}" bindtap="onCreateByAgent">一键转日程</button>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="card-title">通知智能体解析历史</view>
+    <view wx:if="{{agentRecords.length === 0}}" class="empty">暂无解析记录</view>
+    <view wx:for="{{agentRecords}}" wx:key="id" class="swipe-wrap"
+      data-index="{{index}}"
+      bindtouchstart="onAgentRecordTouchStart"
+      bindtouchmove="onAgentRecordTouchMove"
+      bindtouchend="onAgentRecordTouchEnd">
+      <view class="swipe-delete" data-index="{{index}}" data-id="{{item.id}}" bindtap="onDeleteAgentRecord">删除</view>
+      <view class="item swipe-item" style="transform: translateX({{item.swipeX}}rpx);" data-index="{{index}}" bindtap="onTapAgentRecord">
+        <view class="item-main">
+          <view class="item-title item-title-ellipsis">{{item.fileName || ('记录#' + item.id)}}</view>
+          <view class="item-sub">{{item.route}} · {{item.itemCount}} 条 · {{item.createdAt}}</view>
+          <view class="item-sub item-sub-ellipsis">{{item.summary}}</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{showAgentRecordDialog}}" class="dialog-mask" bindtap="onCloseAgentRecordDialog">
+    <view class="dialog-card" catchtap="noop">
+      <view class="dialog-title">解析详情</view>
+      <view class="dialog-sub">{{activeAgentRecord.fileName}}</view>
+      <view class="dialog-sub">{{activeAgentRecord.route}} · {{activeAgentRecord.createdAt}}</view>
+      <scroll-view scroll-y class="dialog-body">
+        <view class="dialog-label">摘要</view>
+        <view class="dialog-text">{{activeAgentRecord.summary || '无'}}</view>
+
+        <view class="dialog-label">AI提醒项</view>
+        <view wx:if="{{activeAgentRecord.parsedItems.length === 0 && !activeAgentRecord.itemsRawText}}" class="dialog-text">无</view>
+        <view wx:for="{{activeAgentRecord.parsedItems}}" wx:key="index" class="dialog-item">
+          <view class="dialog-text">{{index + 1}}. {{item.title}}（{{item.type}}）</view>
+          <view class="dialog-sub">{{item.source}} · {{item.remindAt}}</view>
+        </view>
+        <view wx:if="{{activeAgentRecord.itemsRawText}}" class="dialog-text">{{activeAgentRecord.itemsRawText}}</view>
+
+        <view class="dialog-label">OCR文本</view>
+        <view class="dialog-text">{{activeAgentRecord.rawText || '无'}}</view>
+      </scroll-view>
+      <button class="create-btn" bindtap="onCloseAgentRecordDialog">关闭</button>
+    </view>
+  </view>
 </view>
