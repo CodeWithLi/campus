@@ -1,19 +1,47 @@
 import { getStorage, removeStorage } from './storage'
 import { buildApiUrl } from '../config/env'
+import { ensureLoginOrRedirect } from './auth-guard'
 
 const TOKEN_KEY = 'TOKEN'
 const USER_INFO_KEY = 'USER_INFO'
 const LOGIN_STATUS_KEY = 'LOGIN_STATUS'
+const PUBLIC_GET_PATTERNS = [
+  /^\/wx\/post\/list$/,
+  /^\/wx\/post\/\d+$/,
+  /^\/wx\/post\/\d+\/comments$/
+]
+const AUTH_FREE_PATTERNS = [
+  /^\/wx\/auth\/login$/,
+  /^\/wx\/auth\/register$/,
+  /^\/wx\/auth\/email-code$/
+]
 
 const redirectToLogin = () => {
   removeStorage(TOKEN_KEY)
   removeStorage(USER_INFO_KEY)
   removeStorage(LOGIN_STATUS_KEY)
+  ensureLoginOrRedirect()
+}
+
+const isPublicRequest = (url = '', method = 'GET') => {
+  const upperMethod = String(method || 'GET').toUpperCase()
+  if (AUTH_FREE_PATTERNS.some((pattern) => pattern.test(url))) {
+    return true
+  }
+  if (upperMethod !== 'GET') {
+    return false
+  }
+  return PUBLIC_GET_PATTERNS.some((pattern) => pattern.test(url))
 }
 
 const request = ({ url, method = 'GET', data = {}, header = {} }) =>
   new Promise((resolve, reject) => {
     const token = getStorage(TOKEN_KEY)
+    if (!token && !isPublicRequest(url, method)) {
+      ensureLoginOrRedirect()
+      reject(new Error('未登录或登录已过期'))
+      return
+    }
     const authorization = token ? `Bearer ${token}` : ''
 
     wx.request({
@@ -67,6 +95,11 @@ export const uploadFiles = (url, filePaths = [], name = 'files', formData = {}) 
       return
     }
     const token = getStorage(TOKEN_KEY)
+    if (!token) {
+      ensureLoginOrRedirect()
+      reject(new Error('未登录或登录已过期'))
+      return
+    }
     const authorization = token ? `Bearer ${token}` : ''
     wx.uploadFile({
       url: buildApiUrl(url),

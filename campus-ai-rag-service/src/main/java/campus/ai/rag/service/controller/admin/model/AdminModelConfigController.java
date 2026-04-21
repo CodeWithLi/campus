@@ -3,8 +3,10 @@ package campus.ai.rag.service.controller.admin.model;
 import campus.ai.rag.service.common.Result;
 import campus.ai.rag.service.dto.admin.model.AiModelConfigCreateDTO;
 import campus.ai.rag.service.dto.admin.model.AiModelConfigUpdateDTO;
+import campus.ai.rag.service.dto.admin.model.AiModelTestChatDTO;
 import campus.ai.rag.service.service.admin.model.AdminModelConfigService;
 import campus.ai.rag.service.vo.admin.model.AiModelConfigVO;
+import campus.ai.rag.service.vo.admin.model.AiModelTestChatVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
@@ -75,6 +77,13 @@ public class AdminModelConfigController {
     public Result<Void> delete(@PathVariable("id") Long id) {
         adminModelConfigService.delete(id);
         return Result.success();
+    }
+
+    @PostMapping("/test-chat")
+    @ApiOperation(value = "模型连通性测试", notes = "按模型编码发起一次测试问答，返回模型回复与耗时")
+    @Operation(summary = "模型连通性测试")
+    public Result<AiModelTestChatVO> testChat(@RequestBody AiModelTestChatDTO dto) {
+        return Result.success(adminModelConfigService.testChat(dto));
     }
 }
 

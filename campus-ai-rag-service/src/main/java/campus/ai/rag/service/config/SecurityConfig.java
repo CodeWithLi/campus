@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -58,6 +59,8 @@ public class SecurityConfig {
                         .requestMatchers("/wx/auth/**").permitAll()
                         .requestMatchers("/wx/pay/alipay/notify").permitAll()
                         .requestMatchers("/wx/pay/alipay/return").permitAll()
+                        // 社区：允许游客浏览帖子列表（不需要 token）
+                        .requestMatchers(HttpMethod.GET, "/wx/post/list").permitAll()
                         .requestMatchers("/admin/**").authenticated()
                         .requestMatchers("/wx/**").authenticated()
                         .anyRequest().permitAll()

@@ -1,5 +1,6 @@
 import { listPostsApi } from '../../api/post'
 import { listReminderNoticeApi } from '../../api/reminder'
+import { isLoggedIn } from '../../utils/auth-guard'
 import { showError } from '../../utils/ui'
 
 Page({
@@ -119,6 +120,10 @@ Page({
   },
 
   async loadUnreadNoticeCount() {
+    if (!isLoggedIn()) {
+      this.setData({ unreadNoticeCount: 0 })
+      return
+    }
     try {
       const res = await listReminderNoticeApi()
       const count = Number(res?.data?.unreadCount || 0)

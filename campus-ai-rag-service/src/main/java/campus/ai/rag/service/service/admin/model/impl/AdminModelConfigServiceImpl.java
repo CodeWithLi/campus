@@ -1,13 +1,16 @@
 package campus.ai.rag.service.service.admin.model.impl;
 
+import campus.ai.rag.service.ai.AiChatRouter;
 import campus.ai.rag.service.common.StatusCodeEnum;
 import campus.ai.rag.service.dto.admin.model.AiModelConfigCreateDTO;
 import campus.ai.rag.service.dto.admin.model.AiModelConfigUpdateDTO;
+import campus.ai.rag.service.dto.admin.model.AiModelTestChatDTO;
 import campus.ai.rag.service.entity.model.AiModelConfigEntity;
 import campus.ai.rag.service.exception.BusinessException;
 import campus.ai.rag.service.mapper.model.AiModelConfigMapper;
 import campus.ai.rag.service.service.admin.model.AdminModelConfigService;
 import campus.ai.rag.service.vo.admin.model.AiModelConfigVO;
+import campus.ai.rag.service.vo.admin.model.AiModelTestChatVO;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.springframework.stereotype.Service;
 
@@ -23,9 +26,12 @@ public class AdminModelConfigServiceImpl implements AdminModelConfigService {
     private static final int INVOKE_TYPE_GENERIC_HTTP = 3;
 
     private final AiModelConfigMapper aiModelConfigMapper;
+    private final AiChatRouter aiChatRouter;
 
-    public AdminModelConfigServiceImpl(AiModelConfigMapper aiModelConfigMapper) {
+    public AdminModelConfigServiceImpl(AiModelConfigMapper aiModelConfigMapper,
+                                       AiChatRouter aiChatRouter) {
         this.aiModelConfigMapper = aiModelConfigMapper;
+        this.aiChatRouter = aiChatRouter;
     }
 
     @Override
@@ -98,6 +104,23 @@ public class AdminModelConfigServiceImpl implements AdminModelConfigService {
                 .orderByAsc(AiModelConfigEntity::getSortNo)
                 .orderByDesc(AiModelConfigEntity::getId));
         return entities.stream().map(this::toVO).collect(Collectors.toList());
+    }
+
+    @Override
+    public AiModelTestChatVO testChat(AiModelTestChatDTO dto) {
+        if (dto == null || isBlank(dto.getModelCode())) {
+            throw new BusinessException(StatusCodeEnum.BAD_REQUEST, "模型编码不能为空");
+        }
+        String question = isBlank(dto.getMessage()) ? "你好" : dto.getMessage().trim();
+        long start = System.currentTimeMillis();
+        String answer = aiChatRouter.rawChat(dto.getModelCode().trim(), question);
+        long elapsed = System.currentTimeMillis() - start;
+        AiModelTestChatVO vo = new AiModelTestChatVO();
+        vo.setModelCode(dto.getModelCode().trim());
+        vo.setQuestion(question);
+        vo.setAnswer(answer);
+        vo.setElapsedMs(elapsed);
+        return vo;
     }
 
     private void validateCreateDto(AiModelConfigCreateDTO dto) {
