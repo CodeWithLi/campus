@@ -35,6 +35,15 @@ const router = createRouter({
           }
         },
         {
+          path: '/orders',
+          name: 'orders',
+          component: () => import('@/views/order/index.vue'),
+          meta: {
+            title: '订单管理',
+            requiresAdmin: true
+          }
+        },
+        {
           path: '/prompts/system',
           name: 'system-prompts',
           component: () => import('@/views/prompt/index.vue'),

@@ -26,3 +26,45 @@ a {
   color: inherit;
   text-decoration: none;
 }
+
+/* 统一修复后台下拉框过窄、选中值显示不全的问题 */
+.el-form--inline .el-select,
+.el-form--inline .el-select-v2,
+.el-form--inline .el-cascader {
+  min-width: 180px;
+}
+
+.el-form--inline .el-select .el-select__wrapper,
+.el-form--inline .el-select-v2 .el-select__wrapper,
+.el-form--inline .el-cascader .el-input__wrapper {
+  min-width: 180px;
+}
+
+.el-select .el-select__selected-item,
+.el-select-v2 .el-select__selected-item,
+.el-cascader .el-input__inner {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.el-select__popper.el-popper,
+.el-select-v2__popper.el-popper,
+.el-cascader__dropdown.el-popper {
+  min-width: 200px !important;
+}
+
+/* 统一修复数字步进框过窄（如温度、Max Tokens） */
+.el-form--inline .el-input-number {
+  min-width: 150px;
+}
+
+.el-form--inline .el-input-number .el-input__wrapper {
+  min-width: 150px;
+}
+
+.el-input-number .el-input__inner {
+  text-align: left;
+}

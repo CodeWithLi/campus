@@ -113,18 +113,18 @@
         </el-row>
 
         <el-row :gutter="16">
-          <el-col :span="12">
+          <el-col :span="10">
             <el-form-item label="远程模型名" prop="modelNameRemote">
               <el-input v-model="formData.modelNameRemote" placeholder="例如 qwen-plus" />
             </el-form-item>
           </el-col>
-          <el-col :span="6">
-            <el-form-item label="温度" prop="temperature">
+          <el-col :span="7">
+            <el-form-item label="温度" prop="temperature" label-width="56px">
               <el-input-number v-model="formData.temperature" :min="0" :max="2" :step="0.1" class="full-width" />
             </el-form-item>
           </el-col>
-          <el-col :span="6">
-            <el-form-item label="Max Tokens" prop="maxTokens">
+          <el-col :span="7">
+            <el-form-item label="最大Token" prop="maxTokens" label-width="76px">
               <el-input-number v-model="formData.maxTokens" :min="1" :step="1" class="full-width" />
             </el-form-item>
           </el-col>
@@ -615,7 +615,8 @@ loadModelList()
 
 .config-form {
   max-height: 62vh;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
   padding-right: 4px;
 }
 
