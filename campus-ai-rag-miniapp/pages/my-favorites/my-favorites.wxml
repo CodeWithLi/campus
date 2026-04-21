@@ -1,0 +1,22 @@
+<view class="page">
+  <view wx:if="{{list.length === 0 && !loading}}" class="empty">你还没有收藏帖子</view>
+
+  <view
+    class="post-card"
+    wx:for="{{list}}"
+    wx:key="id"
+    data-id="{{item.id}}"
+    bindtap="onOpenDetail"
+  >
+    <view class="title">{{item.title}}</view>
+    <view class="content">{{item.contentPreview}}</view>
+    <view class="meta">
+      <text>{{item.nickname || ('用户 ' + item.userId)}}</text>
+      <text>{{item.createdAt || ''}}</text>
+    </view>
+  </view>
+
+  <view class="more-wrap" wx:if="{{hasMore}}">
+    <button class="more-btn" loading="{{loadingMore}}" bindtap="onLoadMore">加载更多</button>
+  </view>
+</view>

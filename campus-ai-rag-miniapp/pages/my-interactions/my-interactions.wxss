@@ -1,0 +1,66 @@
+.page {
+  min-height: 100vh;
+  background: #f5f7fb;
+  padding: 24rpx;
+  box-sizing: border-box;
+}
+
+.item {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 20rpx;
+  margin-bottom: 14rpx;
+  box-shadow: 0 8rpx 20rpx rgba(15, 23, 42, 0.06);
+}
+
+.line1 {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  flex-wrap: wrap;
+}
+
+.actor {
+  color: #111827;
+  font-size: 26rpx;
+  font-weight: 600;
+}
+
+.type {
+  color: #1d4ed8;
+  font-size: 22rpx;
+  background: #e0e7ff;
+  border-radius: 999rpx;
+  padding: 4rpx 10rpx;
+}
+
+.time {
+  margin-left: auto;
+  color: #9ca3af;
+  font-size: 22rpx;
+}
+
+.line2 {
+  margin-top: 10rpx;
+  color: #334155;
+  font-size: 24rpx;
+}
+
+.line3 {
+  margin-top: 8rpx;
+  color: #64748b;
+  font-size: 24rpx;
+}
+
+.empty {
+  margin-top: 180rpx;
+  text-align: center;
+  color: #94a3b8;
+}
+
+.more-btn {
+  border-radius: 999rpx;
+  background: #dbeafe;
+  color: #1d4ed8;
+  font-size: 24rpx;
+}

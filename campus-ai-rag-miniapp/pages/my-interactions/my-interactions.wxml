@@ -1,0 +1,17 @@
+<view class="page">
+  <view wx:if="{{list.length === 0 && !loading}}" class="empty">暂时还没有收到互动</view>
+
+  <view class="item" wx:for="{{list}}" wx:key="id" data-post-id="{{item.postId}}" bindtap="onOpenPost">
+    <view class="line1">
+      <text class="actor">{{item.actorNickname || ('用户 ' + item.actorUserId)}}</text>
+      <text class="type">{{item.typeText}}</text>
+      <text class="time">{{item.createdAt || ''}}</text>
+    </view>
+    <view class="line2">帖子：{{item.postTitle || '帖子已删除'}}</view>
+    <view class="line3" wx:if="{{item.contentSnapshot}}">{{item.contentSnapshot}}</view>
+  </view>
+
+  <view class="more-wrap" wx:if="{{hasMore}}">
+    <button class="more-btn" loading="{{loadingMore}}" bindtap="onLoadMore">加载更多</button>
+  </view>
+</view>
