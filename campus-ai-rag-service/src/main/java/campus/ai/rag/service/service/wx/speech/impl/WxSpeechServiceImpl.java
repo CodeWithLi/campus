@@ -17,16 +17,22 @@ import java.net.http.HttpClient;
 import java.net.http.WebSocket;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Locale;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 
 @Service
 public class WxSpeechServiceImpl implements WxSpeechService {
@@ -62,6 +68,30 @@ public class WxSpeechServiceImpl implements WxSpeechService {
     @Value("${xf.rtasr.samplerate:16000}")
     private Integer sampleRate;
 
+    @Value("${xf.iat.url:wss://iat-api.xfyun.cn/v2/iat}")
+    private String iatUrl;
+
+    @Value("${xf.iat.app-id:6346119f}")
+    private String iatAppId;
+
+    @Value("${xf.iat.api-key:caba4cc5c2e634ec94313d2f2c8d0c16}")
+    private String iatApiKey;
+
+    @Value("${xf.iat.api-secret:ZTgzYmRjMjg2MmY3OWViODMwMzIyNDdj}")
+    private String iatApiSecret;
+
+    @Value("${xf.iat.language:zh_cn}")
+    private String iatLanguage;
+
+    @Value("${xf.iat.domain:iat}")
+    private String iatDomain;
+
+    @Value("${xf.iat.accent:mandarin}")
+    private String iatAccent;
+
+    @Value("${xf.iat.dwa:wpgs}")
+    private String iatDwa;
+
     @Override
     public WxSpeechTranscribeVO transcribe(MultipartFile file, String scene, Long durationMs) {
         validateInput(file);
@@ -83,6 +113,38 @@ public class WxSpeechServiceImpl implements WxSpeechService {
             throw ex;
         } catch (Exception ex) {
             throw new BusinessException(StatusCodeEnum.BUSINESS_ERROR, "语音转写失败：" + ex.getMessage());
+        }
+    }
+
+    @Override
+    public WxSpeechTranscribeVO transcribeNew(MultipartFile file, String scene, Long durationMs) {
+        return transcribeNewStream(file, scene, durationMs, null);
+    }
+
+    @Override
+    public WxSpeechTranscribeVO transcribeNewStream(MultipartFile file,
+                                                    String scene,
+                                                    Long durationMs,
+                                                    Consumer<String> partialConsumer) {
+        validateInput(file);
+        if (isBlank(iatUrl) || isBlank(iatAppId) || isBlank(iatApiKey) || isBlank(iatApiSecret)) {
+            throw new BusinessException(StatusCodeEnum.BAD_REQUEST, "IAT配置不完整，请检查 xf.iat.*");
+        }
+        try {
+            String text = transcribeByIatWs(file.getBytes(), file.getOriginalFilename(), partialConsumer);
+            if (isBlank(text)) {
+                throw new BusinessException(StatusCodeEnum.BUSINESS_ERROR, "语音转写结果为空");
+            }
+            WxSpeechTranscribeVO vo = new WxSpeechTranscribeVO();
+            vo.setText(text.trim());
+            vo.setScene(isBlank(scene) ? "chat" : scene.trim());
+            vo.setDurationMs(durationMs == null ? 0L : Math.max(durationMs, 0L));
+            vo.setProvider("xf-iat-ws");
+            return vo;
+        } catch (BusinessException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new BusinessException(StatusCodeEnum.BUSINESS_ERROR, "语音转写（新）失败：" + ex.getMessage());
         }
     }
 
@@ -175,6 +237,216 @@ public class WxSpeechServiceImpl implements WxSpeechService {
             throw new BusinessException(StatusCodeEnum.BUSINESS_ERROR, error.get());
         }
         return mergedText.get();
+    }
+
+    private String transcribeByIatWs(byte[] audioBytes, String filename, Consumer<String> partialConsumer) throws Exception {
+        String signedUrl = buildIatSignedUrl();
+        String encoding = resolveIatEncoding(filename);
+        CountDownLatch done = new CountDownLatch(1);
+        AtomicReference<String> error = new AtomicReference<>("");
+        AtomicReference<String> mergedText = new AtomicReference<>("");
+
+        WebSocket.Listener listener = new WebSocket.Listener() {
+            private final StringBuilder msgBuffer = new StringBuilder();
+            private final ConcurrentHashMap<Integer, String> snTextMap = new ConcurrentHashMap<>();
+            private final java.util.Set<Integer> deletedSn = java.util.Collections.newSetFromMap(new ConcurrentHashMap<>());
+
+            @Override
+            public void onOpen(WebSocket webSocket) {
+                webSocket.request(1);
+            }
+
+            @Override
+            public CompletionStage<?> onText(WebSocket webSocket, CharSequence data, boolean last) {
+                msgBuffer.append(data);
+                if (last) {
+                    String payload = msgBuffer.toString();
+                    msgBuffer.setLength(0);
+                    try {
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> root = objectMapper.readValue(payload, Map.class);
+                        Integer code = toInt(root.get("code"), 0);
+                        if (code != null && code != 0) {
+                            error.set(String.valueOf(root.getOrDefault("message", "IAT识别失败(code=" + code + ")")));
+                            done.countDown();
+                            webSocket.request(1);
+                            return null;
+                        }
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> dataMap = (Map<String, Object>) root.get("data");
+                        if (dataMap != null) {
+                            Integer status = toInt(dataMap.get("status"), 1);
+                            @SuppressWarnings("unchecked")
+                            Map<String, Object> resultMap = (Map<String, Object>) dataMap.get("result");
+                            if (resultMap != null) {
+                                int sn = toInt(resultMap.get("sn"), snTextMap.size());
+                                String text = extractIatText(resultMap);
+                                String pgs = String.valueOf(resultMap.getOrDefault("pgs", ""));
+                                if ("rpl".equalsIgnoreCase(pgs)) {
+                                    Object rgObj = resultMap.get("rg");
+                                    if (rgObj instanceof List<?> rg && rg.size() >= 2) {
+                                        int from = toInt(rg.get(0), sn);
+                                        int to = toInt(rg.get(1), sn);
+                                        for (int i = from; i <= to; i++) {
+                                            deletedSn.add(i);
+                                        }
+                                    }
+                                }
+                                if (!isBlank(text)) {
+                                    snTextMap.put(sn, text);
+                                    deletedSn.remove(sn);
+                                }
+                                mergedText.set(mergeIatSnTexts(snTextMap, deletedSn));
+                                if (partialConsumer != null) {
+                                    try {
+                                        partialConsumer.accept(mergedText.get());
+                                    } catch (Exception ignore) {
+                                    }
+                                }
+                            }
+                            if (status != null && status == 2) {
+                                done.countDown();
+                            }
+                        }
+                    } catch (Exception e) {
+                        error.set("解析IAT响应失败: " + e.getMessage());
+                        done.countDown();
+                    }
+                }
+                webSocket.request(1);
+                return null;
+            }
+
+            @Override
+            public CompletionStage<?> onClose(WebSocket webSocket, int statusCode, String reason) {
+                done.countDown();
+                return null;
+            }
+
+            @Override
+            public void onError(WebSocket webSocket, Throwable throwable) {
+                error.set("IAT连接异常: " + throwable.getMessage());
+                done.countDown();
+            }
+        };
+
+        WebSocket ws = httpClient.newWebSocketBuilder()
+                .connectTimeout(Duration.ofSeconds(10))
+                .buildAsync(URI.create(signedUrl), listener)
+                .join();
+
+        int offset = 0;
+        int status = 0;
+        while (offset < audioBytes.length) {
+            int len = Math.min(FRAME_BYTES, audioBytes.length - offset);
+            byte[] frameBytes = new byte[len];
+            System.arraycopy(audioBytes, offset, frameBytes, 0, len);
+            String json = buildIatFrame(status, frameBytes, encoding);
+            ws.sendText(json, true).join();
+            offset += len;
+            status = 1;
+            Thread.sleep(FRAME_INTERVAL_MS);
+        }
+        String lastFrame = "{\"data\":{\"status\":2,\"format\":\"audio/L16;rate=16000\",\"encoding\":\"" + encoding + "\",\"audio\":\"\"}}";
+        ws.sendText(lastFrame, true).join();
+
+        done.await(20, TimeUnit.SECONDS);
+        ws.sendClose(WebSocket.NORMAL_CLOSURE, "done");
+
+        if (!isBlank(error.get())) {
+            throw new BusinessException(StatusCodeEnum.BUSINESS_ERROR, error.get());
+        }
+        return mergedText.get();
+    }
+
+    private String buildIatFrame(int status, byte[] frameBytes, String encoding) throws Exception {
+        String audioBase64 = Base64.getEncoder().encodeToString(frameBytes == null ? new byte[0] : frameBytes);
+        StringBuilder sb = new StringBuilder();
+        sb.append("{");
+        if (status == 0) {
+            sb.append("\"common\":{\"app_id\":\"").append(iatAppId).append("\"},");
+            sb.append("\"business\":{")
+                    .append("\"language\":\"").append(nullToDefault(iatLanguage, "zh_cn")).append("\",")
+                    .append("\"domain\":\"").append(nullToDefault(iatDomain, "iat")).append("\",")
+                    .append("\"accent\":\"").append(nullToDefault(iatAccent, "mandarin")).append("\"");
+            if (!isBlank(iatDwa)) {
+                sb.append(",\"dwa\":\"").append(iatDwa.trim()).append("\"");
+            }
+            sb.append("},");
+        }
+        sb.append("\"data\":{")
+                .append("\"status\":").append(status).append(",")
+                .append("\"format\":\"audio/L16;rate=16000\",")
+                .append("\"encoding\":\"").append(encoding).append("\",")
+                .append("\"audio\":\"").append(audioBase64).append("\"")
+                .append("}}");
+        return sb.toString();
+    }
+
+    private String buildIatSignedUrl() throws Exception {
+        URI uri = URI.create(iatUrl.trim().replace("wss://", "https://").replace("ws://", "http://"));
+        String host = uri.getHost();
+        String path = isBlank(uri.getPath()) ? "/v2/iat" : uri.getPath();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss 'GMT'", Locale.US);
+        String date = formatter.format(ZonedDateTime.now(ZoneOffset.UTC));
+
+        String signatureOrigin = "host: " + host + "\n" +
+                "date: " + date + "\n" +
+                "GET " + path + " HTTP/1.1";
+        String signature = hmacSha256Base64(signatureOrigin, iatApiSecret);
+        String authorizationOrigin = "api_key=\"" + iatApiKey + "\", algorithm=\"hmac-sha256\", headers=\"host date request-line\", signature=\"" + signature + "\"";
+        String authorization = Base64.getEncoder().encodeToString(authorizationOrigin.getBytes(StandardCharsets.UTF_8));
+
+        String query = "authorization=" + urlEncode(authorization) +
+                "&date=" + urlEncode(date) +
+                "&host=" + urlEncode(host);
+
+        String wsBase = iatUrl.trim();
+        if (wsBase.startsWith("https://")) {
+            wsBase = wsBase.replace("https://", "wss://");
+        } else if (wsBase.startsWith("http://")) {
+            wsBase = wsBase.replace("http://", "ws://");
+        }
+        return wsBase + "?" + query;
+    }
+
+    private String hmacSha256Base64(String value, String key) throws Exception {
+        Mac mac = Mac.getInstance("HmacSHA256");
+        SecretKeySpec secretKeySpec = new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
+        mac.init(secretKeySpec);
+        byte[] signBytes = mac.doFinal(value.getBytes(StandardCharsets.UTF_8));
+        return Base64.getEncoder().encodeToString(signBytes);
+    }
+
+    private String extractIatText(Map<String, Object> resultMap) {
+        Object wsObj = resultMap.get("ws");
+        if (!(wsObj instanceof List<?> wsList)) return "";
+        StringBuilder sb = new StringBuilder();
+        for (Object ws : wsList) {
+            if (!(ws instanceof Map<?, ?> wsMap)) continue;
+            Object cwObj = wsMap.get("cw");
+            if (!(cwObj instanceof List<?> cwList) || cwList.isEmpty()) continue;
+            Object cw0 = cwList.get(0);
+            if (!(cw0 instanceof Map<?, ?> cwMap)) continue;
+            Object word = cwMap.get("w");
+            if (word != null) sb.append(word);
+        }
+        return sb.toString();
+    }
+
+    private String mergeIatSnTexts(ConcurrentHashMap<Integer, String> snTextMap, java.util.Set<Integer> deletedSn) {
+        return snTextMap.entrySet().stream()
+                .filter(e -> !deletedSn.contains(e.getKey()))
+                .sorted(Comparator.comparingInt(Map.Entry::getKey))
+                .map(Map.Entry::getValue)
+                .filter(Objects::nonNull)
+                .collect(java.util.stream.Collectors.joining());
+    }
+
+    private String resolveIatEncoding(String filename) {
+        String lower = filename == null ? "" : filename.toLowerCase();
+        if (lower.endsWith(".mp3")) return "lame";
+        return "raw";
     }
 
     private void validateInput(MultipartFile file) {
@@ -285,6 +557,13 @@ public class WxSpeechServiceImpl implements WxSpeechService {
         } catch (Exception e) {
             return fallback;
         }
+    }
+
+    private String nullToDefault(String value, String defaultValue) {
+        if (isBlank(value)) {
+            return defaultValue;
+        }
+        return value.trim();
     }
 
     private String urlEncode(String value) {

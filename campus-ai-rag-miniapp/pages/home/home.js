@@ -73,7 +73,7 @@ Page({
     if (key === 'mine') return wx.switchTab({ url: '/pages/mine/mine' })
     if (key === 'community') return this.goCommunity()
     if (key === 'notice') return this.goNotificationCenter()
-    if (key === 'guide') return wx.showToast({ title: '办事指南开发中', icon: 'none' })
+    if (key === 'guide') return this.goGuideList()
     wx.showToast({ title: '功能开发中', icon: 'none' })
   },
 
@@ -97,6 +97,10 @@ Page({
 
   goNotificationCenter() {
     wx.navigateTo({ url: '/pages/notification-center/notification-center' })
+  },
+
+  goGuideList() {
+    wx.navigateTo({ url: '/pages/guide-list/guide-list' })
   },
 
   onOpenPost(e) {

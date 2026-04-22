@@ -115,6 +115,15 @@ const router = createRouter({
             requiresAdmin: true
           }
         },
+        {
+          path: '/guides',
+          name: 'guides',
+          component: () => import('@/views/guide/index.vue'),
+          meta: {
+            title: '办事指南',
+            requiresAdmin: true
+          }
+        },
       ]
     },
     {

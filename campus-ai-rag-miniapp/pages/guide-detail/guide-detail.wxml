@@ -1,0 +1,36 @@
+<view class="page">
+  <view wx:if="{{guide}}" class="head-card">
+    <view wx:if="{{guide.coverUrlFull}}" class="cover-wrap" bindtap="onPreviewCover">
+      <image class="cover-image" mode="aspectFill" src="{{guide.coverUrlFull}}" />
+      <view class="cover-mask">
+        <view class="cover-tip">点击预览图片</view>
+      </view>
+    </view>
+    <view class="guide-info">
+      <view class="title-row">
+        <view class="title">{{guide.title}}</view>
+        <view wx:if="{{guide.tag}}" class="tag">{{guide.tag}}</view>
+      </view>
+      <view class="meta">{{guide.category || '未分类'}}</view>
+      <view class="summary">{{guide.summary || '暂无简介'}}</view>
+    </view>
+  </view>
+
+  <view
+    wx:for="{{stepList}}"
+    wx:key="id"
+    class="step-card"
+  >
+    <view class="step-top">
+      <view class="step-index">Step {{item.stepNo || (index + 1)}}</view>
+      <view class="step-action-type">{{item.actionType || 'NONE'}}</view>
+    </view>
+    <view class="step-title">{{item.title}}</view>
+    <view wx:if="{{item.content}}" class="step-content">{{item.content}}</view>
+    <view wx:if="{{item.requiredMaterialsList && item.requiredMaterialsList.length}}" class="materials">
+      <view class="materials-title">所需材料</view>
+      <view wx:for="{{item.requiredMaterialsList}}" wx:key="index" class="material-item">- {{item}}</view>
+    </view>
+    <button class="action-btn" data-index="{{index}}" bindtap="onStepActionTap">执行步骤动作</button>
+  </view>
+</view>

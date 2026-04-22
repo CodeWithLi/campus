@@ -228,9 +228,6 @@ CREATE TABLE `forum_post_report`  (
   INDEX `idx_status_created_at`(`status` ASC, `created_at` ASC) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '帖子举报记录' ROW_FORMAT = Dynamic;
 
--- ----------------------------
--- Table structure for forum_schedule_notice
--- ----------------------------
 DROP TABLE IF EXISTS `forum_schedule_notice`;
 CREATE TABLE `forum_schedule_notice`  (
   `id` bigint NOT NULL AUTO_INCREMENT,
@@ -245,6 +242,46 @@ CREATE TABLE `forum_schedule_notice`  (
   INDEX `idx_user_read_created`(`user_id` ASC, `is_read` ASC, `created_at` ASC) USING BTREE,
   INDEX `idx_reminder_created`(`reminder_id` ASC, `created_at` ASC) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '提醒通知' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Table structure for forum_guide
+-- ----------------------------
+DROP TABLE IF EXISTS `forum_guide`;
+CREATE TABLE `forum_guide`  (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `title` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '指南标题',
+  `category` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '分类',
+  `tag` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '标签',
+  `summary` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '简介',
+  `cover_url` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '封面图URL',
+  `status` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'DRAFT' COMMENT '状态：DRAFT/PUBLISHED/OFFLINE',
+  `sort_no` int NOT NULL DEFAULT 100 COMMENT '排序值（越小越靠前）',
+  `deleted` tinyint NOT NULL DEFAULT 0 COMMENT '逻辑删除：0未删除 1已删除',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_guide_status_sort`(`deleted` ASC, `status` ASC, `sort_no` ASC, `id` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '办事指南主表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Table structure for forum_guide_step
+-- ----------------------------
+DROP TABLE IF EXISTS `forum_guide_step`;
+CREATE TABLE `forum_guide_step`  (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `guide_id` bigint NOT NULL COMMENT '指南ID',
+  `step_no` int NOT NULL DEFAULT 1 COMMENT '步骤序号',
+  `title` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '步骤标题',
+  `content` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '步骤说明',
+  `action_type` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'NONE' COMMENT '动作类型：NONE/LINK/REMINDER/ASK_AI',
+  `action_payload` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '动作参数JSON',
+  `required_materials` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '材料清单JSON',
+  `status` tinyint NOT NULL DEFAULT 1 COMMENT '步骤状态：1启用，0停用',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_guide_step_guide`(`guide_id` ASC, `step_no` ASC, `id` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '办事指南步骤表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for forum_schedule_reminder

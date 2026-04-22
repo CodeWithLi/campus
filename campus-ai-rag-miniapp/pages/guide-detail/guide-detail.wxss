@@ -1,0 +1,146 @@
+.page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #f3f7ff 0%, #f7f9fc 45%, #f4f6fb 100%);
+  padding: 20rpx;
+  box-sizing: border-box;
+}
+
+.head-card, .step-card {
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 22rpx;
+  padding: 20rpx;
+  margin-bottom: 16rpx;
+  box-shadow: 0 10rpx 26rpx rgba(37, 99, 235, 0.08);
+}
+
+.cover-wrap {
+  position: relative;
+  border-radius: 14rpx;
+  overflow: hidden;
+  margin-bottom: 14rpx;
+}
+
+.cover-image {
+  width: 100%;
+  height: 300rpx;
+  background: #f1f5f9;
+}
+
+.cover-mask {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 10rpx 14rpx;
+  background: linear-gradient(180deg, rgba(2, 6, 23, 0) 0%, rgba(2, 6, 23, 0.55) 100%);
+}
+
+.cover-tip {
+  color: #e2e8f0;
+  font-size: 22rpx;
+}
+
+.guide-info {
+  background: #f8fbff;
+  border-radius: 12rpx;
+  padding: 14rpx;
+}
+
+.title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.title {
+  font-size: 36rpx;
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.tag {
+  font-size: 22rpx;
+  color: #2563eb;
+  background: #dbeafe;
+  border-radius: 999rpx;
+  padding: 4rpx 14rpx;
+}
+
+.meta {
+  margin-top: 10rpx;
+  color: #5b6b8c;
+  font-size: 22rpx;
+}
+
+.summary {
+  margin-top: 8rpx;
+  color: #334155;
+  font-size: 25rpx;
+  line-height: 1.6;
+}
+
+.step-top {
+  display: flex;
+  justify-content: space-between;
+  color: #5c6f92;
+  font-size: 22rpx;
+  align-items: center;
+}
+
+.step-index {
+  font-weight: 600;
+  color: #1e3a8a;
+}
+
+.step-title {
+  margin-top: 8rpx;
+  color: #111827;
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+.step-content {
+  margin-top: 10rpx;
+  color: #374151;
+  font-size: 24rpx;
+  line-height: 1.6;
+}
+
+.materials {
+  margin-top: 14rpx;
+  background: #f3f7ff;
+  border: 1rpx solid #dbeafe;
+  border-radius: 14rpx;
+  padding: 14rpx;
+}
+
+.materials-title {
+  color: #334155;
+  font-size: 22rpx;
+  font-weight: 600;
+  margin-bottom: 4rpx;
+}
+
+.material-item {
+  color: #475569;
+  font-size: 23rpx;
+  line-height: 1.6;
+}
+
+.action-btn {
+  margin-top: 16rpx;
+  height: 74rpx;
+  border-radius: 999rpx;
+  font-size: 26rpx;
+  color: #ffffff;
+  background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-btn::after {
+  border: none;
+}

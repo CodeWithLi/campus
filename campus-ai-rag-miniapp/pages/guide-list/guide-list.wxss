@@ -1,0 +1,115 @@
+.page {
+  min-height: 100vh;
+  background: #f5f7fb;
+  padding: 24rpx;
+  box-sizing: border-box;
+}
+
+.filter-card {
+  background: #fff;
+  border-radius: 18rpx;
+  padding: 20rpx;
+  box-shadow: 0 8rpx 20rpx rgba(15, 23, 42, 0.06);
+  margin-bottom: 18rpx;
+}
+
+.input {
+  width: 100%;
+  height: 72rpx;
+  line-height: 72rpx;
+  background: #f8fafc;
+  border-radius: 12rpx;
+  border: 1rpx solid #e5e7eb;
+  font-size: 26rpx;
+  color: #1f2937;
+  padding: 0 18rpx;
+  margin-bottom: 12rpx;
+  box-sizing: border-box;
+}
+
+.category-picker {
+  width: 100%;
+  margin-bottom: 12rpx;
+}
+
+.picker-view {
+  display: flex;
+  align-items: center;
+}
+
+.search-btn {
+  height: 72rpx;
+  border-radius: 999rpx;
+  font-size: 26rpx;
+  color: #1d4ed8;
+  background: #dbeafe;
+}
+
+.search-btn::after {
+  border: none;
+}
+
+.guide-card {
+  background: #fff;
+  border-radius: 18rpx;
+  padding: 22rpx;
+  margin-bottom: 14rpx;
+  box-shadow: 0 8rpx 20rpx rgba(15, 23, 42, 0.06);
+}
+
+.guide-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.guide-title {
+  font-size: 30rpx;
+  color: #111827;
+  font-weight: 600;
+}
+
+.guide-tag {
+  font-size: 20rpx;
+  color: #2563eb;
+  background: #dbeafe;
+  border-radius: 999rpx;
+  padding: 4rpx 12rpx;
+}
+
+.guide-meta {
+  margin-top: 8rpx;
+  font-size: 22rpx;
+  color: #64748b;
+}
+
+.guide-summary {
+  margin-top: 10rpx;
+  font-size: 24rpx;
+  color: #374151;
+  line-height: 1.6;
+}
+
+.guide-action {
+  margin-top: 12rpx;
+  font-size: 24rpx;
+  color: #3b82f6;
+}
+
+.empty {
+  margin: 220rpx 0 0;
+  text-align: center;
+}
+
+.empty-title {
+  font-size: 30rpx;
+  color: #334155;
+  font-weight: 600;
+}
+
+.empty-text {
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  color: #94a3b8;
+}

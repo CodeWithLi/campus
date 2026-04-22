@@ -33,14 +33,22 @@ Page({
   speechSocketTask: null,
   speechSocketOpened: false,
   realtimeFinalText: '',
+  pendingInitialMessage: '',
 
   async onLoad(options) {
     const conversationId = options?.conversationId || ''
+    const initialMessage = decodeURIComponent(options?.initialMessage || '')
     this.initRecorder()
+    this.pendingInitialMessage = initialMessage
     this.setData({ conversationId })
     await this.loadModels()
     if (conversationId) {
       await this.restoreConversation(conversationId)
+    }
+    if (this.pendingInitialMessage) {
+      const message = this.pendingInitialMessage
+      this.pendingInitialMessage = ''
+      await this.sendMessage(message)
     }
   },
 

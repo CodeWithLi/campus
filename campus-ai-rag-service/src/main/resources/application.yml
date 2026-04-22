@@ -134,6 +134,16 @@ xf:
     audio-encode: pcm_s16le
     samplerate: 16000
     role-type: 0
+  # 语音听写（流式版）WebSocket（新接口 /wx/speech/transcribe）
+  iat:
+    url: wss://iat-api.xfyun.cn/v2/iat
+    app-id: 6346119f
+    api-key: caba4cc5c2e634ec94313d2f2c8d0c16
+    api-secret: ZTgzYmRjMjg2MmY3OWViODMwMzIyNDdj
+    language: zh_cn
+    domain: iat
+    accent: mandarin
+    dwa: wpgs
   image:
     app-id: 6346119f
     api-key: caba4cc5c2e634ec94313d2f2c8d0c16
