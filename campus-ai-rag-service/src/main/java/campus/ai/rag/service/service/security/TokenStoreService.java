@@ -10,7 +10,7 @@ import java.time.Duration;
 public class TokenStoreService {
 
     private static final String TOKEN_KEY_PREFIX = "campus:auth:token:";
-    private static final Duration TOKEN_TTL = Duration.ofHours(2);
+    private static final Duration TOKEN_TTL = Duration.ofHours(24);
 
     private final RedisTemplate<String, Object> redisTemplate;
 

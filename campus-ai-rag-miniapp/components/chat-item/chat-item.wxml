@@ -19,6 +19,7 @@
         <text class="dot dot-3">•</text>
       </view>
     </view>
+    <text wx:elif="{{role === 'assistant' && streaming}}" user-select>{{content}}</text>
     <towxml wx:elif="{{role === 'assistant'}}" nodes="{{towxmlNodes}}"></towxml>
     <text wx:else user-select>{{content}}</text>
   </view>

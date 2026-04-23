@@ -17,14 +17,18 @@ Component({
     thinking: {
       type: Boolean,
       value: false
+    },
+    streaming: {
+      type: Boolean,
+      value: false
     }
   },
   data: {
     towxmlNodes: {}
   },
   observers: {
-    'content,role,thinking': function (content, role, thinking) {
-      if (thinking || role !== 'assistant') {
+    'content,role,thinking,streaming': function (content, role, thinking, streaming) {
+      if (thinking || streaming || role !== 'assistant') {
         this.setData({ towxmlNodes: {} })
         return
       }

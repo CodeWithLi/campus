@@ -1,5 +1,5 @@
 // 统一环境配置：只改这里即可切换本地/线上
-const ENV = 'local' // 'local' | 'prod'
+const ENV = 'prod' // 'local' | 'prod'
 
 const CONFIG = {
   local: {
