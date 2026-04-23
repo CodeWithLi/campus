@@ -1,5 +1,28 @@
-<view class="page">
-  <view class="profile-card {{isLogin ? '' : 'guest'}}">
+<view class="page {{isLogin ? '' : 'guest-page'}}">
+  <view wx:if="{{!isLogin}}" class="guest-wrap">
+    <view class="guest-bg">
+      <view class="blob blob-1"></view>
+      <view class="blob blob-2"></view>
+      <view class="blob blob-3"></view>
+      <view class="grid"></view>
+    </view>
+    <view class="guest-card">
+      <view class="guest-top-row">
+        <view class="guest-left">
+          <view class="guest-avatar">头像</view>
+        </view>
+        <view class="guest-right">
+          <view class="guest-title">未登录</view>
+          <view class="guest-desc">登录后可使用提醒与社区功能</view>
+        </view>
+      </view>
+      <view class="guest-btn-row">
+        <button class="guest-btn" bindtap="goLogin">去登录 / 注册</button>
+      </view>
+    </view>
+  </view>
+
+  <view wx:else class="profile-card">
     <view class="profile-top">
       <image
         wx:if="{{avatarPreviewUrl}}"
@@ -8,23 +31,18 @@
         mode="aspectFill"
         bindtap="onChooseAvatar"
       />
-      <view wx:else class="avatar avatar-placeholder" bindtap="{{isLogin ? 'onChooseAvatar' : ''}}">头像</view>
+      <view wx:else class="avatar avatar-placeholder" bindtap="onChooseAvatar">头像</view>
       <view class="profile-meta">
-        <view class="name">{{isLogin ? (nickname || username || '微信用户') : '未登录'}}</view>
-        <view class="desc">
-          {{isLogin ? (email || '已登录，点击头像可更换') : '登录后可使用提醒与社区功能'}}
-        </view>
-        <view wx:if="{{isLogin}}" class="points-line">
+        <view class="name">{{nickname || username || '微信用户'}}</view>
+        <view class="desc">{{email || '已登录，点击头像可更换'}}</view>
+        <view class="points-line">
           <text class="points-label">算力点</text>
           <text class="points-value">{{powerPoints}}</text>
         </view>
-        <view wx:if="{{isLogin}}" class="name-edit-line">
+        <view class="name-edit-line">
           <text class="name-edit-btn" bindtap="onEditNickname">修改昵称</text>
         </view>
       </view>
-    </view>
-    <view class="profile-actions" wx:if="{{!isLogin}}">
-      <button class="login-btn" bindtap="goLogin">去登录 / 注册</button>
     </view>
   </view>
 

@@ -52,7 +52,7 @@ public class AiChatRouter {
      * 微信端 AI 对话免费场景（不扣算力点）。
      * 说明：仅影响扣费与“算力点不足”的拦截，不影响计费日志记录（consumedPoints=0）。
      */
-    private static final Set<String> FREE_SCENES = Set.of("CHAT", "RAG", "RESUME");
+    private static final Set<String> FREE_SCENES = Set.of("CHAT");
 
     private final String defaultModelCode;
     private final AiModelConfigMapper aiModelConfigMapper;

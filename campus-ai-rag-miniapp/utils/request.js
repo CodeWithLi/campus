@@ -19,10 +19,14 @@ const AUTH_FREE_PATTERNS = [
   /^\/wx\/auth\/email-code$/
 ]
 
-const redirectToLogin = () => {
+const clearLoginStorage = () => {
   removeStorage(TOKEN_KEY)
   removeStorage(USER_INFO_KEY)
   removeStorage(LOGIN_STATUS_KEY)
+}
+
+const redirectToLogin = () => {
+  clearLoginStorage()
   ensureLoginOrRedirect()
 }
 
@@ -59,7 +63,12 @@ const request = ({ url, method = 'GET', data = {}, header = {} }) =>
       success: (res) => {
         const { statusCode } = res
         if (statusCode === 401) {
-          redirectToLogin()
+          const silentAuth = String(header?.['X-Silent-Auth'] || '') === '1'
+          if (silentAuth) {
+            clearLoginStorage()
+          } else {
+            redirectToLogin()
+          }
           reject(new Error('登录已失效，请重新登录'))
           return
         }
@@ -115,7 +124,12 @@ export const uploadFiles = (url, filePaths = [], name = 'files', formData = {}) 
       success: (res) => {
         const statusCode = res.statusCode
         if (statusCode === 401) {
-          redirectToLogin()
+          const silentAuth = String(formData?.['X-Silent-Auth'] || '') === '1'
+          if (silentAuth) {
+            clearLoginStorage()
+          } else {
+            redirectToLogin()
+          }
           reject(new Error('登录已失效，请重新登录'))
           return
         }

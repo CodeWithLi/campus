@@ -1,8 +1,9 @@
 import { getStorage, removeStorage, setStorage } from '../../utils/storage'
 import { showError, showSuccess } from '../../utils/ui'
 import { listReminderNoticeApi } from '../../api/reminder'
-import { getProfileApi, updateNicknameApi, uploadAvatarApi } from '../../api/auth'
+import { checkSessionApi, getProfileApi, updateNicknameApi, uploadAvatarApi } from '../../api/auth'
 import { buildApiUrl } from '../../config/env'
+import { isLoggedIn } from '../../utils/auth-guard'
 
 const TOKEN_KEY = 'TOKEN'
 const USER_INFO_KEY = 'USER_INFO'
@@ -22,26 +23,44 @@ Page({
     avatarUploading: false
   },
 
-  onShow() {
-    const token = getStorage(TOKEN_KEY) || ''
-    const userInfo = getStorage(USER_INFO_KEY) || {}
-    const isLogin = Boolean(getStorage(LOGIN_STATUS_KEY))
-    this.setData({
-      token,
-      isLogin,
-      username: userInfo.username || '',
-      nickname: userInfo.nickname || '',
-      email: userInfo.email || '',
-      avatarUrl: userInfo.avatarUrl || '',
-      avatarPreviewUrl: this.toFullUrl(userInfo.avatarUrl || ''),
-      powerPoints: this.formatPoints(userInfo.powerPoints)
-    })
-    if (isLogin) {
+  async onShow() {
+    // 先用本地状态快速渲染，再用后端接口校验会话有效性，避免 token 过期但 UI 仍显示已登录。
+    this.syncLoginState()
+    if (this.data.isLogin) {
+      await this.checkSessionAndSync()
+    }
+    if (this.data.isLogin) {
       this.loadProfile()
       this.loadUnreadNoticeCount()
     } else {
       this.setData({ unreadNoticeCount: 0 })
     }
+  },
+
+  async checkSessionAndSync() {
+    try {
+      await checkSessionApi()
+      // 会话有效，无需处理
+    } catch (e) {
+      // token 过期时：request.js 会静默清缓存（X-Silent-Auth=1），这里刷新 UI
+      this.syncLoginState()
+    }
+  },
+
+  syncLoginState() {
+    const token = getStorage(TOKEN_KEY) || ''
+    const userInfo = getStorage(USER_INFO_KEY) || {}
+    const ok = isLoggedIn()
+    this.setData({
+      token: ok ? token : '',
+      isLogin: ok,
+      username: ok ? (userInfo.username || '') : '',
+      nickname: ok ? (userInfo.nickname || '') : '',
+      email: ok ? (userInfo.email || '') : '',
+      avatarUrl: ok ? (userInfo.avatarUrl || '') : '',
+      avatarPreviewUrl: ok ? this.toFullUrl(userInfo.avatarUrl || '') : '',
+      powerPoints: ok ? this.formatPoints(userInfo.powerPoints) : '0.00'
+    })
   },
 
   async loadProfile() {
@@ -65,7 +84,8 @@ Page({
         powerPoints: this.formatPoints(userInfo.powerPoints)
       })
     } catch (e) {
-      // ignore profile failure
+      // 当 token 过期时，request.js 会清理 storage 并弹登录提示；这里同步 UI 到未登录态
+      this.syncLoginState()
     }
   },
 

@@ -18,6 +18,9 @@ export const updatePasswordApi = (payload) =>
 export const getProfileApi = () =>
   get('/wx/auth/profile')
 
+export const checkSessionApi = () =>
+  get('/wx/session/check', {}, { 'X-Silent-Auth': '1' })
+
 export const getPowerPointLogsApi = (params) =>
   get('/wx/auth/power-points/logs', params)
 
