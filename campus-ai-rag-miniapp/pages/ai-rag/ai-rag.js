@@ -324,6 +324,7 @@ Page({
       role: 'assistant',
       content: '',
       thinking: true,
+      streaming: false,
       attachments: [],
       createdAt: Date.now()
     }
@@ -356,7 +357,7 @@ Page({
           streamedAnswer += piece
           const updatedList = this.data.chatList.map((item) => {
             if (item.id !== thinkingId) return item
-            return { ...item, thinking: false, content: streamedAnswer }
+            return { ...item, thinking: false, streaming: true, content: streamedAnswer }
           })
           this.setData({ chatList: updatedList }, () => this.scrollToBottom(thinkingId))
         }
@@ -369,7 +370,7 @@ Page({
       const markdown = this.buildRagMarkdown(answer, hits)
       const finalizedList = this.data.chatList.map((item) => {
         if (item.id !== thinkingId) return item
-        return { ...item, thinking: false, content: markdown || '（无回复）' }
+        return { ...item, thinking: false, streaming: false, content: markdown || '（无回复）' }
       })
       this.setData({ chatList: finalizedList, conversationId, conversationTitle, loading: false }, () => {
         this.scrollToBottom(thinkingId)
@@ -381,6 +382,7 @@ Page({
         return {
           ...item,
           thinking: false,
+          streaming: false,
           content: '请求失败，请稍后重试。'
         }
       })

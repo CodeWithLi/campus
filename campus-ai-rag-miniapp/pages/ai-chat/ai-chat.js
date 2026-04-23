@@ -217,6 +217,7 @@ Page({
       role: 'assistant',
       content: '',
       thinking: true,
+      streaming: false,
       createdAt: Date.now()
     }
 
@@ -240,7 +241,7 @@ Page({
           streamed += piece
           const updatedList = this.data.chatList.map((item) => {
             if (item.id !== thinkingId) return item
-            return { ...item, thinking: false, content: streamed }
+            return { ...item, thinking: false, streaming: true, content: streamed }
           })
           this.setData({ chatList: updatedList }, () => this.scrollToBottom(thinkingId))
         }
@@ -251,7 +252,7 @@ Page({
       const finalAnswer = doneData?.answer || streamed || '（无回复）'
       const finalizedList = this.data.chatList.map((item) => {
         if (item.id !== thinkingId) return item
-        return { ...item, thinking: false, content: finalAnswer }
+        return { ...item, thinking: false, streaming: false, content: finalAnswer }
       })
       this.setData({ chatList: finalizedList, conversationId, conversationTitle, loading: false }, () => {
         this.scrollToBottom(thinkingId)
@@ -265,6 +266,7 @@ Page({
         return {
           ...item,
           thinking: false,
+          streaming: false,
           content: '请求失败，请稍后重试。'
         }
       })

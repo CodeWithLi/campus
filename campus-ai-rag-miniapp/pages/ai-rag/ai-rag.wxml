@@ -79,6 +79,7 @@
             role="{{item.role}}"
             content="{{item.content}}"
             thinking="{{item.thinking}}"
+            streaming="{{item.streaming}}"
             attachments="{{item.attachments}}"
           ></chat-item>
         </view>

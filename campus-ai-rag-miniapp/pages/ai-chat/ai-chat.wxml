@@ -59,7 +59,7 @@
       
       <block wx:for="{{chatList}}" wx:key="id">
         <view id="msg-{{item.id}}">
-          <chat-item role="{{item.role}}" content="{{item.content}}" thinking="{{item.thinking}}"></chat-item>
+          <chat-item role="{{item.role}}" content="{{item.content}}" thinking="{{item.thinking}}" streaming="{{item.streaming}}"></chat-item>
         </view>
       </block>
       <view id="bottom-anchor-{{anchorKey}}" class="chat-bottom-space"></view>

@@ -187,6 +187,43 @@ public class AiChatRouter {
         }
     }
 
+    /**
+     * 视觉模型流式对话（仅支持 springai / xf_http 两种 invokeType，且必须 supportsImageChat=1）。
+     * 仅当上游 OpenAI 兼容接口支持 image + stream:true 时，才能实现真正的逐 chunk 输出。
+     */
+    public String streamVisionChat(Long userId,
+                                   String modelCode,
+                                   String userMessage,
+                                   String imageBase64,
+                                   String imageMimeType,
+                                   Consumer<String> onDelta) {
+        if (imageBase64 == null || imageBase64.trim().isEmpty()) {
+            throw new BusinessException(StatusCodeEnum.BAD_REQUEST, "图片内容不能为空");
+        }
+        String prompt = (userMessage == null || userMessage.trim().isEmpty())
+                ? "请先识别图片内容，再回答用户问题。"
+                : userMessage.trim();
+        AiModelConfigEntity modelConfig = resolveModel(modelCode);
+        ensureMinimumChargeBalance(safeUserId(userId), "CHAT");
+        if (!Objects.equals(modelConfig.getSupportsImageChat(), 1)) {
+            throw new BusinessException(StatusCodeEnum.BAD_REQUEST, "当前模型不支持图片对话");
+        }
+        if (!Objects.equals(modelConfig.getInvokeType(), INVOKE_TYPE_SPRING_AI)
+                && !Objects.equals(modelConfig.getInvokeType(), INVOKE_TYPE_XF_HTTP)) {
+            throw new BusinessException(StatusCodeEnum.BAD_REQUEST, "当前模型暂不支持流式输出");
+        }
+
+        long startMs = System.currentTimeMillis();
+        try {
+            ChatInvokeResult result = streamOpenAiCompatibleVisionChat(modelConfig, prompt, imageBase64.trim(), imageMimeType, safeUserId(userId), onDelta);
+            recordBilling(safeUserId(userId), "INTERNAL", modelConfig, prompt, result, null, System.currentTimeMillis() - startMs);
+            return result.answer;
+        } catch (RuntimeException ex) {
+            recordBillingFailure(safeUserId(userId), "INTERNAL", modelConfig, prompt, ex.getMessage(), System.currentTimeMillis() - startMs);
+            throw ex;
+        }
+    }
+
     public void validate() {
         Objects.requireNonNull(defaultModelCode, "defaultModelCode 不能为空");
         Objects.requireNonNull(aiModelConfigMapper, "aiModelConfigMapper 不能为空");
@@ -469,6 +506,93 @@ public class AiChatRouter {
             throw e;
         } catch (Exception e) {
             throw new BusinessException(StatusCodeEnum.BUSINESS_ERROR, "流式调用失败：" + e.getMessage());
+        }
+        return ChatInvokeResult.of(answer.toString(), promptTokens, completionTokens, totalTokens, "TOKEN_API", null);
+    }
+
+    private ChatInvokeResult streamOpenAiCompatibleVisionChat(AiModelConfigEntity modelConfig,
+                                                              String userMessage,
+                                                              String imageBase64,
+                                                              String imageMimeType,
+                                                              Long userId,
+                                                              Consumer<String> onDelta) {
+        String endpoint = buildChatCompletionsEndpoint(modelConfig.getApiBaseUrl());
+        String mime = (imageMimeType == null || imageMimeType.trim().isEmpty()) ? "image/jpeg" : imageMimeType.trim();
+        String dataUrl = "data:" + mime + ";base64," + imageBase64;
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("model", modelConfig.getModelNameRemote());
+        body.put("temperature", modelConfig.getTemperature());
+        body.put("max_tokens", modelConfig.getMaxTokens());
+        body.put("stream", true);
+        if (userId != null && userId > 0) {
+            body.put("user", String.valueOf(userId));
+        }
+        body.put("messages", List.of(Map.of(
+                "role", "user",
+                "content", List.of(
+                        Map.of("type", "text", "text", userMessage),
+                        Map.of("type", "image_url", "image_url", Map.of("url", dataUrl))
+                )
+        )));
+
+        Integer promptTokens = null;
+        Integer completionTokens = null;
+        Integer totalTokens = null;
+        StringBuilder answer = new StringBuilder();
+        try {
+            String bodyJson = OBJECT_MAPPER.writeValueAsString(body);
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(endpoint))
+                    .timeout(Duration.ofSeconds(180))
+                    .header("Content-Type", "application/json")
+                    .header("Authorization", "Bearer " + modelConfig.getApiKey())
+                    .POST(HttpRequest.BodyPublishers.ofString(bodyJson, StandardCharsets.UTF_8))
+                    .build();
+            HttpResponse<InputStream> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofInputStream());
+            if (response.statusCode() < 200 || response.statusCode() >= 300) {
+                String err = new String(response.body().readAllBytes(), StandardCharsets.UTF_8);
+                throw new BusinessException(StatusCodeEnum.BUSINESS_ERROR,
+                        "视觉流式调用失败，status=" + response.statusCode() + "，body=" + truncate(err, 300));
+            }
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(response.body(), StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    String l = line.trim();
+                    if (l.isEmpty() || l.startsWith(":")) {
+                        continue;
+                    }
+                    if (!l.startsWith("data:")) {
+                        continue;
+                    }
+                    String payload = l.substring(5).trim();
+                    if (payload.isEmpty()) {
+                        continue;
+                    }
+                    if ("[DONE]".equals(payload)) {
+                        break;
+                    }
+                    Map<String, Object> chunk = OBJECT_MAPPER.readValue(payload, new TypeReference<>() {
+                    });
+                    String delta = extractStreamDeltaContent(chunk);
+                    if (!isBlank(delta)) {
+                        answer.append(delta);
+                        if (onDelta != null) {
+                            onDelta.accept(delta);
+                        }
+                    }
+                    Object usageObj = chunk.get("usage");
+                    if (usageObj instanceof Map<?, ?> usage) {
+                        promptTokens = toIntSafe(usage.get("prompt_tokens"));
+                        completionTokens = toIntSafe(usage.get("completion_tokens"));
+                        totalTokens = toIntSafe(usage.get("total_tokens"));
+                    }
+                }
+            }
+        } catch (BusinessException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new BusinessException(StatusCodeEnum.BUSINESS_ERROR, "视觉流式调用失败：" + e.getMessage());
         }
         return ChatInvokeResult.of(answer.toString(), promptTokens, completionTokens, totalTokens, "TOKEN_API", null);
     }

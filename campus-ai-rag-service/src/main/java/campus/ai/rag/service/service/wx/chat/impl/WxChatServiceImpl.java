@@ -86,10 +86,9 @@ public class WxChatServiceImpl implements WxChatService {
             if (!Objects.equals(model.getSupportsImageChat(), 1)) {
                 throw new BusinessException(StatusCodeEnum.BAD_REQUEST, "当前大模型不支持上传图片对话");
             }
-            answer = aiChatRouter.rawVisionChat(userIdLong, finalModelCode, composed, dto.getImageBase64(), dto.getImageMimeType());
-            if (streamMode && onDelta != null && !isBlank(answer)) {
-                onDelta.accept(answer);
-            }
+            answer = streamMode
+                    ? aiChatRouter.streamVisionChat(userIdLong, finalModelCode, composed, dto.getImageBase64(), dto.getImageMimeType(), onDelta)
+                    : aiChatRouter.rawVisionChat(userIdLong, finalModelCode, composed, dto.getImageBase64(), dto.getImageMimeType());
         } else {
             answer = streamMode
                     ? aiChatRouter.streamChat(userIdLong, finalModelCode, "CHAT", composed, null, onDelta)
