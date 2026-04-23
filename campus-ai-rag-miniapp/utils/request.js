@@ -129,6 +129,130 @@ export const post = (url, data = {}, header = {}) =>
 export const del = (url, data = {}, header = {}) =>
   request({ url, method: 'DELETE', data, header })
 
+const decodeChunk = (chunk) => {
+  if (!chunk) return ''
+  if (typeof chunk === 'string') return chunk
+  try {
+    if (typeof TextDecoder !== 'undefined') {
+      return new TextDecoder('utf-8').decode(chunk)
+    }
+  } catch (e) {
+    // ignore
+  }
+  try {
+    const arr = new Uint8Array(chunk)
+    let out = ''
+    for (let i = 0; i < arr.length; i += 1) out += String.fromCharCode(arr[i])
+    return decodeURIComponent(escape(out))
+  } catch (e) {
+    return ''
+  }
+}
+
+export const postStream = (url, data = {}, options = {}) =>
+  new Promise((resolve, reject) => {
+    const token = getStorage(TOKEN_KEY)
+    if (!token && !isPublicRequest(url, 'POST')) {
+      ensureLoginOrRedirect()
+      reject(new Error('未登录或登录已过期'))
+      return
+    }
+    const authorization = token ? `Bearer ${token}` : ''
+    const onMessage = typeof options?.onMessage === 'function' ? options.onMessage : () => {}
+    const onError = typeof options?.onError === 'function' ? options.onError : () => {}
+    const header = options?.header || {}
+    let doneData = null
+    let sseBuffer = ''
+    let streamError = null
+
+    const task = wx.request({
+      url: buildApiUrl(url),
+      method: 'POST',
+      enableChunked: true,
+      data,
+      header: {
+        'content-type': 'application/json',
+        Accept: 'text/event-stream',
+        Authorization: authorization,
+        ...header
+      },
+      success: (res) => {
+        const { statusCode } = res
+        if (statusCode === 401) {
+          const silentAuth = String(header?.['X-Silent-Auth'] || '') === '1'
+          handleUnauthorized(silentAuth)
+          const err = new Error('登录已失效，请重新登录')
+          onError(err)
+          reject(err)
+          return
+        }
+        if (statusCode < 200 || statusCode >= 300) {
+          const err = new Error(`请求失败，状态码：${statusCode}`)
+          onError(err)
+          reject(err)
+          return
+        }
+        if (streamError) {
+          reject(streamError)
+          return
+        }
+        resolve(doneData)
+      },
+      fail: (error) => {
+        onError(error)
+        reject(error)
+      }
+    })
+
+    if (!task || typeof task.onChunkReceived !== 'function') {
+      const err = new Error('当前环境不支持流式请求')
+      onError(err)
+      reject(err)
+      return
+    }
+
+    const flushSse = () => {
+      const packets = sseBuffer.split('\n\n')
+      sseBuffer = packets.pop() || ''
+      packets.forEach((packet) => {
+        const lines = String(packet || '').split('\n')
+        const dataLines = lines
+          .map((l) => l.trim())
+          .filter((l) => l.startsWith('data:'))
+          .map((l) => l.slice(5).trim())
+        if (!dataLines.length) return
+        const payloadText = dataLines.join('\n')
+        if (!payloadText || payloadText === '[DONE]') return
+        try {
+          const payload = JSON.parse(payloadText)
+          const type = payload?.type
+          if (type === 'chunk') {
+            onMessage(payload?.data || {})
+          } else if (type === 'done') {
+            doneData = payload?.data || null
+          } else if (type === 'error') {
+            const err = new Error(payload?.data?.message || '流式请求失败')
+            streamError = err
+            const msg = String(err.message || '')
+            if (msg.includes('未登录') || msg.includes('登录已过期')) {
+              handleUnauthorized(false)
+            }
+            onError(err)
+          }
+        } catch (e) {
+          // ignore non-json chunks
+        }
+      })
+    }
+
+    task.onChunkReceived((chunkRes) => {
+      const text = decodeChunk(chunkRes?.data)
+      if (!text) return
+      sseBuffer += text
+      flushSse()
+    })
+  })
+
 export const uploadFiles = (url, filePaths = [], name = 'files', formData = {}) =>
   new Promise((resolve, reject) => {
     if (!Array.isArray(filePaths) || filePaths.length === 0) {

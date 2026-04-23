@@ -21,12 +21,20 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.MediaType;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.HashMap;
+import java.util.concurrent.CompletableFuture;
+import jakarta.servlet.http.HttpServletResponse;
 
 @RestController
 @RequestMapping("/wx/chat")
@@ -50,6 +58,38 @@ public class WxChatController {
     @Operation(summary = "单轮对话")
     public Result<WxChatVO> chat(@RequestBody WxChatDTO dto) {
         return Result.success(wxChatService.chat(dto));
+    }
+
+    @PostMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @Operation(summary = "单轮对话（流式）")
+    public SseEmitter chatStream(@RequestBody WxChatDTO dto, HttpServletResponse response) {
+        SseEmitter emitter = new SseEmitter(180_000L);
+        if (response != null) {
+            response.setHeader("Cache-Control", "no-cache");
+            response.setHeader("X-Accel-Buffering", "no");
+        }
+        if (!ensureAuth(emitter)) {
+            return emitter;
+        }
+        // SecurityContext 默认是 ThreadLocal；异步线程需要显式传递 Authentication
+        final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        CompletableFuture.runAsync(() -> {
+            SecurityContext asyncCtx = SecurityContextHolder.createEmptyContext();
+            asyncCtx.setAuthentication(authentication);
+            SecurityContextHolder.setContext(asyncCtx);
+            try {
+                WxChatVO vo = wxChatService.chatStream(dto,
+                        (delta) -> emitStreamEvent(emitter, "chunk", Map.of("content", delta)));
+                emitStreamEvent(emitter, "done", vo);
+                emitter.complete();
+            } catch (Exception e) {
+                emitStreamEvent(emitter, "error", Map.of("message", e.getMessage()));
+                emitter.completeWithError(e);
+            } finally {
+                SecurityContextHolder.clearContext();
+            }
+        });
+        return emitter;
     }
 
     @GetMapping("/conversations")
@@ -147,6 +187,28 @@ public class WxChatController {
         vo.setConversationTitle(conversationTitle);
         vo.setMessages(messages);
         return Result.success(vo);
+    }
+
+    private void emitStreamEvent(SseEmitter emitter, String type, Object data) {
+        try {
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("type", type);
+            payload.put("data", data);
+            emitter.send(SseEmitter.event().name(type).data(payload));
+        } catch (Exception ignore) {
+            // ignore
+        }
+    }
+
+    private boolean ensureAuth(SseEmitter emitter) {
+        try {
+            WxAuthContextUtils.requireWxUserId();
+            return true;
+        } catch (Exception e) {
+            emitStreamEvent(emitter, "error", Map.of("message", "未登录或登录已过期"));
+            emitter.complete();
+            return false;
+        }
     }
 }
 

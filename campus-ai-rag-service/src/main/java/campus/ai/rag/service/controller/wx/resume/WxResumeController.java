@@ -26,12 +26,15 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.MediaType;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.HashMap;
 
 @RestController
 @RequestMapping("/wx/resume")
@@ -55,6 +58,24 @@ public class WxResumeController {
     @Operation(summary = "简历对话助手")
     public Result<WxResumeChatVO> chat(@RequestBody WxResumeChatDTO dto) {
         return Result.success(wxResumeService.chat(dto));
+    }
+
+    @PostMapping(value = "/chat/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @Operation(summary = "简历对话助手（流式）")
+    public SseEmitter chatStream(@RequestBody WxResumeChatDTO dto) {
+        SseEmitter emitter = new SseEmitter(180_000L);
+        if (!ensureAuth(emitter)) {
+            return emitter;
+        }
+        try {
+            WxResumeChatVO vo = wxResumeService.chatStream(dto, (delta) -> emitStreamEvent(emitter, "chunk", Map.of("content", delta)));
+            emitStreamEvent(emitter, "done", vo);
+            emitter.complete();
+        } catch (Exception e) {
+            emitStreamEvent(emitter, "error", Map.of("message", e.getMessage()));
+            emitter.complete();
+        }
+        return emitter;
     }
 
     @PostMapping("/generate")
@@ -158,6 +179,28 @@ public class WxResumeController {
         vo.setConversationTitle(conversationTitle);
         vo.setMessages(messages);
         return Result.success(vo);
+    }
+
+    private void emitStreamEvent(SseEmitter emitter, String type, Object data) {
+        try {
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("type", type);
+            payload.put("data", data);
+            emitter.send(SseEmitter.event().name(type).data(payload));
+        } catch (Exception ignore) {
+            // ignore
+        }
+    }
+
+    private boolean ensureAuth(SseEmitter emitter) {
+        try {
+            WxAuthContextUtils.requireWxUserId();
+            return true;
+        } catch (Exception e) {
+            emitStreamEvent(emitter, "error", Map.of("message", "未登录或登录已过期"));
+            emitter.complete();
+            return false;
+        }
     }
 }
 

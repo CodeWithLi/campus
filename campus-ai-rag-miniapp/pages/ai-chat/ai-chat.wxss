@@ -243,6 +243,18 @@
   font-size: 22rpx;
 }
 
+.pending-image-tip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pending-image-remove {
+  margin-left: 16rpx;
+  color: #1d4ed8;
+  font-weight: 600;
+}
+
 .drawer-mask {
   position: fixed;
   inset: 0;

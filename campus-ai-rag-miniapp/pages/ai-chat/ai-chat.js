@@ -1,4 +1,4 @@
-import { chatApi, getConversationHistoryApi, listConversationsApi } from '../../api/chat'
+import { chatApi, chatStreamApi, getConversationHistoryApi, listConversationsApi } from '../../api/chat'
 import { listEnabledModelsApi } from '../../api/model'
 import { getStorage, setStorage } from '../../utils/storage'
 import { showError } from '../../utils/ui'
@@ -25,7 +25,8 @@ Page({
     voiceLoading: false,
     liveSpeechText: '',
     showHistoryDrawer: false,
-    historyList: []
+    historyList: [],
+    pendingImagePath: ''
   },
 
   recorderManager: null,
@@ -89,7 +90,12 @@ Page({
 
   onSendMessage(event) {
     const message = event.detail?.message || ''
-    this.sendMessage(message)
+    const pendingImagePath = this.data.pendingImagePath || ''
+    const imagePayload = pendingImagePath ? { filePath: pendingImagePath } : null
+    this.sendMessage(message, imagePayload)
+    if (pendingImagePath) {
+      this.setData({ pendingImagePath: '' })
+    }
   },
 
   onImageSelected(event) {
@@ -101,7 +107,11 @@ Page({
       showError('当前大模型不支持上传图片')
       return
     }
-    this.sendMessage('', { filePath })
+    this.setData({ pendingImagePath: filePath })
+  },
+
+  onClearPendingImage() {
+    this.setData({ pendingImagePath: '' })
   },
 
   onQuickAsk(event) {
@@ -193,7 +203,7 @@ Page({
         return
       }
     }
-    const userDisplayText = hasImage ? `[图片]\n${message || '请帮我识别图片内容并回答。'}` : message
+    const userDisplayText = hasImage ? `[图片]${message ? `\n${message}` : ''}` : message
     const userMessageId = buildId('u')
     const thinkingId = buildId('a')
     const userMessage = {
@@ -216,19 +226,37 @@ Page({
     })
 
     try {
-      const response = await chatApi({
+      let streamed = ''
+      const doneData = await chatStreamApi({
         modelCode: this.data.selectedModelCode || null,
         conversationId: this.data.conversationId || null,
         message: message || null,
         imageBase64: imageBase64 || null,
         imageMimeType: imageMimeType || null
+      }, {
+        onMessage: (chunk) => {
+          const piece = String(chunk?.content || '')
+          if (!piece) return
+          streamed += piece
+          const updatedList = this.data.chatList.map((item) => {
+            if (item.id !== thinkingId) return item
+            return { ...item, thinking: false, content: streamed }
+          })
+          this.setData({ chatList: updatedList }, () => this.scrollToBottom(thinkingId))
+        }
       })
-      const conversationId = response?.data?.conversationId || this.data.conversationId
-      const conversationTitle = response?.data?.conversationTitle || this.data.conversationTitle
-      const answer = response?.data?.answer || ''
 
-      this.setData({ conversationId, conversationTitle })
-      this.streamAssistantReply(thinkingId, answer)
+      const conversationId = doneData?.conversationId || this.data.conversationId
+      const conversationTitle = doneData?.conversationTitle || this.data.conversationTitle
+      const finalAnswer = doneData?.answer || streamed || '（无回复）'
+      const finalizedList = this.data.chatList.map((item) => {
+        if (item.id !== thinkingId) return item
+        return { ...item, thinking: false, content: finalAnswer }
+      })
+      this.setData({ chatList: finalizedList, conversationId, conversationTitle, loading: false }, () => {
+        this.scrollToBottom(thinkingId)
+        this.persistConversation()
+      })
     } catch (error) {
       const failedList = this.data.chatList.map((item) => {
         if (item.id !== thinkingId) {
@@ -412,33 +440,12 @@ Page({
   },
 
   streamAssistantReply(messageId, finalText) {
-    let index = 0
-    const timer = setInterval(() => {
-      index += 1
-      const content = finalText.slice(0, index)
-      const done = index >= finalText.length
-      const updatedList = this.data.chatList.map((item) => {
-        if (item.id !== messageId) {
-          return item
-        }
-        return {
-          ...item,
-          thinking: false,
-          content
-        }
-      })
-
-      this.setData({ chatList: updatedList }, () => {
-        this.scrollToBottom(messageId)
-      })
-
-      if (done) {
-        clearInterval(timer)
-        this.setData({ loading: false }, () => {
-          this.persistConversation()
-        })
-      }
-    }, 28)
+    // 保留空实现避免旧调用报错（当前页面已切换为后端流式）。
+    const updatedList = this.data.chatList.map((item) => {
+      if (item.id !== messageId) return item
+      return { ...item, thinking: false, content: finalText || '' }
+    })
+    this.setData({ chatList: updatedList }, () => this.scrollToBottom(messageId))
   },
 
   scrollToBottom(lastId) {

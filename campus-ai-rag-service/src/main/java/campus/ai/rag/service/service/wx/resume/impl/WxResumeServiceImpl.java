@@ -33,6 +33,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 @Service
 public class WxResumeServiceImpl implements WxResumeService {
@@ -82,6 +83,15 @@ public class WxResumeServiceImpl implements WxResumeService {
 
     @Override
     public WxResumeChatVO chat(WxResumeChatDTO dto) {
+        return doResumeChat(dto, null, false);
+    }
+
+    @Override
+    public WxResumeChatVO chatStream(WxResumeChatDTO dto, Consumer<String> onDelta) {
+        return doResumeChat(dto, onDelta, true);
+    }
+
+    private WxResumeChatVO doResumeChat(WxResumeChatDTO dto, Consumer<String> onDelta, boolean streamMode) {
         if (dto == null || isBlank(dto.getMessage())) {
             throw new BusinessException(StatusCodeEnum.BAD_REQUEST, "消息内容不能为空");
         }
@@ -93,7 +103,9 @@ public class WxResumeServiceImpl implements WxResumeService {
         String historyText = buildHistoryText(historyKey(userId, convId));
         String userMessage = dto.getMessage().trim();
         String composed = composeInput(historyText, userMessage);
-        String answer = aiChatRouter.chat(userIdLong, finalModelCode, SCENE_RESUME, composed, null);
+        String answer = streamMode
+                ? aiChatRouter.streamChat(userIdLong, finalModelCode, SCENE_RESUME, composed, null, onDelta)
+                : aiChatRouter.chat(userIdLong, finalModelCode, SCENE_RESUME, composed, null);
 
         appendHistory(historyKey(userId, convId), "user", userMessage);
         appendHistory(historyKey(userId, convId), "assistant", answer);

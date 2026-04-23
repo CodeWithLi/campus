@@ -6,6 +6,7 @@ import campus.ai.rag.service.filter.AdminJwtAuthenticationFilter;
 import campus.ai.rag.service.filter.WxJwtAuthenticationFilter;
 import campus.ai.rag.service.service.security.AdminUserDetailsService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.DispatcherType;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -56,6 +57,8 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // SSE/异步请求会触发 ASYNC/ERROR 二次派发，放行避免 response committed 后再被拦截
+                        .dispatcherTypeMatchers(DispatcherType.ASYNC, DispatcherType.ERROR, DispatcherType.FORWARD).permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html", "/doc.html").permitAll()
                         .requestMatchers("/admin/auth/login").permitAll()

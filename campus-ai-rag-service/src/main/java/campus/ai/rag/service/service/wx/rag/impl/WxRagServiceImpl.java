@@ -27,6 +27,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.time.Duration;
+import java.util.function.Consumer;
 
 @Service
 public class WxRagServiceImpl implements WxRagService {
@@ -74,6 +75,15 @@ public class WxRagServiceImpl implements WxRagService {
 
     @Override
     public WxRagVO rag(WxRagDTO dto) {
+        return doRag(dto, null, false);
+    }
+
+    @Override
+    public WxRagVO ragStream(WxRagDTO dto, Consumer<String> onDelta) {
+        return doRag(dto, onDelta, true);
+    }
+
+    private WxRagVO doRag(WxRagDTO dto, Consumer<String> onDelta, boolean streamMode) {
         if (dto == null || isBlank(dto.getQuestion())) {
             throw new BusinessException(StatusCodeEnum.BAD_REQUEST, "question 不能为空");
         }
@@ -96,7 +106,9 @@ public class WxRagServiceImpl implements WxRagService {
         List<WxRagVO.Hit> hits = searchTopK(userIdLong, qVector, dto.getCategoryIds(), topK);
         String ragContext = buildRagContext(hits);
 
-        String answer = aiChatRouter.chat(userIdLong, finalModelCode, "RAG", dto.getQuestion().trim(), ragContext);
+        String answer = streamMode
+                ? aiChatRouter.streamChat(userIdLong, finalModelCode, "RAG", dto.getQuestion().trim(), ragContext, onDelta)
+                : aiChatRouter.chat(userIdLong, finalModelCode, "RAG", dto.getQuestion().trim(), ragContext);
 
         WxRagVO vo = new WxRagVO();
         vo.setModelCode(finalModelCode);

@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import java.time.Duration;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 @Service
 public class WxChatServiceImpl implements WxChatService {
@@ -52,6 +53,15 @@ public class WxChatServiceImpl implements WxChatService {
 
     @Override
     public WxChatVO chat(WxChatDTO dto) {
+        return doChat(dto, null, false);
+    }
+
+    @Override
+    public WxChatVO chatStream(WxChatDTO dto, Consumer<String> onDelta) {
+        return doChat(dto, onDelta, true);
+    }
+
+    private WxChatVO doChat(WxChatDTO dto, Consumer<String> onDelta, boolean streamMode) {
         if (Objects.isNull(dto)) {
             throw new BusinessException(StatusCodeEnum.BAD_REQUEST, "请求参数不能为空");
         }
@@ -77,8 +87,13 @@ public class WxChatServiceImpl implements WxChatService {
                 throw new BusinessException(StatusCodeEnum.BAD_REQUEST, "当前大模型不支持上传图片对话");
             }
             answer = aiChatRouter.rawVisionChat(userIdLong, finalModelCode, composed, dto.getImageBase64(), dto.getImageMimeType());
+            if (streamMode && onDelta != null && !isBlank(answer)) {
+                onDelta.accept(answer);
+            }
         } else {
-            answer = aiChatRouter.chat(userIdLong, finalModelCode, "CHAT", composed, null);
+            answer = streamMode
+                    ? aiChatRouter.streamChat(userIdLong, finalModelCode, "CHAT", composed, null, onDelta)
+                    : aiChatRouter.chat(userIdLong, finalModelCode, "CHAT", composed, null);
         }
 
         // 写入历史（user + assistant）

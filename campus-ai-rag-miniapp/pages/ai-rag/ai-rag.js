@@ -1,5 +1,5 @@
 import { listEnabledModelsApi } from '../../api/model'
-import { ragApi, listKbCategoriesApi, listRagConversationsApi, getRagConversationHistoryApi } from '../../api/rag'
+import { ragApi, ragStreamApi, listKbCategoriesApi, listRagConversationsApi, getRagConversationHistoryApi } from '../../api/rag'
 import { getStorage, setStorage } from '../../utils/storage'
 import { showError } from '../../utils/ui'
 import { buildApiUrl, buildWsUrl } from '../../config/env'
@@ -341,24 +341,40 @@ Page({
     )
 
     try {
-      const response = await ragApi({
+      let streamedAnswer = ''
+      const doneData = await ragStreamApi({
         modelCode: this.data.selectedModelCode || null,
         conversationId: this.data.conversationId || null,
         question: message,
         categoryIds: this.getSelectedCategoryIds(),
         topK: 5,
         fileDocumentIds: docIds
+      }, {
+        onMessage: (chunk) => {
+          const piece = String(chunk?.content || '')
+          if (!piece) return
+          streamedAnswer += piece
+          const updatedList = this.data.chatList.map((item) => {
+            if (item.id !== thinkingId) return item
+            return { ...item, thinking: false, content: streamedAnswer }
+          })
+          this.setData({ chatList: updatedList }, () => this.scrollToBottom(thinkingId))
+        }
       })
 
-      const answer = response?.data?.answer || ''
-      const hits = response?.data?.hits || []
-      const conversationId = response?.data?.conversationId || this.data.conversationId
-      const conversationTitle = response?.data?.conversationTitle || this.data.conversationTitle
+      const answer = doneData?.answer || streamedAnswer
+      const hits = doneData?.hits || []
+      const conversationId = doneData?.conversationId || this.data.conversationId
+      const conversationTitle = doneData?.conversationTitle || this.data.conversationTitle
       const markdown = this.buildRagMarkdown(answer, hits)
-
-      this.setData({ conversationId, conversationTitle })
-
-      this.streamAssistantReply(thinkingId, markdown)
+      const finalizedList = this.data.chatList.map((item) => {
+        if (item.id !== thinkingId) return item
+        return { ...item, thinking: false, content: markdown || '（无回复）' }
+      })
+      this.setData({ chatList: finalizedList, conversationId, conversationTitle, loading: false }, () => {
+        this.scrollToBottom(thinkingId)
+        this.persistLocalHistory()
+      })
     } catch (error) {
       const failedList = this.data.chatList.map((item) => {
         if (item.id !== thinkingId) return item

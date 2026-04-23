@@ -1,5 +1,6 @@
 import {
   resumeChatApi,
+  resumeChatStreamApi,
   resumeGenerateApi,
   listResumeConversationsApi,
   getResumeConversationHistoryApi
@@ -125,17 +126,28 @@ Page({
     this.setData({ chatList, loading: true }, () => this.scrollToBottom())
 
     try {
-      const res = await resumeChatApi({
+      let streamed = ''
+      const doneData = await resumeChatStreamApi({
         conversationId: this.data.conversationId || null,
         modelCode: this.data.selectedModelCode || null,
         message
+      }, {
+        onMessage: (chunk) => {
+          const piece = String(chunk?.content || '')
+          if (!piece) return
+          streamed += piece
+          const updated = this.data.chatList.map((m) =>
+            m.id === aiId ? { ...m, content: streamed } : m
+          )
+          this.setData({ chatList: updated }, () => this.scrollToBottom())
+        }
       })
-      const answer = res?.data?.answer || ''
-      const conversationId = res?.data?.conversationId || this.data.conversationId
-      const conversationTitle = res?.data?.conversationTitle || this.data.conversationTitle
 
+      const answer = doneData?.answer || streamed || '（无回复）'
+      const conversationId = doneData?.conversationId || this.data.conversationId
+      const conversationTitle = doneData?.conversationTitle || this.data.conversationTitle
       const updated = this.data.chatList.map((m) =>
-        m.id === aiId ? { ...m, content: answer || '（无回复）' } : m
+        m.id === aiId ? { ...m, content: answer } : m
       )
       this.setData({ chatList: updated, conversationId, conversationTitle, loading: false }, () => this.scrollToBottom())
     } catch (e) {

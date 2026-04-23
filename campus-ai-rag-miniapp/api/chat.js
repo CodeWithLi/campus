@@ -1,7 +1,10 @@
-import { get, post } from '../utils/request'
+import { get, post, postStream } from '../utils/request'
 
 export const chatApi = (payload) =>
   post('/wx/chat', payload)
+
+export const chatStreamApi = (payload, options = {}) =>
+  postStream('/wx/chat/stream', payload, options)
 
 export const listConversationsApi = () =>
   get('/wx/chat/conversations')
