@@ -25,8 +25,35 @@ const clearLoginStorage = () => {
   removeStorage(LOGIN_STATUS_KEY)
 }
 
+const notifyAuthInvalid = () => {
+  try {
+    const pages = getCurrentPages ? getCurrentPages() : []
+    ;(pages || []).forEach((p) => {
+      if (p && typeof p.onAuthInvalid === 'function') {
+        try {
+          p.onAuthInvalid()
+        } catch (e) {
+          // ignore
+        }
+      }
+    })
+  } catch (e) {
+    // ignore
+  }
+}
+
+const handleUnauthorized = (silentAuth) => {
+  if (silentAuth) {
+    clearLoginStorage()
+    notifyAuthInvalid()
+    return
+  }
+  redirectToLogin()
+}
+
 const redirectToLogin = () => {
   clearLoginStorage()
+  notifyAuthInvalid()
   ensureLoginOrRedirect()
 }
 
@@ -64,17 +91,19 @@ const request = ({ url, method = 'GET', data = {}, header = {} }) =>
         const { statusCode } = res
         if (statusCode === 401) {
           const silentAuth = String(header?.['X-Silent-Auth'] || '') === '1'
-          if (silentAuth) {
-            clearLoginStorage()
-          } else {
-            redirectToLogin()
-          }
+          handleUnauthorized(silentAuth)
           reject(new Error('登录已失效，请重新登录'))
           return
         }
         if (statusCode >= 200 && statusCode < 300) {
           const responseData = res.data || {}
           if (typeof responseData.code === 'number') {
+            if (responseData.code === 401) {
+              const silentAuth = String(header?.['X-Silent-Auth'] || '') === '1'
+              handleUnauthorized(silentAuth)
+              reject(new Error(responseData.msg || '登录已失效，请重新登录'))
+              return
+            }
             if (responseData.code === 200) {
               resolve(responseData)
               return
@@ -125,11 +154,7 @@ export const uploadFiles = (url, filePaths = [], name = 'files', formData = {}) 
         const statusCode = res.statusCode
         if (statusCode === 401) {
           const silentAuth = String(formData?.['X-Silent-Auth'] || '') === '1'
-          if (silentAuth) {
-            clearLoginStorage()
-          } else {
-            redirectToLogin()
-          }
+          handleUnauthorized(silentAuth)
           reject(new Error('登录已失效，请重新登录'))
           return
         }
@@ -140,6 +165,10 @@ export const uploadFiles = (url, filePaths = [], name = 'files', formData = {}) 
         try {
           const data = JSON.parse(res.data || '{}')
           if (typeof data.code === 'number' && data.code !== 200) {
+            if (data.code === 401) {
+              const silentAuth = String(formData?.['X-Silent-Auth'] || '') === '1'
+              handleUnauthorized(silentAuth)
+            }
             reject(new Error(data.msg || '上传失败'))
             return
           }

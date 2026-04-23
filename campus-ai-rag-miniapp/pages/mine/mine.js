@@ -63,6 +63,12 @@ Page({
     })
   },
 
+  onAuthInvalid() {
+    // request.js 在 401 时会清理缓存并通知页面，这里立刻刷新 UI
+    this.syncLoginState()
+    this.setData({ unreadNoticeCount: 0 })
+  },
+
   async loadProfile() {
     try {
       const res = await getProfileApi()
