@@ -34,5 +34,16 @@ public final class WxAuthContextUtils {
         }
         throw new BusinessException(StatusCodeEnum.UNAUTHORIZED, "未登录或登录已过期");
     }
+
+    /**
+     * 尝试获取当前微信用户ID；未登录时返回 null。
+     */
+    public static String getOptionalWxUserId() {
+        try {
+            return requireWxUserId();
+        } catch (BusinessException e) {
+            return null;
+        }
+    }
 }
 

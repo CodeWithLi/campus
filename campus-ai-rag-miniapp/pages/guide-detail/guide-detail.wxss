@@ -80,6 +80,57 @@
   line-height: 1.6;
 }
 
+.actions-row {
+  margin-top: 14rpx;
+  display: flex;
+  gap: 10rpx;
+}
+
+.mini-btn {
+  height: 58rpx;
+  line-height: 58rpx;
+  border-radius: 999rpx;
+  font-size: 24rpx;
+  font-weight: 600;
+  padding: 0 18rpx;
+}
+
+.mini-btn::after { border: none; }
+
+.fav-btn {
+  color: #1d4ed8;
+  background: rgba(37, 99, 235, 0.12);
+}
+
+.rag-btn {
+  color: #0f766e;
+  background: rgba(20, 184, 166, 0.14);
+}
+
+.progress-row {
+  margin-top: 12rpx;
+}
+
+.progress-text {
+  font-size: 22rpx;
+  color: #5b6b8c;
+  margin-bottom: 8rpx;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 12rpx;
+  border-radius: 999rpx;
+  background: rgba(59, 130, 246, 0.14);
+  overflow: hidden;
+}
+
+.progress-bar-inner {
+  height: 100%;
+  border-radius: 999rpx;
+  background: linear-gradient(135deg, #22c55e 0%, #3b82f6 100%);
+}
+
 .step-top {
   display: flex;
   justify-content: space-between;
@@ -105,6 +156,25 @@
   color: #374151;
   font-size: 24rpx;
   line-height: 1.6;
+}
+
+.step-done-row {
+  margin-top: 10rpx;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.done-pill {
+  padding: 6rpx 14rpx;
+  border-radius: 999rpx;
+  font-size: 22rpx;
+  color: #334155;
+  background: rgba(148, 163, 184, 0.16);
+}
+
+.done-pill.done {
+  color: #166534;
+  background: rgba(34, 197, 94, 0.16);
 }
 
 .materials {

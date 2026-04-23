@@ -179,9 +179,15 @@ Page({
     let imageMimeType = ''
     if (hasImage) {
       try {
-        const imageData = await this.readImageAsBase64(imagePayload.filePath)
+        const compressedPath = await this.compressImageIfNeeded(imagePayload.filePath)
+        const imageData = await this.readImageAsBase64(compressedPath)
         imageBase64 = imageData.base64
         imageMimeType = imageData.mimeType
+        // 注意：base64 会膨胀体积，线上网关常有较小请求体限制（413）。
+        // 这里做一个软上限，避免用户反复失败。
+        if ((imageBase64 || '').length > 2_800_000) {
+          throw new Error('图片过大，请裁剪或重新选择更小的图片')
+        }
       } catch (e) {
         showError(e.message || '图片读取失败')
         return
@@ -533,5 +539,33 @@ Page({
         fail: () => reject(new Error('读取图片失败'))
       })
     })
-  }
+  },
+
+  compressImageIfNeeded(filePath) {
+    return new Promise((resolve) => {
+      if (!filePath || !wx.compressImage) {
+        resolve(filePath)
+        return
+      }
+      wx.getFileInfo({
+        filePath,
+        success: (info) => {
+          const size = Number(info?.size || 0)
+          // 小图不压缩，避免画质损失
+          if (!Number.isFinite(size) || size <= 350 * 1024) {
+            resolve(filePath)
+            return
+          }
+          // 尽量压到网关可接受的大小
+          wx.compressImage({
+            src: filePath,
+            quality: size > 2 * 1024 * 1024 ? 55 : 70,
+            success: (res) => resolve(res?.tempFilePath || filePath),
+            fail: () => resolve(filePath)
+          })
+        },
+        fail: () => resolve(filePath)
+      })
+    })
+  },
 })

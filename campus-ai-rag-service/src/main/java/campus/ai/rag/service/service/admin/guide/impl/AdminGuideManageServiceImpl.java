@@ -93,8 +93,10 @@ public class AdminGuideManageServiceImpl implements AdminGuideManageService {
         entity.setTag(trimToNull(dto.getTag()));
         entity.setSummary(trimToNull(dto.getSummary()));
         entity.setCoverUrl(trimToNull(dto.getCoverUrl()));
+        entity.setRagCategoryIdsJson(trimToNull(dto.getRagCategoryIdsJson()));
         entity.setStatus("DRAFT");
         entity.setSortNo(dto.getSortNo() == null ? 100 : dto.getSortNo());
+        entity.setViewCount(0L);
         entity.setDeleted(0);
         entity.setCreatedAt(LocalDateTime.now());
         entity.setUpdatedAt(LocalDateTime.now());
@@ -113,6 +115,7 @@ public class AdminGuideManageServiceImpl implements AdminGuideManageService {
         entity.setTag(trimToNull(dto.getTag()));
         entity.setSummary(trimToNull(dto.getSummary()));
         entity.setCoverUrl(trimToNull(dto.getCoverUrl()));
+        entity.setRagCategoryIdsJson(trimToNull(dto.getRagCategoryIdsJson()));
         entity.setSortNo(dto.getSortNo() == null ? 100 : dto.getSortNo());
         entity.setUpdatedAt(LocalDateTime.now());
         forumGuideMapper.updateById(entity);
@@ -242,8 +245,10 @@ public class AdminGuideManageServiceImpl implements AdminGuideManageService {
         vo.setTag(entity.getTag());
         vo.setSummary(entity.getSummary());
         vo.setCoverUrl(entity.getCoverUrl());
+        vo.setRagCategoryIdsJson(entity.getRagCategoryIdsJson());
         vo.setStatus(normalizeStatus(entity.getStatus(), true));
         vo.setSortNo(entity.getSortNo());
+        vo.setViewCount(entity.getViewCount() == null ? 0L : entity.getViewCount());
         vo.setCreatedAt(entity.getCreatedAt());
         vo.setUpdatedAt(entity.getUpdatedAt());
         return vo;

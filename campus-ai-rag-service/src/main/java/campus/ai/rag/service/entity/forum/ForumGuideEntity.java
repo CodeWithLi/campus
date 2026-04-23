@@ -24,9 +24,13 @@ public class ForumGuideEntity {
 
     private String coverUrl;
 
+    private String ragCategoryIdsJson;
+
     private String status;
 
     private Integer sortNo;
+
+    private Long viewCount;
 
     private Integer deleted;
 

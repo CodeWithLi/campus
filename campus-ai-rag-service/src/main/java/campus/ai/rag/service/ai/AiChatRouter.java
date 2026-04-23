@@ -32,6 +32,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * 按 modelCode 路由到对应 ChatClient。后续做“后台可配置”时，只需要把配置落库并刷新 registry 即可。
@@ -47,6 +48,11 @@ public class AiChatRouter {
     private static final BigDecimal MIN_CHARGE_POINTS = new BigDecimal("2.00");
     private static final BigDecimal BILLING_TOKEN_MULTIPLIER = new BigDecimal("1.5");
     private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
+    /**
+     * 微信端 AI 对话免费场景（不扣算力点）。
+     * 说明：仅影响扣费与“算力点不足”的拦截，不影响计费日志记录（consumedPoints=0）。
+     */
+    private static final Set<String> FREE_SCENES = Set.of("CHAT", "RAG", "RESUME");
 
     private final String defaultModelCode;
     private final AiModelConfigMapper aiModelConfigMapper;
@@ -557,9 +563,14 @@ public class AiChatRouter {
     }
 
     private boolean shouldCharge(Long userId, String scene) {
-        // 仅当存在真实微信用户ID时扣费；
+        // 仅当存在真实微信用户ID时才可能扣费；
         // 后台管理测试或系统调用（userId<=0）保持不扣费。
-        return userId != null && userId > 0L;
+        if (userId == null || userId <= 0L) {
+            return false;
+        }
+        // 微信端 AI 对话免费：CHAT / RAG / RESUME 不扣费
+        String s = safeScene(scene);
+        return !FREE_SCENES.contains(s);
     }
 
     private void ensureMinimumChargeBalance(Long userId, String scene) {

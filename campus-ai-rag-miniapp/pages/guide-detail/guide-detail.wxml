@@ -13,6 +13,23 @@
       </view>
       <view class="meta">{{guide.category || '未分类'}}</view>
       <view class="summary">{{guide.summary || '暂无简介'}}</view>
+
+      <view class="actions-row">
+        <button class="mini-btn fav-btn" bindtap="onToggleFavorite">
+          {{ guide.favorite ? '已收藏' : '收藏' }}
+        </button>
+        <button wx:if="{{guide.ragCategoryIdsJson}}" class="mini-btn rag-btn" bindtap="onGoRag">去 RAG 问答</button>
+      </view>
+
+      <view class="progress-row">
+        <view class="progress-text">完成进度：{{guide.doneCount || 0}} / {{guide.totalSteps || stepList.length || 0}}</view>
+        <view class="progress-bar">
+          <view
+            class="progress-bar-inner"
+            style="width: {{ ((guide.totalSteps || stepList.length || 0) ? Math.round(((guide.doneCount || 0) * 100) / (guide.totalSteps || stepList.length || 1)) : 0) }}%;"
+          ></view>
+        </view>
+      </view>
     </view>
   </view>
 
@@ -24,6 +41,11 @@
     <view class="step-top">
       <view class="step-index">Step {{item.stepNo || (index + 1)}}</view>
       <view class="step-action-type">{{item.actionType || 'NONE'}}</view>
+    </view>
+    <view class="step-done-row">
+      <view class="done-pill {{item.done ? 'done' : ''}}" data-index="{{index}}" bindtap="onToggleStepDone">
+        {{ item.done ? '已完成' : '未完成（点我勾选）' }}
+      </view>
     </view>
     <view class="step-title">{{item.title}}</view>
     <view wx:if="{{item.content}}" class="step-content">{{item.content}}</view>

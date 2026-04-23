@@ -64,6 +64,10 @@ public class SecurityConfig {
                         .requestMatchers("/wx/pay/alipay/return").permitAll()
                         // 社区：允许游客浏览帖子列表（不需要 token）
                         .requestMatchers(HttpMethod.GET, "/wx/post/list").permitAll()
+                        // 办事指南：允许游客浏览（列表/分类/详情）
+                        .requestMatchers(HttpMethod.GET, "/wx/guides").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/wx/guides/categories").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/wx/guides/*").permitAll()
                         .requestMatchers("/admin/**").authenticated()
                         .requestMatchers("/wx/**").authenticated()
                         .anyRequest().permitAll()

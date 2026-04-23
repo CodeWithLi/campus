@@ -61,6 +61,10 @@
         <span class="menu-dot"></span>
         <span>办事指南</span>
       </el-menu-item>
+      <el-menu-item v-if="userStore.isAdmin" index="/guide-material-templates">
+        <span class="menu-dot"></span>
+        <span>材料模板</span>
+      </el-menu-item>
       <el-menu-item v-if="userStore.isSuperAdmin" index="/prompts/system">
         <span class="menu-dot"></span>
         <span>系统提示词</span>

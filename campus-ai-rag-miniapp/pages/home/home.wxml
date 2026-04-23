@@ -37,7 +37,10 @@
       <view class="entry-icon-wrap" style="background: {{item.iconBg}};">
         <view class="entry-icon">{{item.icon}}</view>
       </view>
-      <view class="entry-name">{{item.title}} <text class="entry-tag">{{item.tag}}</text></view>
+      <view class="entry-name">
+        {{item.title}}
+        <text wx:if="{{item.tag}}" class="entry-tag">{{item.tag}}</text>
+      </view>
       <view class="entry-desc">{{item.desc}}</view>
     </view>
   </view>

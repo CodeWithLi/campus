@@ -254,8 +254,10 @@ CREATE TABLE `forum_guide`  (
   `tag` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '标签',
   `summary` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '简介',
   `cover_url` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '封面图URL',
+  `rag_category_ids_json` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '关联RAG知识库分类ID列表JSON（如 [1,2]）',
   `status` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'DRAFT' COMMENT '状态：DRAFT/PUBLISHED/OFFLINE',
   `sort_no` int NOT NULL DEFAULT 100 COMMENT '排序值（越小越靠前）',
+  `view_count` bigint NOT NULL DEFAULT 0 COMMENT '浏览次数',
   `deleted` tinyint NOT NULL DEFAULT 0 COMMENT '逻辑删除：0未删除 1已删除',
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
@@ -282,6 +284,56 @@ CREATE TABLE `forum_guide_step`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_guide_step_guide`(`guide_id` ASC, `step_no` ASC, `id` ASC) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '办事指南步骤表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Table structure for forum_material_template
+-- ----------------------------
+DROP TABLE IF EXISTS `forum_material_template`;
+CREATE TABLE `forum_material_template`  (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `template_name` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '模板名称',
+  `items_json` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '材料项JSON数组',
+  `enabled` tinyint NOT NULL DEFAULT 1 COMMENT '是否启用：1启用，0禁用',
+  `sort_no` int NOT NULL DEFAULT 100 COMMENT '排序值',
+  `remark` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '备注',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `uk_material_template_name`(`template_name` ASC) USING BTREE,
+  INDEX `idx_material_template_enabled_sort`(`enabled` ASC, `sort_no` ASC, `id` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '材料清单模板' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Table structure for forum_guide_favorite
+-- ----------------------------
+DROP TABLE IF EXISTS `forum_guide_favorite`;
+CREATE TABLE `forum_guide_favorite`  (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `user_id` bigint NOT NULL COMMENT 'wx_user.id',
+  `guide_id` bigint NOT NULL COMMENT 'forum_guide.id',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '收藏时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `uk_guide_user`(`user_id` ASC, `guide_id` ASC) USING BTREE,
+  INDEX `idx_guide_fav_guide`(`guide_id` ASC) USING BTREE,
+  INDEX `idx_guide_fav_user_created`(`user_id` ASC, `created_at` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '指南收藏关系' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Table structure for forum_guide_progress
+-- ----------------------------
+DROP TABLE IF EXISTS `forum_guide_progress`;
+CREATE TABLE `forum_guide_progress`  (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `user_id` bigint NOT NULL COMMENT 'wx_user.id',
+  `guide_id` bigint NOT NULL COMMENT 'forum_guide.id',
+  `step_id` bigint NOT NULL COMMENT 'forum_guide_step.id',
+  `done` tinyint NOT NULL DEFAULT 0 COMMENT '是否完成：1完成，0未完成',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `uk_guide_progress_user_step`(`user_id` ASC, `step_id` ASC) USING BTREE,
+  INDEX `idx_guide_progress_user_guide`(`user_id` ASC, `guide_id` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '指南步骤完成进度' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for forum_schedule_reminder

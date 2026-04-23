@@ -51,8 +51,9 @@ Page({
 
   async onLoad(options = {}) {
     const conversationId = options?.conversationId || ''
+    const preferCategoryId = Number(options?.categoryId || 0)
     this.initRecorder()
-    this.setData({ conversationId })
+    this.setData({ conversationId, preferCategoryId })
     await this.loadModels()
     await this.loadCategories()
     if (conversationId) {
@@ -100,7 +101,13 @@ Page({
       const res = await listKbCategoriesApi()
       const list = Array.isArray(res?.data) ? res.data : []
       const categoryOptions = [{ id: 0, categoryName: '全部分类' }, ...list]
-      this.setData({ categoryOptions, selectedCategoryIndex: 0 })
+      let selectedCategoryIndex = 0
+      const preferCategoryId = Number(this.data.preferCategoryId || 0)
+      if (preferCategoryId) {
+        const idx = categoryOptions.findIndex((c) => Number(c?.id) === preferCategoryId)
+        if (idx >= 0) selectedCategoryIndex = idx
+      }
+      this.setData({ categoryOptions, selectedCategoryIndex })
     } catch (e) {
       this.setData({ categoryOptions: [{ id: 0, categoryName: '全部分类' }], selectedCategoryIndex: 0 })
     }

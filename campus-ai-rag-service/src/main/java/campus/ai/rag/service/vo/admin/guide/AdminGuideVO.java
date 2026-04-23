@@ -29,11 +29,17 @@ public class AdminGuideVO {
     @ApiModelProperty(value = "封面图URL")
     private String coverUrl;
 
+    @ApiModelProperty(value = "关联RAG知识库分类ID列表JSON（如 [1,2]）")
+    private String ragCategoryIdsJson;
+
     @ApiModelProperty(value = "状态：DRAFT/PUBLISHED/OFFLINE")
     private String status;
 
     @ApiModelProperty(value = "排序值")
     private Integer sortNo;
+
+    @ApiModelProperty(value = "浏览次数")
+    private Long viewCount;
 
     @ApiModelProperty(value = "创建时间")
     private LocalDateTime createdAt;

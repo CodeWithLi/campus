@@ -124,6 +124,15 @@ const router = createRouter({
             requiresAdmin: true
           }
         },
+        {
+          path: '/guide-material-templates',
+          name: 'guide-material-templates',
+          component: () => import('@/views/material-template/index.vue'),
+          meta: {
+            title: '材料模板',
+            requiresAdmin: true
+          }
+        },
       ]
     },
     {

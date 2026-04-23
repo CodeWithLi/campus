@@ -8,7 +8,10 @@ const LOGIN_STATUS_KEY = 'LOGIN_STATUS'
 const PUBLIC_GET_PATTERNS = [
   /^\/wx\/post\/list$/,
   /^\/wx\/post\/\d+$/,
-  /^\/wx\/post\/\d+\/comments$/
+  /^\/wx\/post\/\d+\/comments$/,
+  /^\/wx\/guides$/,
+  /^\/wx\/guides\/categories$/,
+  /^\/wx\/guides\/\d+$/
 ]
 const AUTH_FREE_PATTERNS = [
   /^\/wx\/auth\/login$/,

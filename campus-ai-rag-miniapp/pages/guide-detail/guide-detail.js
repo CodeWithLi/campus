@@ -1,4 +1,4 @@
-import { getGuideDetailApi } from '../../api/guide'
+import { getGuideDetailApi, toggleGuideFavoriteApi, updateGuideStepProgressApi } from '../../api/guide'
 import { createReminderApi } from '../../api/reminder'
 import { showError, showSuccess } from '../../utils/ui'
 import { API_BASE_URL, buildApiUrl } from '../../config/env'
@@ -38,12 +38,15 @@ Page({
           }
         : null
       const steps = Array.isArray(guide?.steps) ? guide.steps : []
+      const doneStepIds = Array.isArray(guide?.doneStepIds) ? guide.doneStepIds : []
+      const doneStepIdSet = new Set(doneStepIds.map((x) => Number(x)))
       this.setData({
         guide,
         stepList: steps.map((it) => ({
           ...it,
           actionPayloadObj: this.parseJsonSafe(it?.actionPayload),
-          requiredMaterialsList: this.parseArraySafe(it?.requiredMaterials)
+          requiredMaterialsList: this.parseArraySafe(it?.requiredMaterials),
+          done: doneStepIdSet.has(Number(it?.id))
         }))
       })
     } catch (e) {
@@ -52,6 +55,60 @@ Page({
       this.setData({ loading: false })
       if (fromPullDown) wx.stopPullDownRefresh()
     }
+  },
+
+  async onToggleFavorite() {
+    if (!this.data.id || !this.data.guide) return
+    try {
+      const res = await toggleGuideFavoriteApi(this.data.id)
+      const nextFavorite = !!res?.data
+      this.setData({
+        guide: {
+          ...this.data.guide,
+          favorite: nextFavorite
+        }
+      })
+      showSuccess(nextFavorite ? '已收藏' : '已取消收藏')
+    } catch (e) {
+      showError(e.message || '操作失败')
+    }
+  },
+
+  async onToggleStepDone(e) {
+    const index = Number(e.currentTarget.dataset?.index ?? -1)
+    const step = this.data.stepList[index]
+    if (!step) return
+    const nextDone = !step.done
+    try {
+      await updateGuideStepProgressApi(this.data.id, step.id, nextDone)
+      const nextList = this.data.stepList.map((s, i) => (i === index ? { ...s, done: nextDone } : s))
+      const doneCount = nextList.filter((s) => s.done).length
+      this.setData({
+        stepList: nextList,
+        guide: {
+          ...this.data.guide,
+          doneCount,
+          totalSteps: nextList.length,
+          doneStepIds: nextList.filter((s) => s.done).map((s) => s.id)
+        }
+      })
+    } catch (e) {
+      showError(e.message || '更新失败')
+    }
+  },
+
+  onGoRag() {
+    const idsJson = this.data?.guide?.ragCategoryIdsJson
+    let ids = []
+    try {
+      const parsed = JSON.parse(idsJson || '[]')
+      ids = Array.isArray(parsed) ? parsed.map((x) => Number(x)).filter((x) => Number.isFinite(x) && x > 0) : []
+    } catch (e) {
+      ids = []
+    }
+    const categoryId = ids[0] || 0
+    const url = categoryId ? `/pages/ai-rag/ai-rag?categoryId=${categoryId}` : '/pages/ai-rag/ai-rag'
+    wx.navigateTo({ url })
   },
 
   async onStepActionTap(e) {

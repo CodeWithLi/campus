@@ -12,4 +12,8 @@ public interface WxGuideService {
     List<String> listPublishedCategories();
 
     WxGuideVO detail(Long guideId);
+
+    Boolean toggleFavorite(Long guideId);
+
+    void updateStepProgress(Long guideId, Long stepId, boolean done);
 }

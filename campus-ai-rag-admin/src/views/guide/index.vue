@@ -139,6 +139,26 @@
           </div>
         </el-form-item>
 
+        <el-form-item label="关联RAG">
+          <el-select
+            v-model="formData.ragCategoryIds"
+            multiple
+            filterable
+            clearable
+            collapse-tags
+            collapse-tags-tooltip
+            class="full-width"
+            placeholder="选择知识库分类（用于RAG问答）"
+          >
+            <el-option
+              v-for="c in kbCategoryOptions"
+              :key="c.id"
+              :label="c.categoryName"
+              :value="c.id"
+            />
+          </el-select>
+        </el-form-item>
+
         <div class="step-head">
           <span>步骤配置</span>
           <el-button size="small" @click="addStep">新增步骤</el-button>
@@ -205,6 +225,17 @@
               <el-col :span="16">
                 <div class="materials-editor">
                   <div class="materials-label">材料清单</div>
+                  <div class="materials-template-row">
+                    <el-select v-model="step.selectedTemplateId" filterable clearable class="template-select" placeholder="套用材料模板">
+                      <el-option
+                        v-for="t in materialTemplateOptions"
+                        :key="t.id"
+                        :label="t.templateName"
+                        :value="t.id"
+                      />
+                    </el-select>
+                    <el-button @click="applyMaterialTemplate(step)" :disabled="!step.selectedTemplateId">套用</el-button>
+                  </div>
                   <div class="materials-tags">
                     <el-tag
                       v-for="(material, materialIndex) in step.materialsList"
@@ -259,6 +290,8 @@ import {
   uploadGuideCover,
   updateGuide
 } from '@/api/guide'
+import { getKbCategoryList } from '@/api/kb'
+import { getMaterialTemplateList } from '@/api/material-template'
 
 const tableLoading = ref(false)
 const submitLoading = ref(false)
@@ -269,6 +302,8 @@ const dialogMode = ref('create')
 const currentGuideId = ref(null)
 const formRef = ref()
 const categoryOptions = ref([])
+const kbCategoryOptions = ref([])
+const materialTemplateOptions = ref([])
 
 const pageState = reactive({ pageNum: 1, pageSize: 20, total: 0 })
 const queryForm = reactive({ keyword: '', category: '', status: '' })
@@ -283,6 +318,7 @@ const createStep = () => ({
   requiredMaterials: '',
   materialsList: [],
   materialInput: '',
+  selectedTemplateId: 0,
   status: 1
 })
 
@@ -292,6 +328,7 @@ const createFormData = () => ({
   tag: '',
   summary: '',
   coverUrl: '',
+  ragCategoryIds: [],
   sortNo: 100,
   steps: [createStep()]
 })
@@ -409,9 +446,17 @@ const openEditDialog = async (row) => {
   dialogVisible.value = true
   const res = await getGuideDetail(row.id)
   const detail = res.data || {}
+  let ragCategoryIds = []
+  try {
+    const parsed = JSON.parse(detail.ragCategoryIdsJson || '[]')
+    ragCategoryIds = Array.isArray(parsed) ? parsed.map((x) => Number(x)).filter((x) => Number.isFinite(x) && x > 0) : []
+  } catch (e) {
+    ragCategoryIds = []
+  }
   Object.assign(formData, {
     ...createFormData(),
     ...detail,
+    ragCategoryIds,
     steps: Array.isArray(detail.steps) && detail.steps.length
       ? detail.steps.map((step) => normalizeStepForForm(step))
       : [createStep()]
@@ -425,6 +470,7 @@ const buildPayload = () => ({
   tag: formData.tag,
   summary: formData.summary,
   coverUrl: formData.coverUrl,
+  ragCategoryIdsJson: formData.ragCategoryIds?.length ? JSON.stringify(formData.ragCategoryIds) : '',
   sortNo: formData.sortNo,
   steps: (formData.steps || []).map((step, index) => ({
     stepNo: Number(step.stepNo || index + 1),
@@ -436,6 +482,41 @@ const buildPayload = () => ({
     status: Number(step.status === 0 ? 0 : 1)
   }))
 })
+
+const loadKbCategories = async () => {
+  try {
+    const res = await getKbCategoryList()
+    const list = Array.isArray(res?.data) ? res.data : []
+    kbCategoryOptions.value = list
+  } catch (e) {
+    kbCategoryOptions.value = []
+  }
+}
+
+const loadMaterialTemplates = async () => {
+  try {
+    const res = await getMaterialTemplateList()
+    materialTemplateOptions.value = Array.isArray(res?.data) ? res.data : []
+  } catch (e) {
+    materialTemplateOptions.value = []
+  }
+}
+
+const applyMaterialTemplate = (step) => {
+  const id = Number(step?.selectedTemplateId || 0)
+  if (!id) return
+  const tpl = (materialTemplateOptions.value || []).find((t) => Number(t?.id) === id)
+  if (!tpl) return
+  let items = []
+  try {
+    const parsed = JSON.parse(tpl.itemsJson || '[]')
+    items = Array.isArray(parsed) ? parsed.map((x) => String(x || '').trim()).filter(Boolean) : []
+  } catch (e) {
+    items = []
+  }
+  step.materialsList = items
+  ElMessage.success('已套用材料模板')
+}
 
 const onStepActionTypeChange = (step) => {
   if (!step) return
@@ -640,6 +721,8 @@ const handleDelete = async (row) => {
 }
 
 loadGuidePage()
+loadKbCategories()
+loadMaterialTemplates()
 </script>
 
 <style scoped>
@@ -708,6 +791,14 @@ loadGuidePage()
 .materials-input-row { display: flex; gap: 8px; }
 .materials-input-row :deep(.el-input__wrapper) {
   border-radius: 8px;
+}
+.materials-template-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.template-select {
+  flex: 1;
 }
 .step-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; color: #2d426e; font-weight: 600; }
 .step-list { max-height: 360px; overflow: auto; display: flex; flex-direction: column; gap: 10px; }
