@@ -164,6 +164,7 @@ export const postStream = (url, data = {}, options = {}) =>
     let doneData = null
     let sseBuffer = ''
     let streamError = null
+    let hasChunkCallbackData = false
 
     const task = wx.request({
       url: buildApiUrl(url),
@@ -192,6 +193,14 @@ export const postStream = (url, data = {}, options = {}) =>
           reject(err)
           return
         }
+        // 兜底：某些真机 + 代理缓冲场景下 onChunkReceived 不触发，但 success.res.data 会带完整 SSE 文本
+        if (!hasChunkCallbackData) {
+          const rawBody = typeof res?.data === 'string' ? res.data : ''
+          if (rawBody) {
+            sseBuffer += rawBody
+          }
+        }
+        flushSse(true)
         if (streamError) {
           reject(streamError)
           return
@@ -211,43 +220,56 @@ export const postStream = (url, data = {}, options = {}) =>
       return
     }
 
-    const flushSse = () => {
-      const packets = sseBuffer.split('\n\n')
-      sseBuffer = packets.pop() || ''
-      packets.forEach((packet) => {
-        const lines = String(packet || '').split('\n')
-        const dataLines = lines
-          .map((l) => l.trim())
-          .filter((l) => l.startsWith('data:'))
-          .map((l) => l.slice(5).trim())
-        if (!dataLines.length) return
-        const payloadText = dataLines.join('\n')
-        if (!payloadText || payloadText === '[DONE]') return
-        try {
-          const payload = JSON.parse(payloadText)
-          const type = payload?.type
-          if (type === 'chunk') {
-            onMessage(payload?.data || {})
-          } else if (type === 'done') {
-            doneData = payload?.data || null
-          } else if (type === 'error') {
-            const err = new Error(payload?.data?.message || '流式请求失败')
-            streamError = err
-            const msg = String(err.message || '')
-            if (msg.includes('未登录') || msg.includes('登录已过期')) {
-              handleUnauthorized(false)
-            }
-            onError(err)
+    const handlePayloadText = (payloadText) => {
+      if (!payloadText || payloadText === '[DONE]') return
+      try {
+        const payload = JSON.parse(payloadText)
+        const type = payload?.type
+        if (type === 'chunk') {
+          onMessage(payload?.data || {})
+        } else if (type === 'done') {
+          doneData = payload?.data || null
+        } else if (type === 'error') {
+          const err = new Error(payload?.data?.message || '流式请求失败')
+          streamError = err
+          const msg = String(err.message || '')
+          if (msg.includes('未登录') || msg.includes('登录已过期')) {
+            handleUnauthorized(false)
           }
-        } catch (e) {
-          // ignore non-json chunks
+          onError(err)
         }
+      } catch (e) {
+        // ignore non-json chunks
+      }
+    }
+
+    const flushSse = (force = false) => {
+      // 兼容真机：部分环境不会严格按 \n\n 分 event，按“完整行”实时解析 data: 更稳。
+      const normalized = sseBuffer.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
+      const lines = normalized.split('\n')
+      const tail = lines.pop() || ''
+      sseBuffer = force ? '' : tail
+      lines.forEach((line) => {
+        const l = String(line || '').trim()
+        if (!l.startsWith('data:') && !l.startsWith('data :')) return
+        const idx = l.indexOf(':')
+        const payloadText = idx >= 0 ? l.slice(idx + 1).trim() : ''
+        handlePayloadText(payloadText)
       })
+      if (force) {
+        const l = String(tail || '').trim()
+        if (l.startsWith('data:') || l.startsWith('data :')) {
+          const idx = l.indexOf(':')
+          const payloadText = idx >= 0 ? l.slice(idx + 1).trim() : ''
+          handlePayloadText(payloadText)
+        }
+      }
     }
 
     task.onChunkReceived((chunkRes) => {
       const text = decodeChunk(chunkRes?.data)
       if (!text) return
+      hasChunkCallbackData = true
       sseBuffer += text
       flushSse()
     })
